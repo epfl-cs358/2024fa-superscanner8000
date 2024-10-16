@@ -1,1 +1,1 @@
-# 2024fa-superscanner8000
+# Superscanner8000
