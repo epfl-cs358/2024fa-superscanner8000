@@ -1,0 +1,135 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{gensymb}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{tkz-euclide}
+\usepackage{ragged2e}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{tikz}
+\usepackage{float}
+\usepackage{multirow}
+\usepackage{biblatex}
+\addbibresource{refs.bib}
+
+\pagestyle{fancy}
+\geometry{top=3cm, bottom=2.5cm, left=3.5cm, right=3.5cm}
+\rhead{CS-358}
+\lhead{\leftmark}
+\fancyfoot[R]{\leftmark}
+\fancyfoot[C]{}
+\fancyfoot[L]{Page \thepage}
+\renewcommand{\footrulewidth}{1pt}
+\usepackage{multicol}
+\title{CS-358: Individual Project Proposal}
+\author{Noa Ette}
+\date{\today}
+
+\begin{document}
+
+
+\maketitle
+\vspace{45mm}
+\tableofcontents
+\newpage
+\section{Project Description: Autonomous 3d Object Scanner}
+
+The core of this project idea is to make a mobile robot capable of identifying the object of interest and taking pictures of it from all (possible) angles. This would be paired with a desktop application that would receive the images and apply the user selected 3d reconstruction algorithm.\\
+
+
+From this description we can identify several key components the project needs: \begin{enumerate}
+    \item \texttt{The Robot}:
+    \begin{description}
+            \item[1.1] Navigate and plan routes through unknown environments without getting stuck.
+            \item[1.2] Segment view and recognize object of interest.
+            \item[1.3] Translate camera on z axis whilst tracking object of interest.
+    \end{description}
+    \item \texttt{The Desktop App}:
+    \begin{description}
+        \item[2.1] User can choose object of interest.
+        \item[2.2] Process images sent by robot using 3d reconstruction algorithms (NeRF \cite{mildenhall2020nerf}, 3DGS \cite{kerbl3Dgaussians}, Multi-view stereo)
+    \end{description}
+\end{enumerate}
+
+Nowadays, one does not need specialised high end equipment in order 3d scan objects. Most of us already have the sufficient equipment needed, a smartphone, given that it has a functioning camera and the adequate software. \\
+For this project we will not be using a smartphone as it gives the robot higher usefulness and does not drastically increase complexity to have an integrated camera. 
+
+
+In order to translate camera on z axis we will use a robotic arm with two points of rotation. 
+
+
+Most currently existing 3d Object scanners are catered to small objects \cite{desktop3dscanner}, rotation the object and photographing it from a fixed camera. For this reason, for references, I have decided to look at projects that take on different elements of this one individually. \\
+For instance, for point 1.1, after looking at several different form factors that would give the robot mobility, the two-wheeled format seemed to be the perfect combination of function and elegance.
+
+
+\newpage
+\section{Related Projects}
+I have looked at various related projects whilst trying to figure out how to design mine in the best possible manner.
+
+For example, this project \cite{balancingrobot} of a two wheeled balancing robot gives great insight on the electrical and mechanical components required for stability. I use these references and compare them with the course handbook in order to determine the best and most economical manner to construct such a robot. In this specific project, two NEMA17 stepper motors are driven by A4988 drivers. The gyroscope used is an MPU 6050 and its all controlled by an ESP32. It is possible to take inspiration from the balancing part of the code but our project will be slightly different in shape, size and center of mass due to the robotic arm so it will likely have to be tweaked a considerable amount.
+
+For the robot arm I plan on inspiring myself from \href{https://www.youtube.com/watch?v=u4ynKC0TWL8}{this video} where two Nema 17 stepper motors are used. In this instance the micro-controller is an arduino mega, and the motor drivers are DM542 which are not usable in this course. These drivers can easily be replaced by the A4988's we have access to in this class. To this, I plan on adding an extra MPU6050 at the top of the arm with a ESP32 + CAM and a SG90 Servo, for object tracking along a single axis.
+
+Unfortunately I have been unsuccessful in finding a project where a robot tracks an object, rotating around it. This poses a particular computer vision challenge as the robot needs to be able to recognise the object from completely distinct angles. Thanks to the fact that the robot will be navigating using video from an ESP32-CAM on the front of the robot, basic object tracking like those in opencv will most likely be sufficient.
+
+
+
+
+\section{User Stories}
+
+The final product of this project is something that could be useful to many people from different horizons. \\
+In one case, one could imagine a real estate agent, wanting to provide virtual visits of a home he is selling. Instead of having to contact a freelance 3D artist to remodel the home, probably costing thousands, they would be able to simply 3d scan the area using the robot and software made in this project, saving plenty of time and money. Some companies have already ventured into real-estate specific 3d scanning \cite{matterport}. \\
+Another imaginable use case is for professional 3d artists wanting to use realistic large objects in their 3d scenes. The conventional way to scan these objects would be to manually take pictures of them. Something that is very time consuming and sometimes requires particular gymnastics skills.
+I personally have a little bit of experience with manually 3d scanning objects and can personally attest that, depending on the object, it can take a frustratingly long amount of time.
+
+It could be an interesting demonstration for the EPFL Open House as it demonstrates the link between 3d art and computer science by leveraging an intelligent robot to optimise the workload of different career paths.
+
+\section{Long term view}
+
+Given a long term viewpoint, we could easily imagine a multiple different form factors being based on this project being developed for many different use cases. 
+
+At a much larger scale, terrestrial and aerial 3d scanning robots could be used to map entire city's. Re-creating what would take thousands if not millions of man hours. This data could be used to train autonomous vehicles on real city's though simulation or for many other projects.
+
+At a smaller scale, this technology could be redesigned on an aquatic form factor in order to map ocean floors and areas inaccessible by humans.
+\newpage
+\section{Cost Estimation}
+
+Here is the estimated cost based on the components listed in the previous sections.
+
+\begin{center}
+\begin{tabular}{ ||c|c|c|| } 
+
+\hline
+Robot Section & Part Name & CHF \\
+\hline
+\hline
+\multirow{3}{4em}{Tracking Camera} & ESP32-CAM & 4 \\ 
+& MPU-6050 & 5 \\ 
+& SG90 & 3 \\ 
+\hline
+\hline
+\multirow{2}{4em}{Mechanical Arm} & 17HS4401 + A4988 & 15\\ 
+& 17HS4401 + A4988 & 15 \\
+\hline
+\hline
+\multirow{5}{4em}{Body / Driving Module} & ESP32-CAM & 4 \\ 
+& 17HS4401 + A4988 & 15\\ 
+& 17HS4401 + A4988 & 15\\ 
+& MPU-6050 & 5 \\ 
+& LIPO 3S 11.1V & 17 \\
+\hline
+\hline
+\multicolumn{2}{||c|}{\multirow{3}{4em}{Total Cost}} & \\
+\multicolumn{2}{||c|}{} & 98 \\
+\multicolumn{2}{||c|}{} & \\
+\hline
+\end{tabular}
+\end{center}
+
+This falls way bellow the budget and leaves some margin for potential improvements.
+
+\newpage
+\printbibliography
+
+\end{document}
