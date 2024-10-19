@@ -25,7 +25,7 @@
 \renewcommand{\footrulewidth}{1pt}
 \usepackage{multicol}
 \title{CS-358: Individual Project Proposal}
-\author{Noa Ette}
+\author{Noa Ette - \\Mateo Tiedra - 356525\\Kevan Lam - \\Louis Larcher - \\Ugo -}
 \date{\today}
 
 \begin{document}
@@ -48,7 +48,7 @@ From this description we can identify several key components the project needs: 
             \item[1.2] Segment view and recognize object of interest.
             \item[1.3] Translate camera on z axis whilst tracking object of interest.
     \end{description}
-    \item \texttt{The Desktop App}:
+    \item \texttt{The Desktop Application}:
     \begin{description}
         \item[2.1] User can choose object of interest.
         \item[2.2] Process images sent by robot using 3d reconstruction algorithms (NeRF \cite{mildenhall2020nerf}, 3DGS \cite{kerbl3Dgaussians}, Multi-view stereo)
@@ -106,6 +106,21 @@ In terms of power, our thing will work on LiPo batteries, with a battery managem
 For further details on the design, please refer to the 3D files provided with this document.
 
 \section{Software description}
+
+The Superscanner8000 software run on a computer connected to the robot through Wi-Fi. The program allows users to select an object within the camera’s field of view and adjust a parameter that specifies the level of precision needed, determining the number of photos the robot will capture. Once selected, the software guides the robot to navigate around the object, capturing images from various angles and distances. After gathering a sufficient number of images, the software processes them to generate a 3D model of the object, which can then be exported.
+
+To enable the user to select an object for scanning, the software displays the live video feed from the robot camera on the screen, showing various objects in view. The user can click directly on the object of interest, which will then be detected and highlighted using Meta's open-source model, SAM 2.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{images/sam2-example.png}
+    \caption{Example of SAM 2's image segmentation}
+    \label{fig:sam2-example}
+\end{figure}
+
+After the object is selected, the software directs the robot to move in a circular path around it. The robot moves in one direction while simultaneously using object segmentation to keep the object centered in the camera's field of view, rotating its entire body to maintain this alignment. Once it has completed a portion of the path, the software halts the robot, allowing it to capture images from different angles by adjusting the arm and raising or lowering the camera and the starts it again to move to the next position. This process is repeated until the robot has completed a full circle around the object. The user can stop the process at any time with a button on the software interface.
+
+The images are transmitted from the robot to the computer in real time as the device moves and captures additional photos. Once the robot completes its data-gathering walk around the object and all images have been uploaded to the computer, the system initiates the 3D object conversion process using 3D reconstruction algorithms such as 3DGS \cite{kerbl3Dgaussians} and NeRF \cite{mildenhall2020nerf}.
 
 \newpage
 \section{Bill of materials}
