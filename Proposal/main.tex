@@ -1,5 +1,6 @@
 \documentclass{article}
 \usepackage[utf8]{inputenc}
+\usepackage{textcomp}
 \usepackage{gensymb}
 \usepackage{geometry}
 \usepackage{fancyhdr}
@@ -10,6 +11,7 @@
 \usepackage{tikz}
 \usepackage{float}
 \usepackage{multirow}
+\usepackage[graphicx]{realboxes}
 \usepackage{biblatex}
 \addbibresource{refs.bib}
 
@@ -35,7 +37,8 @@
 \newpage
 \section{Project Description: Autonomous 3d Object Scanner}
 
-The core of this project idea is to make a mobile robot capable of identifying the object of interest and taking pictures of it from all (possible) angles. This would be paired with a desktop application that would receive the images and apply the user selected 3d reconstruction algorithm.\\
+The core of this project idea is to make a mobile robot capable of identifying the object of interest and taking pictures of it from all (possible) angles. 
+This would be paired with a desktop application that would receive the images and apply the user selected 3d reconstruction algorithm.\\
 
 
 From this description we can identify several key components the project needs: \begin{enumerate}
@@ -95,39 +98,44 @@ At a smaller scale, this technology could be redesigned on an aquatic form facto
 \newpage
 \section{Cost Estimation}
 
-Here is the estimated cost based on the components listed in the previous sections.
-
 \begin{center}
-\begin{tabular}{ ||c|c|c|| } 
+\Rotatebox{90}{%
+\begin{tabular}{ ||c|c|c|c|c|c|| } 
 
 \hline
-Robot Section & Part Name & CHF \\
+Category & Type & Name & Site & Amount & Price \\
 \hline
 \hline
-\multirow{3}{4em}{Tracking Camera} & ESP32-CAM & 4 \\ 
-& MPU-6050 & 5 \\ 
-& SG90 & 3 \\ 
+\multirow{4}{5em}{Actuators} 
+& brushed motor & Chihai CHF-GM37-550ABHL & [In stock] & 2 & 25 \\ 
+& brushed driver & L298N & [In stock] & 2 & 5\\
+& stepper + driver & 17HS4401 + A4988 & [In stock] & 2 & 15 \\
+& servo & SG90 & [In stock] & 2 & 3 \\
 \hline
 \hline
-\multirow{2}{4em}{Mechanical Arm} & 17HS4401 + A4988 & 15\\ 
-& 17HS4401 + A4988 & 15 \\
+\multirow{4}{5em}{Controllers} 
+& controller + camera & AIThinker esp32-cam & [In stock] & 2 & 4\\ 
+& camera & OV5640 & \href{https://www.digikey.ch/fr/products/detail/seeed-technology-co-ltd/114993115/21277047}{digikey.ch} & 1 & 10.89\\ 
+& microcontroller & ESP32-S2-DEVKITM-1U-N4R2 & \href{https://www.digikey.ch/fr/products/detail/espressif-systems/ESP32-S2-DEVKITM-1U-N4R2/16688756}{digikey.ch} & 1 & 7.27\\
+& UART to USB & FTDI USB-to-serial & [In stock] & 1 & 2\\
 \hline
 \hline
-\multirow{5}{4em}{Body / Driving Module} & ESP32-CAM & 4 \\ 
-& 17HS4401 + A4988 & 15\\ 
-& 17HS4401 + A4988 & 15\\ 
-& MPU-6050 & 5 \\ 
-& LIPO 3S 11.1V & 17 \\
+\multirow{7}{5em}{Power}
+& battery & Absima 11.1 V 6000 mAh 3S 50 C & \href{https://www.conrad.ch/fr/p/absima-pack-de-batterie-lipo-11-1-v-6000-mah-nombre-de-cellules-3-50-c-stick-xt90-3322657.html}{conrad.ch} & 1 & 51.95 \\
+& BMS & 3S 12V 40A BMS & \href{https://www.elektronik-kaufen.ch/products/bms-3s-40a?variant=41643639701680&currency=CHF}{elektronik-kaufen.ch} & 1 & 5.5 \\
+& heatsink & aluminum sheet & [In SPOT shop] & 1 & 10 \\
+& battery plug male & XT90-S male plug & \href{https://www.conrad.ch/fr/p/reely-re-6702312-fiche-male-pour-batterie-xt90-s-dore-e-1-pc-s-2234104.html}{conrad.ch} & 2 & 1.9 \\
+& battery plug female & XT90-S female plug & \href{https://www.conrad.ch/fr/p/reely-re-7471836-prise-femelle-pour-batterie-xt90-dore-e-1-pc-s-2490612.html}{conrad.ch} & 1 & 1.6 \\
+& load balance plug & JST XH2.54 3p 20cm & \href{https://www.bastelgarage.ch/cable-de-connexion-jst-xh2-54-3p-20cm}{bastelgarage.ch} & 1 & 0.6 \\
+& voltage converter & LM2596 & [In stock] & 2 & 3 \\
 \hline
 \hline
-\multicolumn{2}{||c|}{\multirow{3}{4em}{Total Cost}} & \\
-\multicolumn{2}{||c|}{} & 98 \\
-\multicolumn{2}{||c|}{} & \\
+\multicolumn{5}{|r|}{total cost} & 203.61\\
+\hline
 \hline
 \end{tabular}
+}%
 \end{center}
-
-This falls way bellow the budget and leaves some margin for potential improvements.
 
 \newpage
 \printbibliography
