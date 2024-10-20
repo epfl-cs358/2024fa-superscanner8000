@@ -1,11 +1,5 @@
-Proposal/main.aux
-Proposal/main.bbl
-Proposal/main.blg
-Proposal/main.log
-Proposal/main.out
-Proposal/main.bcf
-Proposal/main.run.xml
-Proposal/main.toc
-Proposal/main.synctex.gz
-Proposal/main.fls
-Proposal/main.fdb_latexmk
+Proposal/*
+!Proposal/main.pdf
+!Proposal/main.tex
+!Proposal/refs.bib
+!Proposal/images
