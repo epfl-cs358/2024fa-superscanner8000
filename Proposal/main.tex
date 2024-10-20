@@ -25,7 +25,7 @@
 \renewcommand{\footrulewidth}{1pt}
 \usepackage{multicol}
 \title{CS-358: Individual Project Proposal}
-\author{Noa Ette - \\Mateo Tiedra - 356525\\Kevan Lam - \\Louis Larcher - 361002\\Ugo Novello - 329763\\Antoine Gautier - 356442}
+\author{Noa Ette - 363760\\Mateo Tiedra - 356525\\Kevan Lam - 356395\\Louis Larcher - 361002\\Ugo Novello - 329763\\Antoine Gautier - 356442}
 \date{\today}
 
 \begin{document}
@@ -51,7 +51,7 @@ From this description we can identify several key components the project needs: 
     \item \texttt{The Desktop Application}:
     \begin{description}
         \item[2.1] User can choose object of interest.
-        \item[2.2] Process images sent by robot using 3d reconstruction algorithms (NeRF \cite{mildenhall2020nerf}, 3DGS \cite{kerbl3Dgaussians}, Multi-view stereo)
+        \item[2.2] Process images sent by robot using 3d reconstruction algorithms (NeRF \cite{mildenhall2020nerf}, 2DGS \cite{Huang2DGS2024}, Multi-view stereo)
     \end{description}
 \end{enumerate}
 
@@ -120,7 +120,7 @@ To enable the user to select an object for scanning, the software displays the l
 
 After the object is selected, the software directs the robot to move in a circular path around it. The robot moves in one direction while simultaneously using object segmentation to keep the object centered in the camera's field of view, rotating its entire body to maintain this alignment. Once it has completed a portion of the path, the software halts the robot, allowing it to capture images from different angles by adjusting the arm and raising or lowering the camera and the starts it again to move to the next position. This process is repeated until the robot has completed a full circle around the object. The user can stop the process at any time with a button on the software interface.
 
-The images are transmitted from the robot to the computer in real time as the device moves and captures additional photos. Once the robot completes its data-gathering walk around the object and all images have been uploaded to the computer, the system initiates the 3D object conversion process using 3D reconstruction algorithms such as 3DGS \cite{kerbl3Dgaussians} and NeRF \cite{mildenhall2020nerf}.
+The images are transmitted from the robot to the computer in real time as the device moves and captures additional photos. Once the robot completes its data-gathering walk around the object and all images have been uploaded to the computer, the system initiates the 3D object conversion process using 3D reconstruction algorithms such as 2DGS \cite{Huang2DGS2024} and NeRF \cite{mildenhall2020nerf}.
 
 \newpage
 \section{Bill of materials}
