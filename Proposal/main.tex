@@ -165,6 +165,29 @@ Category & Type & Name & Site & Amount & Price \\
 \end{center}
 
 \newpage
+
+\section{Risk Assessment}
+
+Here we will talk about potential risks for the success of the SuperScanner8000 project. Let’s start by focusing on the difficulties linked to the hardware. 
+
+A basic concern is the voltage supply. We have decided to use a LIPO battery to supply our robot. This decision was made after making calculations and verifying that this battery would be enough for all our motors, drivers and microcontrollers. As shown in the bill of materials we also made sure to include all the extra components needed to accompany our LIPO battery. Of course, we will still have to make diagrams for all the electronics before plugging everything in to make sure it all works as planned.
+
+Another typical concern is the power of our actuators. We have also run calculations for our wheels and our arm to make sure the brush/stepper motors were powerful enough. The servos for the camera should also be a good fit however we might have to adapt if we end up using a phone as our camera. All of this will of course have to be retested once we print out the pieces as shown in the GANTT chart.
+
+Speaking of cameras, we also had a tough time finding the appropriate camera for this project. In the end we are choosing to go for the OV5640 camera which should have sufficient quality for recognition and reconstruction of 3d objects. We have thought of alternatives in case of this camera not working out for us, notably using a phone camera.
+
+One last hardware concern is the stability of our SuperScanner8000. The arm should be able to move everywhere without throwing the robot out of balance. We have made multiple design choices like having the arm be orthogonal to the wheels or using a belt for the arm to attempt to reduce this problem however we will once again have to test this once we print the materials and assemble the robot.
+
+
+Now moving onto the software side. 
+One crucial concern is the one of communication between multiple microcontrollers. Our SuperScanner8000 will possess more than one microcontroller as the esp-32 driver does not have enough pins for all our motors. This means that we will have to make sure early on we can make our microcontrollers speak to each other. Notably here we want our camera to take a picture and then move around the object while also communicating to the other camera to make sure we don’t run into any obstacles. Thankfully all our microcontrollers are equipped with Wi-Fi which should let them communicate at a rapid speed.
+
+This also leads us to our second concern which is the communication to the computer who is running the app. We will have to send photos taken by the cameras, compute our next move and send that information back. This will also have to be done through Wi-Fi and will have to be explored early on.
+
+A very important problem we have to tackle in this project is the very basis of it : scanning 3d objects. Our team will have to code a program that is able to use the photos communicated by the robot to recognise and recreate accurate depictions of the 3d object. A lot of libraries and tools already exist for 3d scanning which will be of great help for us. We will also have to make sure we move around the object close enough so that we can recreate a good 3d model of high quality everywhere. This also means taking pictures of the underneath of a table for example which means we should be confident enough to guide our robot all around the 3d object. Optionally we also want to tackle the case of room scanning which involves the robot being capable of moving everywhere inside a room. It is possible we are being too optimistic about 3d scanning, that is why we have set some of the tasks as optional. This leaves us the freedom to spend more time on the basis of the project but also opens possibilities if we find time. Thankfully we have someone who knows a lot about 3d scanning : Noa Ette. He has already worked on such projects and feels confident that as a team we can succeed. With his guidance, the rest of the team should be able to learn more quickly about recognition and reconstruction basics.
+
+Another closely linked problem is the obstacle avoidance issue. We will need this obstacle avoidance if we want to scan an object while others are around it or if we want to do the room scanning. Once again this is an optional task but it is important to state now what could potentially go wrong with it. The issue here will once again be to translate 2d images into something the SuperScanner8000 can understand and prepare against. Once again online libraries will be our biggest allies here and we will have to learn how to use them.
+
 \printbibliography
 
 \end{document}
