@@ -3,3 +3,5 @@ Proposal/*
 !Proposal/main.tex
 !Proposal/refs.bib
 !Proposal/images
+code/sam2_checkpoints/*
+!code/sam2_checkpoints/download_ckpts.sh
