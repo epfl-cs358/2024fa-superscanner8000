@@ -15,8 +15,18 @@ def main():
     # Initialize UI with the first frame
     ui = ImageUI(frame)
 
+    def wait_for_click():
+        while not ui.has_click():
+            frame = esp32cam.get_frame()
+            if frame is not None and frame.size != 0:
+                ui.update_image(frame)
+            ui.root.update_idletasks()
+            ui.root.update()
+
+    wait_for_click()
+    points = np.array([ui.click_coords], dtype=np.float32)
+    
     # Initialize ImageSegmenter with a random (for now) bounding box
-    points = np.array([[100, 150]], dtype=np.float32)
     segmenter = ImageSegmenter(model_cfg="sam2_hiera_s.yaml", checkpoint="sam2_checkpoints/sam2_hiera_small.pt", expand_pixels=10)
     segmenter.initialize(frame, points=points)
 

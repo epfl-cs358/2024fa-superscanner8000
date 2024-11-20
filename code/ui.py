@@ -26,6 +26,9 @@ class ImageUI:
         self.photo = ImageTk.PhotoImage(self.image)
         self.canvas.create_image(0, 0, anchor=tk.NW, image=self.photo)
 
+    def has_click(self):
+        return self.click_coords is not None
+
     def run(self, update_callback):
         def update_loop():
             update_callback()
