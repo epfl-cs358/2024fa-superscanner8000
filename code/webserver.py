@@ -38,6 +38,8 @@ class ESP32CAM:
 
                     # Convert the JPEG frame to a NumPy array and decode it as an OpenCV image
                     frame = cv2.imdecode(np.frombuffer(jpg_frame, np.uint8), cv2.IMREAD_COLOR)
+                    # Convert to RGB
+                    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
                     return frame
         
