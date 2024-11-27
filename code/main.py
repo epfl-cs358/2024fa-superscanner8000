@@ -1,5 +1,6 @@
 import numpy as np
 from webserver import ESP32CAM
+from esp32s2 import Car
 from ui import ImageUI
 from image_segmenter import ImageSegmenter
 import cv2
