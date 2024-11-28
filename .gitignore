@@ -5,6 +5,7 @@ Proposal/*
 !Proposal/images
 code/sam2_checkpoints/*
 !code/sam2_checkpoints/download_ckpts.sh
+code/esp32-s2 snippets/rest_api/password.cpp
 .venv
 .vscode
 output
