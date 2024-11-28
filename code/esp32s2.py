@@ -13,31 +13,37 @@ class Arm:
 
 
 class Car:
-    def __init__(self, ip):
-        self.url = "http://" + ip + ":80"
+    def __init__(self):
+        self.url = "http://superscanner8000:80"
         self.arm = Arm(self.url)
 
     def forward(self, time):
-        requests.post(self.url + "/forward", json={"time": time})
+        requests.get(self.url + "/fwd")
 
     def backward(self, time):
-        requests.post(self.url + "/backward", json={"time": time})
+        requests.get(self.url + "/bwd")
 
     def stop(self):
-        requests.post(self.url + "/stop", json={"stop": True})
+        requests.get(self.url + "/stp")
 
     def right(self, time):
-        requests.post(self.url + "/right", json={"time": time})
+        requests.get(self.url + "/rgt")
 
     def left(self, time):
-        requests.post(self.url + "/left", json={"time": time})
+        requests.get(self.url + "/lft")
 
 
 if __name__ == "__main__":
-    ip = "192.168.137.28"
-    obj = {"red": 10, "green": 1, "blue": 100}
-    
-    ctrl = Car(ip)
-    ctrl.forward(obj)
-    ctrl.arm.goto(0, 0)
-    ctrl.arm.stop()
+    from tkinter import Tk, Button
+
+    root = Tk()
+    car = Car()
+    root.title("Car Control")
+    root.geometry("300x300")
+    Button(root, text="Forward", command=lambda: car.forward(1)).grid(row=0, column=1)
+    Button(root, text="Backward", command=lambda: car.backward(1)).grid(row=2, column=1)
+    Button(root, text="Left", command=lambda: car.left(1)).grid(row=1, column=0)
+    Button(root, text="Right", command=lambda: car.right(1)).grid(row=1, column=2)
+    Button(root, text="Stop", command=car.stop).grid(row=1, column=1)
+
+    root.mainloop()

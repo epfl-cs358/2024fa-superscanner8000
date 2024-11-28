@@ -6,3 +6,5 @@ Proposal/*
 code/sam2_checkpoints/*
 !code/sam2_checkpoints/download_ckpts.sh
 .venv
+.vscode
+output
