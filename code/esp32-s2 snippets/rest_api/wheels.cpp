@@ -1,6 +1,27 @@
 #include "wheels.h"
 #include <Arduino.h>
 
+char* directionMap(Direction Direction) {
+    switch (Direction) {
+        case FORWARD:
+            return "forward";
+        case BACKWARD:
+            return "backward";
+        case LEFT:
+            return "left";
+        case RIGHT:
+            return "right";
+        case HARD_LEFT:
+            return "hard left";
+        case HARD_RIGHT:
+            return "hard right";
+        case STOP:
+            return "stop";
+        default:
+            return "unknown";
+    }
+}
+
 Wheels::Wheels()
     :   motor1Pin1(3), 
         motor1Pin2(2),
@@ -40,20 +61,18 @@ void Wheels::setup() {
     ledcWrite(enable2Pin, dutyCycle);
 }
 
-int Wheels::update() {
-    if (direction == STOP){
-        return -1;
-    }
+// updates the wheels. If the target time is set, it will stop the wheels after the target time is reached
+void Wheels::update() {
     if (targetTime > 0 && millis() - t > targetTime) {
+        Serial.println("wheels:: time is up");
         stop();
         direction = STOP;
-        return -1;
     }
-    return 0;
-
 }
 
 void Wheels::stop() {
+    targetTime = 0;
+    direction = STOP;
     digitalWrite(motor1Pin1, LOW);
     digitalWrite(motor1Pin2, LOW);
     digitalWrite(motor2Pin1, LOW);
@@ -61,8 +80,10 @@ void Wheels::stop() {
 }
 
 void Wheels::forward(int ms) {
+    Wheels::stop();
     t = millis();
     targetTime = ms;
+    direction = FORWARD;
     digitalWrite(motor1Pin1, HIGH);
     digitalWrite(motor1Pin2, LOW);
     digitalWrite(motor2Pin1, HIGH);
@@ -70,8 +91,10 @@ void Wheels::forward(int ms) {
 }
 
 void Wheels::backward(int ms) {
+    Wheels::stop();
     t = millis();
     targetTime = ms;
+    direction = BACKWARD;
     digitalWrite(motor1Pin1, LOW);
     digitalWrite(motor1Pin2, HIGH);
     digitalWrite(motor2Pin1, LOW);
@@ -79,22 +102,28 @@ void Wheels::backward(int ms) {
 }
 
 void Wheels::left(int ms) {
+    Wheels::stop();
     t = millis();
     targetTime = ms;
+    direction = LEFT;
     digitalWrite(motor1Pin1, HIGH);
     digitalWrite(motor1Pin2, LOW);
 }
 
 void Wheels::right(int ms) {
+    Wheels::stop();
     t = millis();
     targetTime = ms;
+    direction = RIGHT;
     digitalWrite(motor2Pin1, HIGH);
     digitalWrite(motor2Pin2, LOW);
 }
 
 void Wheels::hard_left(int ms) {
+    Wheels::stop();
     t = millis();
     targetTime = ms;
+    direction = HARD_LEFT;
     digitalWrite(motor1Pin1, HIGH);
     digitalWrite(motor1Pin2, LOW);
     digitalWrite(motor2Pin1, LOW);
@@ -102,8 +131,10 @@ void Wheels::hard_left(int ms) {
 }
 
 void Wheels::hard_right(int ms) {
+    Wheels::stop();
     t = millis();
     targetTime = ms;
+    direction = HARD_RIGHT;
     digitalWrite(motor1Pin1, LOW);
     digitalWrite(motor1Pin2, HIGH);
     digitalWrite(motor2Pin1, HIGH);

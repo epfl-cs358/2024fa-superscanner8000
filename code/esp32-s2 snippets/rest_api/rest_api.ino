@@ -12,36 +12,25 @@ Wheels wheels = Wheels();
 
 StaticJsonDocument<250> jsonDocument;
 char buffer[250];
- 
-void setup_routing() {    
-  server.on("/fwd", HTTP_POST, fwd);     
-  server.on("/bwd", HTTP_POST, bwd);
-  server.on("/lft", HTTP_POST, lft);
-  server.on("/rgt", HTTP_POST, rgt);
-  server.on("/hrgt", HTTP_POST, hrgt);
-  server.on("/hlft", HTTP_POST, hlft);
-  server.on("/stp", HTTP_POST, stp);
+
+// set the endpoints for the API
+void setup_routing() { 
+  server.on("/status", get_status);   
+  server.on("/fwd", HTTP_GET, fwd);     
+  server.on("/bwd", HTTP_GET, bwd);
+  server.on("/lft", HTTP_GET, lft);
+  server.on("/rgt", HTTP_GET, rgt);
+  server.on("/hrgt", HTTP_GET, hrgt);
+  server.on("/hlft", HTTP_GET, hlft);
+  server.on("/stp", HTTP_GET, stp);
+  server.on("arm/status", arm_status);
   server.on("/arm/goto", HTTP_POST, arm_goto);
+  server.on("/arm/stop", HTTP_POST, arm_stop);
           
   server.begin();    
 }
- 
-// must be changed for more general use
-void create_json(char *tag, float value, char *unit) {  
-  jsonDocument.clear();  
-  jsonDocument["type"] = tag;
-  jsonDocument["value"] = value;
-  jsonDocument["unit"] = unit;
-  serializeJson(jsonDocument, buffer);
-}
- 
-void add_json_object(char *tag, float value, char *unit) {
-  JsonObject obj = jsonDocument.createNestedObject();
-  obj["type"] = tag;
-  obj["value"] = value;
-  obj["unit"] = unit; 
-}
 
+// retrieve the body of the request, parse it and send a response
 void handlePost() {
   if (server.hasArg("plain") == false) {
   }
@@ -52,6 +41,14 @@ void handlePost() {
 }
 
 //---- Wheels ----
+// return the current direction of the wheels
+void get_status() {  
+  jsonDocument.clear();
+  jsonDocument["direction"] = directionMap(wheels.direction);
+  serializeJson(jsonDocument, buffer);
+  server.send(200, "application/json", buffer);
+}
+
 void fwd() {
   handlePost();
   Serial.print("Forward ");
@@ -107,6 +104,16 @@ void stp() {
 }
 
 //---- Arm ----
+// return the current position of the arm and if it is currently moving
+void arm_status() {
+  jsonDocument.clear();
+  jsonDocument["x"] = arm.x;
+  jsonDocument["y"] = arm.y;
+  jsonDocument["moving"] = arm.getMoving();
+  serializeJson(jsonDocument, buffer);
+  server.send(200, "application/json", buffer);
+}
+
 void arm_goto() {
   handlePost();
 
@@ -127,6 +134,7 @@ void setup() {
 
   Serial.print("Connecting to Wi-Fi with password ");
   Serial.println(PWD);
+  // access the esp by http://superscanner8000/ when connected to the same network
   WiFi.setHostname("superscanner8000");
   WiFi.begin(SSID, PWD);
   while (WiFi.status() != WL_CONNECTED) {

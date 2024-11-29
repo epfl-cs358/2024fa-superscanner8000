@@ -41,17 +41,19 @@ void Arm::stop() {
     stepper2.stop();
 }
 
-int Arm::update() {
-    int ret = -1;
+bool Arm::getMoving() {
+    return stepper1.distanceToGo() != 0 || stepper2.distanceToGo() != 0;
+}
+
+void Arm::update() {
     if (stepper1.distanceToGo() != 0) {
+        Serial.println("stepper1 distanceToGo: " + String(stepper1.distanceToGo()));
         stepper1.run();
-        ret = 0;
     }
     if (stepper2.distanceToGo() != 0) {
+        Serial.println("stepper2 distanceToGo: " + String(stepper2.distanceToGo()));
         stepper2.run();
-        ret = 0;
     }
-    return ret;
 }
 
 void Arm::nomaAngles() {

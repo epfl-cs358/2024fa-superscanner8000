@@ -1,6 +1,8 @@
 #ifndef WHHEL_H
 #define WHHEL_H
 
+#include <Arduino.h>
+
 enum Direction {
     FORWARD,
     BACKWARD,
@@ -10,6 +12,8 @@ enum Direction {
     HARD_RIGHT,
     STOP
 };
+
+char* directionMap(Direction direction);
 
 class Wheels {
     private:
@@ -29,8 +33,9 @@ class Wheels {
 
         long t;
         long targetTime;
-        Direction direction;
     public:
+        Direction direction;
+
         Wheels();
         void setup();
         void forward(int ms);
@@ -40,7 +45,7 @@ class Wheels {
         void hard_left(int ms);
         void hard_right(int ms);
         void stop();
-        int update();
+        void update();
 };
 
 #endif // WHHEL_H
