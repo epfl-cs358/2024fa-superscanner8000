@@ -16,28 +16,26 @@ char buffer[250];
 // set the endpoints for the API
 void setup_routing() { 
   server.on("/status", get_status);   
-  server.on("/fwd", HTTP_GET, fwd);     
-  server.on("/bwd", HTTP_GET, bwd);
-  server.on("/lft", HTTP_GET, lft);
-  server.on("/rgt", HTTP_GET, rgt);
-  server.on("/hrgt", HTTP_GET, hrgt);
-  server.on("/hlft", HTTP_GET, hlft);
-  server.on("/stp", HTTP_GET, stp);
-  server.on("arm/status", arm_status);
+  server.on("/fwd", HTTP_POST, fwd);     
+  server.on("/bwd", HTTP_POST, bwd);
+  server.on("/lft", HTTP_POST, lft);
+  server.on("/rgt", HTTP_POST, rgt);
+  server.on("/hrgt", HTTP_POST, hrgt);
+  server.on("/hlft", HTTP_POST, hlft);
+  server.on("/stp", HTTP_POST, stp);
+  server.on("/arm/status", arm_status);
   server.on("/arm/goto", HTTP_POST, arm_goto);
   server.on("/arm/stop", HTTP_POST, arm_stop);
           
   server.begin();    
 }
 
-// retrieve the body of the request, parse it and send a response
+// retrieve the body of the request and parse it
 void handlePost() {
   if (server.hasArg("plain") == false) {
   }
   String body = server.arg("plain");
   deserializeJson(jsonDocument, body);
-
-  server.send(200, "application/json", "{}");
 }
 
 //---- Wheels ----
@@ -107,8 +105,8 @@ void stp() {
 // return the current position of the arm and if it is currently moving
 void arm_status() {
   jsonDocument.clear();
-  jsonDocument["x"] = arm.x;
-  jsonDocument["y"] = arm.y;
+  jsonDocument["target x"] = arm.x;
+  jsonDocument["target y"] = arm.y;
   jsonDocument["moving"] = arm.getMoving();
   serializeJson(jsonDocument, buffer);
   server.send(200, "application/json", buffer);
@@ -120,13 +118,17 @@ void arm_goto() {
   Serial.println("Arm goto");
   int x = jsonDocument["x"];
   int y = jsonDocument["y"];
-  arm.setPos(x, y);
-  Serial.println(x);
+  if (arm.setPos(x, y) == -1) {
+    server.send(422, "application/json", "{}");
+    return;
+  }
+  server.send(200, "application/json", "{}");
 }
 
 void arm_stop() {
   Serial.println("Arm stop");
   arm.stop();
+  server.send(200, "application/json", "{}");
 }
 
 void setup() {     
