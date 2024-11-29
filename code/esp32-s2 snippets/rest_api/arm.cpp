@@ -2,18 +2,20 @@
 #include <AccelStepper.h>
 #include <Arduino.h>
 
-Arm::Arm() 
-    : enablePin(40), 
-      stepper2(AccelStepper::DRIVER, 37, 36), 
-      stepper1(AccelStepper::DRIVER, 11, 10), 
-      x(0), 
-      y(0), 
-      a1(40), 
-      a2(40), 
-      fullRevolution(200), 
-      q1(0), 
-      q2(0) {
-}
+Arm::Arm():   
+    enablePin(40), 
+    stepper1(AccelStepper::DRIVER, 11, 10), 
+    stepper2(AccelStepper::DRIVER, 37, 36), 
+    x(0), 
+    y(0), 
+    a1(40), 
+    a2(40),
+    gearFactor(28),
+    pulleyFactor(200 / 18),
+    fullRevolution(200), 
+    q1(0), 
+    q2(0) 
+    {}
 
 void Arm::setup() {
     pinMode(enablePin, OUTPUT);
@@ -26,19 +28,36 @@ void Arm::setup() {
     stepper2.setAcceleration(100.0);
 }
 
-void Arm::setPos(int x, int y) {
+int Arm::setPos(int _x, int _y) {
+    x = _x;
+    y = _y;
+
+    /*
+    // if the user wants to set the position using the angles
     q1 = x * PI / 180;
     q2 = y * PI / 180;
+    */
 
-    stepper1.moveTo(q1 * fullRevolution / (2 * PI));
-    stepper2.moveTo(q2 * (-fullRevolution) / (2 * PI));
+    // if the user wants to set the position using the coordinates
+    if (sqrt(pow(x, 2) + pow(y, 2)) > (a1 + a2) || sqrt(pow(x, 2) + pow(y, 2)) < abs(a1 - a2)) {
+        Serial.println("Error: Coordinates out of range.");
+        return -1;
+    }
+
+    nomaAngles();
+
+    // Move the steppers
+    stepper1.moveTo(gearFactor * fullRevolution * q1 / (2 * PI));
+    stepper2.moveTo(-1 * pulleyFactor * fullRevolution * q2 / (2 * PI));
 
     Serial.println("Moving to : " + String(fullRevolution * q1 / (2 * PI)) + ", " + String(fullRevolution * q2 / (2 * PI)));
+    return 0;
 }
 
 void Arm::stop() {
     stepper1.stop();
     stepper2.stop();
+    // TODO: set the position and angle to the current position
 }
 
 bool Arm::getMoving() {
