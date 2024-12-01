@@ -62,8 +62,30 @@ Miniconda is a minimal installer for conda. Follow the steps below to install Mi
   ```sh
   pip install -r requirements.txt
   ```
+### Step 4: Install SAM2 from GitHub
 
-### Step 4: Start Using Superscanner8000
+1. **Clone the SAM2 Repository:**
+
+   - Run the following command to clone the SAM2 repository from GitHub:
+     ```sh
+     git clone https://github.com/facebookresearch/sam2.git 
+     ```
+
+2. **Navigate to the SAM2 Directory:**
+
+   - Change to the SAM2 directory:
+     ```sh
+     cd sam2
+     ```
+
+3. **Install SAM2:**
+
+   - Run the following command to install SAM2:
+     ```sh
+     pip install -e .
+     ```
+     
+### Step 5: Start Using Superscanner8000
 
 1. **Go to the app folder**
 

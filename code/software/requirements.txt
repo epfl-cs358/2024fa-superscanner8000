@@ -47,4 +47,3 @@ typing_extensions==4.12.2
 urllib3==2.2.3
 wheel==0.44.0
 streamlit==1.40.2
--e git+https://github.com/Gy920/segment-anything-2-real-time@55c497458e2d3be8e3e42ea34aac037a318818c1#egg=sam2
