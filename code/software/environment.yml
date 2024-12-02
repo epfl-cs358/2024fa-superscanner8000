@@ -1,0 +1,8 @@
+name: superscanner8000env
+dependencies:
+  - python=3.12 # or your desired Python version
+  - numpy
+  - pandas
+  - pip
+  - pip:
+      - -r requirements.txt
