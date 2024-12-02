@@ -1,14 +1,13 @@
 import streamlit as st
 
-from webserver import ESP32CAM
+from streamlit_image_coordinates  import streamlit_image_coordinates
+from webserver import ESP32CAM, WIFI_CONTROLLER
 
 st.set_page_config(
     page_title="SuperScanner8000",  # Window title
     page_icon="🧊",              # Favicon (optional)
     layout="centered"            # Layout ("centered" or "wide")
 )
-
-current_mode = "SETUP"
 
 # esp32cam = ESP32CAM("http://172.20.10.8:80/stream")
 # frame = esp32cam.get_frame()
@@ -17,10 +16,22 @@ current_mode = "SETUP"
 #    print("Failed to receive initial frame.")
 
 # Create three rows for th  e cross shape
+if "mode" not in st.session_state:
+    st.session_state["mode"] = "CONNECTION"
 
-if current_mode == "SETUP":
+if(st.session_state["mode"] == "CONNECTION"):
+    net_cont = WIFI_CONTROLLER()
+
+    st.title("Connection to the scanner")
+    st.write("Welcome to the SuperScanner8000! Please connect to the ESP32-CAM by entering the IP address below.")
+    if st.button("Connect"):
+        st.session_state["mode"]="SETUP"
+
+elif(st.session_state["mode"] == "SETUP"):
     wsAroundBut = 4
 
+    st.write("Please configure select which object do you want to scan by clicking on the image.")
+    value = streamlit_image_coordinates("catglasses.jpg", use_column_width=True, height=200)
     col0, col1, col2, col3, col4 = st.columns([wsAroundBut, 1, 1, 1, wsAroundBut])
 
     with col1:  

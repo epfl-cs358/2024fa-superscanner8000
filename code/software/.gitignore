@@ -1,2 +1,4 @@
 src/
 __pycache__
+app/sam2_checkpoints/*
+!app/sam2_checkpoints/download_ckpts.sh

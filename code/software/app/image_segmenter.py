@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
     scanner = ImageSegmenter(model_cfg="sam2_hiera_s.yaml", checkpoint="sam2_checkpoints/sam2_hiera_small.pt", expand_pixels=10)
 
-    cap = cv2.VideoCapture("/home/noaemien/Downloads/knx.mp4")
+    cap = cv2.VideoCapture("./IMG_4225.MOV")
 
     while True:
         ret, frame = cap.read()
@@ -68,7 +68,6 @@ if __name__ == "__main__":
             scanner.initialize(frame, points=points)
         else:
             all_mask = scanner.propagate(frame)
-            all_mask = cv2.cvtColor(all_mask, cv2.COLOR_GRAY2RGB)
             frame = cv2.addWeighted(frame, 1, all_mask, 1, 0)
 
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)

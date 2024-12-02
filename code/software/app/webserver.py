@@ -1,7 +1,7 @@
 import cv2
 import requests
 import numpy as np
-import time
+import wifi
 
 class ESP32CAM:
     def __init__(self, url, verbose=True):
@@ -50,6 +50,16 @@ class ESP32CAM:
             print(f"Unexpected error: {e}")
             time.sleep(2)
 
+class WIFI_CONTROLLER:
+    def __init__(self):
+        pass
+
+    def get_available_wifi(self):
+        wifi_scanner = wifi.Cell.all('wlan0')
+        available_networks = [cell.ssid for cell in wifi_scanner]
+        print(available_networks)
+        return available_networks
+        
 if __name__ == "__main__":
     esp32cam = ESP32CAM("http://172.20.10.8:80/stream")
 
