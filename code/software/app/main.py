@@ -1,57 +1,43 @@
-import streamlit as st
+from tkinter import ttk
+import tkinter as tk
+from tkinter.ttk import *
+import os
 
-from streamlit_image_coordinates  import streamlit_image_coordinates
-from webserver import ESP32CAM, WIFI_CONTROLLER
+from pages.connection import ConnectionPage
+from pages.setup import SetupPage
 
-st.set_page_config(
-    page_title="SuperScanner8000",  # Window title
-    page_icon="🧊",              # Favicon (optional)
-    layout="centered"            # Layout ("centered" or "wide")
-)
 
-# esp32cam = ESP32CAM("http://172.20.10.8:80/stream")
-# frame = esp32cam.get_frame()
+class SuperScanner8000(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("SuperScanner8000")
+        self.geometry("990x540")
 
-#if frame is None or frame.size == 0:
-#    print("Failed to receive initial frame.")
+        self.container = tk.Frame(self)
+        self.container.pack(fill="both", expand=True)
+        self.apply_styling()
 
-# Create three rows for th  e cross shape
-if "mode" not in st.session_state:
-    st.session_state["mode"] = "CONNECTION"
+        self.frames = {}
+        for F in (ConnectionPage, SetupPage):
+            page_name = F.__name__
+            frame = F(parent=self.container, controller=self)
+            self.frames[page_name] = frame
+            frame.grid(row=0, column=0, sticky="nsew")
 
-if(st.session_state["mode"] == "CONNECTION"):
-    net_cont = WIFI_CONTROLLER()
+        self.show_frame("ConnectionPage")
+        self.container.grid_rowconfigure(0, weight=1)
+        self.container.grid_columnconfigure(0, weight=1)
 
-    st.title("Connection to the scanner")
-    st.write("Welcome to the SuperScanner8000! Please connect to the ESP32-CAM by entering the IP address below.")
-    if st.button("Connect"):
-        st.session_state["mode"]="SETUP"
+    def apply_styling(self):
+        style = ttk.Style(self)
+        tcl_file_path = os.path.join(os.path.dirname(__file__), 'assets', 'Forest-ttk-theme', 'forest-dark.tcl')
+        self.tk.call('source', tcl_file_path)
+        style.theme_use('forest-dark')
 
-elif(st.session_state["mode"] == "SETUP"):
-    wsAroundBut = 4
+    def show_frame(self, page_name):
+        frame = self.frames[page_name]
+        frame.tkraise()
 
-    st.write("Please configure select which object do you want to scan by clicking on the image.")
-    value = streamlit_image_coordinates("catglasses.jpg", use_column_width=True, height=200)
-    col0, col1, col2, col3, col4 = st.columns([wsAroundBut, 1, 1, 1, wsAroundBut])
-
-    with col1:  
-        # Left button
-        if st.button("↻"):
-            st.write("You pressed the Left button")
-
-    with col2:
-        # Top button
-        if st.button("↑"):
-            st.write("You pressed the Up button")
-
-    with col3:
-        # Right button
-        if st.button("↺"):
-            st.write("You pressed the Right button")
-
-    col0, col1, col2, col3, col4 = st.columns([wsAroundBut, 1, 1, 1, wsAroundBut])
-
-    with col2:
-        # Bottom button
-        if st.button("↓"):
-            st.write("You pressed the Down button")
+if __name__ == "__main__":
+    app = SuperScanner8000()
+    app.mainloop()
