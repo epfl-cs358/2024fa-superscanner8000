@@ -5,10 +5,12 @@
 #include "password.h"
 #include "wheels.h"
 #include "arm.h"
+#include "cam_angles.h"
 
 WebServer server(80);
 Arm arm = Arm();
 Wheels wheels = Wheels();
+CamAngles camera(18, 20, 19, 21, 26, 34, 33, 35, 200); 
 
 StaticJsonDocument<250> jsonDocument;
 char buffer[250];
@@ -118,10 +120,18 @@ void arm_goto() {
   Serial.println("Arm goto");
   int x = jsonDocument["x"];
   int y = jsonDocument["y"];
+
+  float currentSum = arm.q1 + arm.q2;
+
   if (arm.setPos(x, y) == -1) {
     server.send(422, "application/json", "{}");
     return;
   }
+
+  float newSum = arm.q1 + arm.q2;
+  float cameraCompensation = currentSum - newSum;
+  camera.moveToAngles(cameraCompensation, 0); 
+
   server.send(200, "application/json", "{}");
 }
 
