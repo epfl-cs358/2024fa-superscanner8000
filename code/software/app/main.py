@@ -19,12 +19,12 @@ class App(tk.Tk):
         self.geometry("990x540")
         self.container = tk.Frame(self)
         self.container.pack(fill="both", expand=True)
-        self.apply_styling()
+        self._apply_styling()
         self.container.grid_rowconfigure(0, weight=1)
         self.container.grid_columnconfigure(0, weight=1)
 
         # Init the Superscanner8000 object
-        self.ss8 = SS8()
+        self.ss8 = SS8(self._connection_lost_callback)
 
         # Init pages
         self.pages = {}
@@ -38,7 +38,7 @@ class App(tk.Tk):
         # First page to show
         self.show_page("ConnectionPage")
         
-    def apply_styling(self):
+    def _apply_styling(self):
         """Apply custom styling to the application using a specified theme."""
         style = ttk.Style(self)
         tcl_file_path = os.path.join(os.path.dirname(__file__), 'assets', 'Forest-ttk-theme', 'forest-dark.tcl')
@@ -53,6 +53,12 @@ class App(tk.Tk):
         """
         frame = self.pages[page_name]
         frame.tkraise()
+
+    def _connection_lost_callback(self):
+        """Callback function to be called when the connection is lost."""
+        print("Connection lost")
+        self.show_page("ConnectionPage")
+        self.update_idletasks()
 
 if __name__ == "__main__":
     app = App()

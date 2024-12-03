@@ -21,7 +21,7 @@ class ConnectionPage(tk.Frame):
         label = ttk.Label(self.container, text="Please make sure that you're connected to the same WiFi as the SuperScanner8000 and then enter the Superscanner8000's IP adress.")
         label.pack(pady=10)
         self.entry = ttk.Entry(self.container)
-        self.entry.insert(tk.END, controller.ss8.get_default_hostname())
+        self.entry.insert(tk.END, controller.ss8.get_default_url())
         self.entry.pack(pady=10, ipadx=100)
 
         button = ttk.Button(self.container, text="Connect", style='Accent.TButton', command=self._connect)
@@ -42,7 +42,7 @@ class ConnectionPage(tk.Frame):
             self.err_message.pack(pady=2)
             return
         
-        loadingText = ttk.Label(self.container, text="Loading... ")
+        loadingText = ttk.Label(self.container, text="Connecting to "+hostname+"...")
         loadingText.pack(pady=2)
         self.update_idletasks()
 
