@@ -1,1 +1,1 @@
-
+Run the Esp32-cam.ino on the esp and then run the socket receiver.py The python script will send the computer's IP and the Esp will use this ip to create an udp connection and send the frames it captures.
