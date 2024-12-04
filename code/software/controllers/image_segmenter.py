@@ -11,7 +11,7 @@ if torch.cuda.get_device_properties(0).major >= 8:
     torch.backends.cuda.matmul.allow_tf32 = True
     torch.backends.cudnn.allow_tf32 = True
 
-class ImageMixer:
+class ImageSegmenter:
     def __init__(self, model_cfg, checkpoint, expand_pixels=0):
         self.predictor = build_sam.build_sam2_camera_predictor(model_cfg, checkpoint)
         self.if_init = False
@@ -37,9 +37,12 @@ class ImageMixer:
                 frame_idx=ann_frame_idx, obj_id=ann_obj_id, bbox=bbox
             )
 
-    def propagate(self, frame):
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        out_obj_ids, out_mask_logits = self.predictor.track(frame)
+    def propagate(self, img:cv2.typing.MatLike):
+        """
+        Get the mask for the given image
+        """
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        out_obj_ids, out_mask_logits = self.predictor.track(img)
 
         all_mask = np.zeros((self.height, self.width, 1), dtype=np.uint8)
         for i in range(0, len(out_obj_ids)):
@@ -53,9 +56,14 @@ class ImageMixer:
 
         return cv2.cvtColor(all_mask, cv2.COLOR_GRAY2RGB)
     
-    def mask_img():
-
-        pass
+    def mask_img(self, img:cv2.typing.MatLike) -> cv2.typing.MatLike:
+        """
+        Masks the given image with the object mask.
+        img (cv2.typing.MatLike): The image to mask.
+        """
+        mask = self.propagate(img)
+        return cv2.addWeighted(img, 1, mask, 1, 0)
+        
 
     def convert_img_to_base64(img):
         # Convert the frame to base64
@@ -65,7 +73,7 @@ class ImageMixer:
     
 if __name__ == "__main__":
 
-    scanner = ImageMixer(model_cfg="sam2_hiera_s.yaml", checkpoint="sam2_checkpoints/sam2_hiera_small.pt", expand_pixels=10)
+    scanner = ImageSegmenter(model_cfg="sam2_hiera_s.yaml", checkpoint="sam2_checkpoints/sam2_hiera_small.pt", expand_pixels=10)
 
     cap = cv2.VideoCapture("./IMG_4225.MOV")
 

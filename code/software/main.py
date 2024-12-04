@@ -4,11 +4,13 @@ from tkinter.ttk import *
 import os
 
 from controllers.ss8 import SS8
-from software.app.controllers.image_mixer import ImageMixer
+from controllers.image_segmenter import ImageSegmenter
 
 # Pages
 from pages.connection import ConnectionPage
 from pages.setup import SetupPage
+
+STARTING_PAGE = "SetupPage"
 
 class App(tk.Tk):
     def __init__(self):
@@ -27,8 +29,8 @@ class App(tk.Tk):
         # Init the Superscanner8000 object
         self.ss8 = SS8(self._connection_lost_callback)
 
-        # Init the image manager
-        self.img_mixer = ImageMixer(model_cfg="sam2_hiera_s.yaml", checkpoint="sam2_checkpoints/sam2_hiera_small.pt", expand_pixels=10)
+        # Init the image segmenter
+        self.img_segmenter = ImageSegmenter(model_cfg="sam2_hiera_s.yaml", checkpoint="controllers/sam2/checkpoints/sam2_hiera_small.pt", expand_pixels=10)
 
         # Init pages
         self.pages = {}
@@ -40,7 +42,7 @@ class App(tk.Tk):
 
         
         # First page to show
-        self.show_page("ConnectionPage")
+        self.show_page(STARTING_PAGE)
         
     def _apply_styling(self):
         """Apply custom styling to the application using a specified theme."""

@@ -1,8 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
-
 from base64 import b64decode
 
+from widgets.image import ImageWidget
 
 class SetupPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -66,6 +66,10 @@ class SetupPage(tk.Frame):
         self.down_button.pack(pady=5)
 
     def _display_preview(self):
+        image = ImageWidget(self, self.controller.ss8.capture_image())
+        image.display(self._update_preview)
+
+    def _update_preview(self):
         raw_image = self.controller.ss8.capture_image()
         raw_image = self.controller.img_mixer.mask_img(raw_image) if self.object_selected else raw_image
 
