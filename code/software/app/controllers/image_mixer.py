@@ -2,6 +2,8 @@ import torch
 import numpy as np
 import cv2
 from sam2 import build_sam
+import base64
+
 # use bfloat16 for the entire notebook
 torch.autocast(device_type="cuda", dtype=torch.bfloat16).__enter__()
 
@@ -9,7 +11,7 @@ if torch.cuda.get_device_properties(0).major >= 8:
     torch.backends.cuda.matmul.allow_tf32 = True
     torch.backends.cudnn.allow_tf32 = True
 
-class ImageSegmenter:
+class ImageMixer:
     def __init__(self, model_cfg, checkpoint, expand_pixels=0):
         self.predictor = build_sam.build_sam2_camera_predictor(model_cfg, checkpoint)
         self.if_init = False
@@ -51,9 +53,19 @@ class ImageSegmenter:
 
         return cv2.cvtColor(all_mask, cv2.COLOR_GRAY2RGB)
     
+    def mask_img():
+
+        pass
+
+    def convert_img_to_base64(img):
+        # Convert the frame to base64
+        _, buffer = cv2.imencode('.jpg', frame)
+        return base64.b64encode(buffer).decode('utf-8')
+
+    
 if __name__ == "__main__":
 
-    scanner = ImageSegmenter(model_cfg="sam2_hiera_s.yaml", checkpoint="sam2_checkpoints/sam2_hiera_small.pt", expand_pixels=10)
+    scanner = ImageMixer(model_cfg="sam2_hiera_s.yaml", checkpoint="sam2_checkpoints/sam2_hiera_small.pt", expand_pixels=10)
 
     cap = cv2.VideoCapture("./IMG_4225.MOV")
 

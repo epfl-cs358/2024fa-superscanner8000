@@ -2,7 +2,7 @@ import numpy as np
 from webserver import ESP32CAM
 from esp32s2 import Car
 from ui import ImageUI
-from software.app.controller.image_segmenter import ImageSegmenter
+from software.app.controllers.image_mixer import ImageMixer
 import cv2
 
 def main():

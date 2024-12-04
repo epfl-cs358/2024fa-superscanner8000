@@ -1,11 +1,16 @@
 import tkinter as tk
 from tkinter import ttk
-from assets.style import font as f
+
+from base64 import b64decode
+
 
 class SetupPage(tk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent)
         self.controller = controller
+
+        # Setup variable to choose which object to scan
+        self.object_selected = False
 
         # Create a container frame to center the content
         self.container = tk.Frame(self)
@@ -60,3 +65,12 @@ class SetupPage(tk.Frame):
         self.down_button.bind("<ButtonRelease-1>", lambda event: self.controller.ss8.stop_cam())
         self.down_button.pack(pady=5)
 
+    def _display_preview(self):
+        raw_image = self.controller.ss8.capture_image()
+        raw_image = self.controller.img_mixer.mask_img(raw_image) if self.object_selected else raw_image
+
+        base64_image = self.controller.img_mixer.convert_img_to_base64(raw_image)
+        image = tk.PhotoImage(data=b64decode(base64_image))
+        label = ttk.Label(image=image)
+        label.pack()
+        self.update_idletasks()

@@ -4,6 +4,7 @@ from tkinter.ttk import *
 import os
 
 from controllers.ss8 import SS8
+from software.app.controllers.image_mixer import ImageMixer
 
 # Pages
 from pages.connection import ConnectionPage
@@ -25,6 +26,9 @@ class App(tk.Tk):
 
         # Init the Superscanner8000 object
         self.ss8 = SS8(self._connection_lost_callback)
+
+        # Init the image manager
+        self.img_mixer = ImageMixer(model_cfg="sam2_hiera_s.yaml", checkpoint="sam2_checkpoints/sam2_hiera_small.pt", expand_pixels=10)
 
         # Init pages
         self.pages = {}
