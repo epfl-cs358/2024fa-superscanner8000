@@ -2,6 +2,8 @@ import torch
 import numpy as np
 import cv2
 from sam2 import build_sam
+import base64
+
 # use bfloat16 for the entire notebook
 torch.autocast(device_type="cuda", dtype=torch.bfloat16).__enter__()
 
@@ -35,9 +37,12 @@ class ImageSegmenter:
                 frame_idx=ann_frame_idx, obj_id=ann_obj_id, bbox=bbox
             )
 
-    def propagate(self, frame):
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        out_obj_ids, out_mask_logits = self.predictor.track(frame)
+    def propagate(self, img:cv2.typing.MatLike):
+        """
+        Get the mask for the given image
+        """
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        out_obj_ids, out_mask_logits = self.predictor.track(img)
 
         all_mask = np.zeros((self.height, self.width, 1), dtype=np.uint8)
         for i in range(0, len(out_obj_ids)):
@@ -50,6 +55,21 @@ class ImageSegmenter:
             all_mask = cv2.bitwise_or(all_mask, out_mask)
 
         return cv2.cvtColor(all_mask, cv2.COLOR_GRAY2RGB)
+    
+    def mask_img(self, img:cv2.typing.MatLike) -> cv2.typing.MatLike:
+        """
+        Masks the given image with the object mask.
+        img (cv2.typing.MatLike): The image to mask.
+        """
+        mask = self.propagate(img)
+        return cv2.addWeighted(img, 1, mask, 1, 0)
+        
+
+    def convert_img_to_base64(img):
+        # Convert the frame to base64
+        _, buffer = cv2.imencode('.jpg', frame)
+        return base64.b64encode(buffer).decode('utf-8')
+
     
 if __name__ == "__main__":
 

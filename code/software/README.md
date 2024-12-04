@@ -62,11 +62,13 @@ Miniconda is a minimal installer for conda. Follow the steps below to install Mi
   ```sh
   pip install -r requirements.txt
   ```
+
 ### Step 4: Install SAM2 from GitHub
-1. **Go to the software folder**
+
+1. **Go to the controllers folder**
 
    ```sh
-   cd .\code\software
+   cd .\code\software\app\controllers
    ```
 
 2. **Clone the SAM2 Repository:**
@@ -76,33 +78,33 @@ Miniconda is a minimal installer for conda. Follow the steps below to install Mi
      git clone https://github.com/Gy920/segment-anything-2-real-time.git sam2
      ```
 
-2. **Navigate to the SAM2 Directory:**
+3. **Navigate to the SAM2 Directory:**
 
    - Change to the SAM2 directory:
      ```sh
      cd sam2
      ```
 
-3. **Install SAM2:**
+4. **Install SAM2:**
 
    - Run the following command to install SAM2:
      ```sh
      pip install -e .
      ```
 
-4. **Go to the checkpoints folder**
+5. **Go to the checkpoints folder**
 
    ```sh
    cd ..\app\sam2_checkpoints
    ```
 
-5. **Run the bash script:**
+6. **Run the bash script:**
 
    - Run the install the checkpoints
      ```sh
      ./download_ckpts
      ```
-     
+
 ### Step 5: Start Using Superscanner8000
 
 1. **Go to the app folder**
@@ -122,3 +124,25 @@ Miniconda is a minimal installer for conda. Follow the steps below to install Mi
   ```sh
   conda deactivate
   ```
+
+## Software structure
+
+### main.py
+
+The file to start the app. It contains all the instance of the different pages and the instance of the high level controllers.
+
+### /pages
+
+Contains the different pages of the application, each implemented as a separate module.
+
+### /widgets
+
+Contains reusable UI components and widgets used across different pages of the application.
+
+### /controllers
+
+Contains the controller modules that handle the logic and interactions with the device.
+
+### /assets
+
+Contains static assets such as images, stylesheets, and other resources used by the application.

@@ -72,12 +72,14 @@ class SS8:
             print(f"An error occurred: {e}")
             self.connection_lost_callback()
     
-    def capture_image(self) -> cv2.typing.MatLike:
+    def capture_image(self, src='arm') -> cv2.typing.MatLike:
         """
-        Captures an image from the connected device.
-
+        Captures an image from the ESP32.
+        
+        Args:
+            src (str): The source from which to capture the image. Default is 'arm'.
         Returns:
-            cv2.typing.MatLike
+            cv2.typing.MatLike: The captured image in a format compatible with OpenCV.
         """
         #response = requests.get(self.ip_adress+"/capture")
         #print(response.json)
