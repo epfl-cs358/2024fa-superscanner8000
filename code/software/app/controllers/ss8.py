@@ -3,6 +3,7 @@ import cv2
 
 DEFAULT_URL = "http://superscanner8000:80"
 TEST_CONNECTION_TIMEOUT = 3
+DEFAULT_MOVING_TIME = 5000
 
 class SS8:
     def  __init__(self, disconnected_callback):
@@ -61,7 +62,6 @@ class SS8:
         """
         try:
             res = req_func()
-            print(res)
             if res.status_code == 200:
                 on_success()
             else:
@@ -84,7 +84,7 @@ class SS8:
 
         pass
 
-    def move_forward(self, dist=-1):
+    def move_forward(self, dist=DEFAULT_MOVING_TIME):
         """
         Move the device forward.
         dist (int): The distance or duration to move. If positive, the device moves for the given time.
@@ -93,7 +93,7 @@ class SS8:
 
         pass
 
-    def move_backward(self, dist=-1):
+    def move_backward(self, dist=DEFAULT_MOVING_TIME):
         """
         Move the device backward.
         dist (int): The distance or duration to move. If positive, the device moves for the given time.
@@ -102,7 +102,7 @@ class SS8:
 
         pass
 
-    def rotate_left(self, dist=-1):
+    def rotate_left(self, dist=DEFAULT_MOVING_TIME):
         """
         Rotate the device to the left.
         dist (int): The distance or duration to rotate. If positive, the device rotates for the given time. 
@@ -112,7 +112,7 @@ class SS8:
 
         pass
 
-    def rotate_right(self, dist=-1):
+    def rotate_right(self, dist=DEFAULT_MOVING_TIME):
         """
         Rotate the device to the right.
         dist (int): The distance or duration to rotate. If positive, the device rotates for the given time. 
@@ -130,7 +130,7 @@ class SS8:
         self._send_req(lambda: requests.post(self.url + "/stp"), on_success=lambda: print("Stopping movement..."))
         pass
 
-    def up_camera(self, dist=-1):
+    def up_camera(self, dist=DEFAULT_MOVING_TIME):
         """
         Move the camera up.
         dist (int): The distance or duration to move. If positive, the camera moves for the given time.
@@ -138,7 +138,7 @@ class SS8:
         print("Moving camera up...")
         pass
 
-    def down_camera(self, dist=-1):
+    def down_camera(self, dist=DEFAULT_MOVING_TIME):
         """
         Move the camera down.
         dist (int): The distance or duration to move. If positive, the camera moves for the given time.
