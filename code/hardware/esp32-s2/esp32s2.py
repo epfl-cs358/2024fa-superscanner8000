@@ -111,5 +111,5 @@ if __name__ == "__main__":
     posy.grid(row=5, column=2)
     Button(root, text="Goto", command=lambda: car.arm.goto(int(posy.get()), int(posy.get()))).grid(row=5, column=0)
     Button(root, text="Stop Arm", command=car.arm.stop).grid(row=4, column=0)
-
+ 
     root.mainloop()

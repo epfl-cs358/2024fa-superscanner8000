@@ -22,7 +22,7 @@ void setup() {
     delay(500);
     Serial.print(".");
   }
-  Serial.println(Wifi connected!");
+  Serial.println("Wifi connected!");
 
      // Print the IP address of the ESP32
   Serial.print("ESP32 Camera ready! Connect to http://");

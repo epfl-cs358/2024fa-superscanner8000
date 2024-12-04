@@ -4,8 +4,8 @@
 
 Arm::Arm():   
     enablePin(40), 
-    stepper1(AccelStepper::DRIVER, 11, 10), 
-    stepper2(AccelStepper::DRIVER, 37, 36), 
+    stepper1(AccelStepper::DRIVER, 8, 9), 
+    stepper2(AccelStepper::DRIVER, 10, 11), 
     x(0), 
     y(0), 
     a1(40), 
@@ -32,12 +32,13 @@ int Arm::setPos(int _x, int _y) {
     x = _x;
     y = _y;
 
-    /*
+    
     // if the user wants to set the position using the angles
     q1 = x * PI / 180;
     q2 = y * PI / 180;
-    */
+    
 
+    /*
     // if the user wants to set the position using the coordinates
     if (sqrt(pow(x, 2) + pow(y, 2)) > (a1 + a2) || sqrt(pow(x, 2) + pow(y, 2)) < abs(a1 - a2)) {
         Serial.println("Error: Coordinates out of range.");
@@ -45,6 +46,7 @@ int Arm::setPos(int _x, int _y) {
     }
 
     nomaAngles();
+    */
 
     // Move the steppers
     stepper1.moveTo(gearFactor * fullRevolution * q1 / (2 * PI));
@@ -66,11 +68,9 @@ bool Arm::getMoving() {
 
 void Arm::update() {
     if (stepper1.distanceToGo() != 0) {
-        Serial.println("stepper1 distanceToGo: " + String(stepper1.distanceToGo()));
         stepper1.run();
     }
     if (stepper2.distanceToGo() != 0) {
-        Serial.println("stepper2 distanceToGo: " + String(stepper2.distanceToGo()));
         stepper2.run();
     }
 }
