@@ -23,13 +23,13 @@ char* directionMap(Direction Direction) {
 }
 
 Wheels::Wheels()
-    :   motor1Pin1(3), 
-        motor1Pin2(2),
+    :   motor1Pin1(2), 
+        motor1Pin2(3),
         enable1Pin(1),
 
-        motor2Pin1(40),
-        motor2Pin2(39),
-        enable2Pin(41),
+        motor2Pin1(5),
+        motor2Pin2(4),
+        enable2Pin(6),
 
         freq(30000),
         resolution(8),

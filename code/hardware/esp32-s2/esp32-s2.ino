@@ -10,7 +10,7 @@
 WebServer server(80);
 Arm arm = Arm();
 Wheels wheels = Wheels();
-CamAngles camera(18, 20, 19, 21, 26, 34, 33, 35, 200); 
+CamAngles camera(12, 13, 14, 15, 36, 37, 38, 39, 200); 
 
 StaticJsonDocument<250> jsonDocument;
 char buffer[250];
@@ -160,10 +160,13 @@ void setup() {
 
   arm.setup();
   wheels.setup();
+  camera.setup();
 }    
        
 void loop() {    
   server.handleClient();     
   arm.update();
+  yield();
   wheels.update();
+  camera.update();
 }
