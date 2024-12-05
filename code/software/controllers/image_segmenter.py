@@ -73,9 +73,9 @@ class ImageSegmenter:
     
 if __name__ == "__main__":
 
-    scanner = ImageSegmenter(model_cfg="sam2_hiera_s.yaml", checkpoint="sam2_checkpoints/sam2_hiera_small.pt", expand_pixels=10)
+    scanner = ImageSegmenter(model_cfg="sam2_hiera_s.yaml", checkpoint="../config/sam2_checkpoints/sam2_hiera_small.pt", expand_pixels=10)
 
-    cap = cv2.VideoCapture("./IMG_4225.MOV")
+    cap = cv2.VideoCapture("../assets/test-video.mp4")
 
     while True:
         ret, frame = cap.read()

@@ -10,7 +10,7 @@ from controllers.image_segmenter import ImageSegmenter
 from pages.connection import ConnectionPage
 from pages.setup import SetupPage
 
-STARTING_PAGE = "SetupPage"
+STARTING_PAGE = "ConnectionPage"
 
 class App(tk.Tk):
     def __init__(self):
@@ -27,19 +27,18 @@ class App(tk.Tk):
         self.container.grid_columnconfigure(0, weight=1)
 
         # Init the Superscanner8000 object
-        self.ss8 = SS8(self._connection_lost_callback)
+        self.ss8 = SS8(self, self._connection_lost_callback)
 
         # Init the image segmenter
-        self.img_segmenter = ImageSegmenter(model_cfg="sam2_hiera_s.yaml", checkpoint="controllers/sam2/checkpoints/sam2_hiera_small.pt", expand_pixels=10)
+        self.img_segmenter = ImageSegmenter(model_cfg="sam2_hiera_s.yaml", checkpoint="config/sam2_checkpoints/sam2_hiera_small.pt", expand_pixels=10)
 
         # Init pages
         self.pages = {}
         for F in (ConnectionPage, SetupPage):
             page_name = F.__name__
-            frame = F(parent=self.container, controller=self)
-            self.pages[page_name] = frame
-            frame.grid(row=0, column=0, sticky="nsew")
+            self.pages[page_name] = F
 
+        self.current_frame = None
         
         # First page to show
         self.show_page(STARTING_PAGE)
@@ -57,8 +56,13 @@ class App(tk.Tk):
         Args:
             page_name (str): The name of the page to show.
         """
-        frame = self.pages[page_name]
-        frame.tkraise()
+        if self.current_frame is not None:
+            self.current_frame.destroy()
+        self.current_frame = self.pages[page_name](parent=self.container, controller=self)
+        self.current_frame.grid(row=0, column=0, sticky="nsew")
+        self.current_frame.tkraise()
+        self.update_idletasks()
+        
 
     def _connection_lost_callback(self):
         """Callback function to be called when the connection is lost."""

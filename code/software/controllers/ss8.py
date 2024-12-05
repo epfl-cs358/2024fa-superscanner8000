@@ -1,17 +1,20 @@
 import requests 
 import cv2
+import os
 
 DEFAULT_URL = "http://superscanner8000:80"
 TEST_CONNECTION_TIMEOUT = 3
 DEFAULT_MOVING_TIME = 5000
 
 class SS8:
-    def  __init__(self, disconnected_callback):
+    def  __init__(self, controller, disconnected_callback):
         """
         Initializes the SS8 class with default values.
         """
         self.url = DEFAULT_URL
+        self.controller = controller
         self.connection_lost_callback = disconnected_callback
+        self.curr_top_cam_img = None
 
     def get_default_url(self):
         """
@@ -34,22 +37,73 @@ class SS8:
             bool: True if the connection is successful.
         """
 
+        
+        # Test connection to the movement hostname
         self.url = url
+        if False and not self.init_api_connection():
+            return False
+        
+        # Test connection to the camera hostname and start receiving video stream
+        if not self.init_udp_connection():
+            return False
+
+        return True
+    
+    def init_api_connection(self) -> bool:
+        """
+        Initialize the API connection to the device.
+        Returns:
+            bool: True if the connection is successful.
+        """
         try:
-            res = requests.get(url+"/status", timeout=TEST_CONNECTION_TIMEOUT)
+            res = requests.get(self.url+"/status", timeout=TEST_CONNECTION_TIMEOUT)
             if res.status_code == 200:
                 print("Connection successful! Server is reachable.")
-                return True
             else:
                 print(f"Server responded with status code: {res.status_code}")
+                return False
         except requests.ConnectionError:
             print("Connection failed. Server is unreachable.")
+            return False
         except requests.Timeout:
             print("Connection timed out.")
+            return False
         except Exception as e:
             print(f"An error occurred: {e}")
+            return False
+        
+        return True
+    
+    def init_udp_connection(self) -> bool:
+        """
+        Initialize the UDP connection to the device.
+        Returns:
+            bool: True if the connection is successful.
+        """
 
-        return False
+        video_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'assets', 'test-video.mp4')
+        if not os.path.exists(video_path):
+            print(f"Video file not found: {video_path}")
+            return False
+        
+        cap = cv2.VideoCapture(video_path)
+        video_fps = cap.get(cv2.CAP_PROP_FPS)
+
+        def update_current_frame():
+            ret, frame = cap.read()
+            if not ret or (cv2.waitKey(1) & 0xFF == ord('q')):
+                cap.release()
+                cv2.destroyAllWindows()
+                return
+
+            cv2.imshow('Frame', frame)
+            self.curr_top_cam_img = frame
+
+            self.controller.after(int(1000 // video_fps), update_current_frame)
+
+        update_current_frame()
+
+        return True
     
     def _send_req(self, req_func, on_error=lambda: None, on_success=lambda: None):
         """
@@ -72,7 +126,7 @@ class SS8:
             print(f"An error occurred: {e}")
             self.connection_lost_callback()
     
-    def capture_image(self, src='arm') -> cv2.typing.MatLike:
+    def capture_image(self, src='arm'):
         """
         Captures an image from the ESP32.
         
@@ -82,9 +136,8 @@ class SS8:
             cv2.typing.MatLike: The captured image in a format compatible with OpenCV.
         """
         #response = requests.get(self.ip_adress+"/capture")
-        #print(response.json)
 
-        pass
+        return self.curr_top_cam_img
 
     def move_forward(self, dist=DEFAULT_MOVING_TIME):
         """

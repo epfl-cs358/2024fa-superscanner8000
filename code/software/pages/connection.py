@@ -13,6 +13,7 @@ class ConnectionPage(tk.Frame):
         # Create a container frame to center the content
         self.container = tk.Frame(self)
         self.container.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        self.err_message = None
 
         # Add widget to the container
         label = ttk.Label(self.container, text="Setup")
@@ -21,13 +22,11 @@ class ConnectionPage(tk.Frame):
         label = ttk.Label(self.container, text="Please make sure that you're connected to the same WiFi as the SuperScanner8000 and then enter the Superscanner8000's IP adress.")
         label.pack(pady=10)
         self.entry = ttk.Entry(self.container)
-        self.entry.insert(tk.END, controller.ss8.get_default_url())
+        self.entry.insert(tk.END, self.controller.ss8.get_default_url())
         self.entry.pack(pady=10, ipadx=100)
 
         button = ttk.Button(self.container, text="Connect", style='Accent.TButton', command=self._connect)
         button.pack(pady=10)
-
-        self.err_message = None
     
     def _connect(self):
         hostname = self.entry.get()

@@ -68,7 +68,7 @@ Miniconda is a minimal installer for conda. Follow the steps below to install Mi
 1. **Go to the controllers folder**
 
    ```sh
-   cd .\code\software\app\controllers
+   cd ./code/software/packages
    ```
 
 2. **Clone the SAM2 Repository:**
@@ -95,7 +95,7 @@ Miniconda is a minimal installer for conda. Follow the steps below to install Mi
 5. **Go to the checkpoints folder**
 
    ```sh
-   cd ..\app\sam2_checkpoints
+   cd ../../config/sam2_checkpoints
    ```
 
 6. **Run the bash script:**
@@ -110,12 +110,12 @@ Miniconda is a minimal installer for conda. Follow the steps below to install Mi
 1. **Go to the app folder**
 
    ```sh
-   cd .\code\software\app
+   cd ./code/software
    ```
 
-2. **Run the main.py file with streamlit**
+2. **Run the main.py**
    ```sh
-    streamlit run main.py
+    python run main.py
    ```
 
 ### Additional Commands
