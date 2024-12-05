@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 import cv2
+import numpy as np
 
 from widgets.image import ImageWidget
 
@@ -18,15 +19,13 @@ class SetupPage(tk.Frame):
 
         # Add widget to the container
         label = ttk.Label(self.container, text="Click on the object you want to scano in  the preview window")
-        label.pack(pady=10)
+        label.pack(pady=0)
 
         self._display_preview()
-
         self._display_directionnal_buttons()
-        # self._display_cam_buttons()
+        self._display_selection_buttons()
 
-        button = ttk.Button(self.container, text="Start the scan", style='Accent.TButton')
-        button.pack(pady=10)
+
         
     def _display_directionnal_buttons(self):
         buttons_container = tk.Frame(self.container)
@@ -71,17 +70,42 @@ class SetupPage(tk.Frame):
 
     def _display_preview(self):
         def img_click_callback(x, y):
-            self.object_selected = True
-            print(f"Clicked at: {x}, {y}")
+            points = np.array([[x, y]], dtype=np.float32)
+    
+            # Initialize ImageSegmenter with a random (for now) bounding box
+            self.controller.segmenter.initialize(self.controller.ss8.capture_image(), points=points)
 
-        image = ImageWidget(self, 400, 300, img_click_callback)
+            if(not self.object_selected):
+                self.selection_buttons_frame.pack(anchor=tk.S, pady=20)
+                self.object_selected = True
+
+        self.img_preview = ImageWidget(self, 400, 300, img_click_callback)
         
         def update_preview():
             new_image = self.controller.ss8.capture_image()
-            # new_image = self.controller.img_mixer.mask_img(new_image) if self.object_selected else new_image
+            new_image = self.controller.segmenter.mask_img(new_image) if self.object_selected else new_image
 
             return new_image
         
-        image.display(update_preview, 10)
+        self.img_preview.display(update_preview, 10)
+
+    def _display_selection_buttons(self):
+        def start_scan():
+            """Start the scanning process and destroy the preview window"""
+            self.img_preview.destroy()
+            self.controller.show_page("ScanningPage")
+        
+        def cancel_selection():
+            self.selection_buttons_frame.pack_forget()
+            self.object_selected = False
 
 
+        self.selection_buttons_frame = tk.Frame(self.container)
+
+        cancel_button = ttk.Button(self.selection_buttons_frame, text="Cancel selection")
+        cancel_button.grid(row=0, column=0, padx=5)
+        cancel_button.bind("<ButtonRelease-1>", lambda event: cancel_selection())
+
+        start_button = ttk.Button(self.selection_buttons_frame, text="Start the scan", style='Accent.TButton')
+        start_button.grid(row=0, column=1, padx=5)
+        start_button.bind("<ButtonRelease-1>", lambda event: start_scan())

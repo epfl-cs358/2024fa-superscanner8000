@@ -17,7 +17,7 @@ class ConnectionPage(tk.Frame):
 
         # Add widget to the container
         label = ttk.Label(self.container, text="Setup")
-        label.pack(pady=10)
+        label.pack(pady=0)
 
         label = ttk.Label(self.container, text="Please make sure that you're connected to the same WiFi as the SuperScanner8000 and then enter the Superscanner8000's IP adress.")
         label.pack(pady=10)

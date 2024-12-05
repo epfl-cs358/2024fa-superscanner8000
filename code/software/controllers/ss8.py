@@ -96,7 +96,7 @@ class SS8:
                 cv2.destroyAllWindows()
                 return
 
-            cv2.imshow('Frame', frame)
+            #cv2.imshow('Frame', frame)
             self.curr_top_cam_img = frame
 
             self.controller.after(int(1000 // video_fps), update_current_frame)

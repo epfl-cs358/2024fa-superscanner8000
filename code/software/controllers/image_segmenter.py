@@ -59,15 +59,17 @@ class ImageSegmenter:
     def mask_img(self, img:cv2.typing.MatLike) -> cv2.typing.MatLike:
         """
         Masks the given image with the object mask.
-        img (cv2.typing.MatLike): The image to mask.
+            img (cv2.typing.MatLike): The image to mask.
         """
-        mask = self.propagate(img)
-        return cv2.addWeighted(img, 1, mask, 1, 0)
+
+        # Only keep pixels from frame that are selected in all_mask
+        mask = cv2.cvtColor(self.propagate(img), cv2.COLOR_RGB2GRAY)
+        return cv2.bitwise_and(img, img, mask=mask)
         
 
     def convert_img_to_base64(img):
         # Convert the frame to base64
-        _, buffer = cv2.imencode('.jpg', frame)
+        _, buffer = cv2.imencode('.jpg', img)
         return base64.b64encode(buffer).decode('utf-8')
 
     

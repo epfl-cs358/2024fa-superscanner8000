@@ -3,6 +3,8 @@ from PIL import Image, ImageTk
 import numpy as np
 import cv2
 
+PREVIEW_WINDOW_NAME = "Preview"
+
 class ImageWidget():
     def __init__(self, parent, width, height, img_click_callback):
 
@@ -18,17 +20,7 @@ class ImageWidget():
         Args:
             image_array: A numpy array representing the new image.
         """
-        cv2.imshow('Preview', image_array)
-
-
-    def has_click(self):
-        """
-        Checks if there has been a mouse click on the image.
-        
-        Returns:
-            bool: True if there has been a click, False otherwise.
-        """
-        return self.click_coords is not None
+        cv2.imshow(PREVIEW_WINDOW_NAME, image_array)
     
     def display(self, update_callback, fps=10):
         """
@@ -50,7 +42,7 @@ class ImageWidget():
                 self.img_click_callback(x, y)
 
         cv2.namedWindow("Preview", cv2.WINDOW_AUTOSIZE) 
-        cv2.setMouseCallback('Preview', get_click_coords)
+        cv2.setMouseCallback(PREVIEW_WINDOW_NAME, get_click_coords)
         
         def update_loop():
             new_image = update_callback()
@@ -62,6 +54,11 @@ class ImageWidget():
 
         update_loop()
 
+    def destroy(self):
+        """
+        Destroys the image window.
+        """
+        cv2.destroyWindow(PREVIEW_WINDOW_NAME)
 # Example
 if __name__ == "__main__":
     image_array = np.random.randint(0, 255, (100, 100, 3), dtype=np.uint8)

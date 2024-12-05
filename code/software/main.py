@@ -9,6 +9,7 @@ from controllers.image_segmenter import ImageSegmenter
 # Pages
 from pages.connection import ConnectionPage
 from pages.setup import SetupPage
+from pages.scanning import ScanningPage
 
 STARTING_PAGE = "ConnectionPage"
 
@@ -30,11 +31,11 @@ class App(tk.Tk):
         self.ss8 = SS8(self, self._connection_lost_callback)
 
         # Init the image segmenter
-        self.img_segmenter = ImageSegmenter(model_cfg="sam2_hiera_s.yaml", checkpoint="config/sam2_checkpoints/sam2_hiera_small.pt", expand_pixels=10)
+        self.segmenter = ImageSegmenter(model_cfg="sam2_hiera_s.yaml", checkpoint="config/sam2_checkpoints/sam2_hiera_small.pt", expand_pixels=10)
 
         # Init pages
         self.pages = {}
-        for F in (ConnectionPage, SetupPage):
+        for F in (ConnectionPage, SetupPage, ScanningPage):
             page_name = F.__name__
             self.pages[page_name] = F
 
