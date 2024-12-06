@@ -4,9 +4,20 @@ import numpy as np
 import time
 
 
+def get_ip_of_hostname(hostname):
+    try:
+        # Get the IP address of the given hostname
+        ip_address = socket.gethostbyname(hostname)
+        return ip_address
+    except socket.gaierror as e:
+        return f"Error: {e}"
+
+
+
+
 # Define the IP address and port to listen on
 UDP_IP = "0.0.0.0"  # Listen on all available interfaces
-UDP_PORT = 12346     # Port used for receiving the stream
+UDP_PORT = 12346    # Port used for receiving the stream
 
 # Get the local IP address of the computer
 def get_local_ip():
@@ -30,12 +41,19 @@ def send_ip_to_esp32(esp32_ip, esp32_port, computer_ip):
         tcp_sock.send(f"IP:{computer_ip}\n".encode())  # Send IP in format "IP:192.168.x.x"
         print(f"Sent IP address {computer_ip} to ESP32")
 
+# Resolve ESP32 hostname using Zeroconf
+try:
+    esp32_ip = get_ip_of_hostname("superscanner8008.local")
+    print(f"ESP32 resolved to IP: {esp32_ip}")
+except Exception as e:
+    print(f"Error resolving ESP32 hostname: {e}")
+    exit(1)
+
 computer_ip = get_local_ip()
-esp32_ip = '192.168.1.100'  # Replace with ESP32's IP address
 esp32_port = 12346
 
-send_ip_to_esp32('172.21.71.73', esp32_port, computer_ip)
-
+# Send the local IP address to the ESP32
+send_ip_to_esp32(esp32_ip, esp32_port, computer_ip)
 
 # Create a UDP socket
 udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -62,11 +80,14 @@ while True:
         bytes_buffer = bytes_buffer[end_index + 2:]  # Reset the buffer for the next frame
 
         # Convert the JPEG byte data to a NumPy array and decode it into an OpenCV image
-        frame = cv2.imdecode(np.frombuffer(jpg_frame, np.uint8), cv2.IMREAD_COLOR)
+        if len(jpg_frame) > 0:
+            frame = cv2.imdecode(np.frombuffer(jpg_frame, np.uint8), cv2.IMREAD_COLOR)
 
         # Display the frame in a window
         if frame is not None:
             cv2.imshow("ESP32-CAM UDP Stream", frame)
+        else:
+            print("Failed to decode the frame.")
 
         # Press 'q' to exit the loop
         if cv2.waitKey(1) & 0xFF == ord('q'):
