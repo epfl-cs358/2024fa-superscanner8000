@@ -73,12 +73,16 @@ void startCamera() {
 void setup() {
   Serial.begin(115200);
 
+  WiFi.setHostname("superscanner8008");
+
+
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
   Serial.println("WiFi connected");
+  Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
 // Wait for the connection and receive the computer's IP address
