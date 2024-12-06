@@ -84,6 +84,11 @@ void setup() {
   Serial.println("WiFi connected");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+  if (!MDNS.begin("superscanner8008")) {
+  Serial.println("Error starting mDNS");
+} else {
+  Serial.println("mDNS responder started");
+}
 
 // Wait for the connection and receive the computer's IP address
  
@@ -132,6 +137,6 @@ void loop() {
 
       esp_camera_fb_return(fb);  // Free memory
 
-      delay(3000);  
+      delay(300);  
     }
 }
