@@ -2,7 +2,11 @@ import requests
 import cv2
 import os
 
-DEFAULT_URL = "http://superscanner8000:80"
+from controllers.udp_receiver import UDPReceiver
+
+DEFAULT_API_URL = "http://superscanner8000:80"
+DEFAULT_TOP_CAM_URL = "http://superscanner8008:80"
+DEFAULT_FRONT_CAM_URL = "http://superscanner8009:80"
 TEST_CONNECTION_TIMEOUT = 3
 DEFAULT_MOVING_TIME = 5000
 
@@ -11,21 +15,22 @@ class SS8:
         """
         Initializes the SS8 class with default values.
         """
-        self.url = DEFAULT_URL
         self.controller = controller
         self.connection_lost_callback = disconnected_callback
-        self.curr_top_cam_img = None
 
-    def get_default_url(self):
+        self.top_cam_udp_receiver = UDPReceiver(self.controller, 11111, "0.0.0.0")
+        self.front_cam_udp_receiver = UDPReceiver(self.controller, 22222, "0.0.0.0")
+
+    def get_default_urls(self):
         """
         Returns the default hostname of the device.
 
         Returns:
             str: The default hostname.
         """
-        return "http://superscanner8000:80"
-    
-    def connect(self, url=DEFAULT_URL) -> bool:
+        return DEFAULT_API_URL,DEFAULT_TOP_CAM_URL,DEFAULT_FRONT_CAM_URL
+       
+    def connect(self, api_url=DEFAULT_API_URL, top_cam_url=DEFAULT_TOP_CAM_URL, front_cam_url=DEFAULT_FRONT_CAM_URL) -> bool:
         """
         Test connection to the given hostname.
 
@@ -38,13 +43,15 @@ class SS8:
         """
 
         
-        # Test connection to the movement hostname
-        self.url = url
+        self.api_url = api_url
+        self.top_cam_url = top_cam_url
+        self.front_cam_url = front_cam_url
+
         if False and not self.init_api_connection():
             return False
         
         # Test connection to the camera hostname and start receiving video stream
-        if not self.init_udp_connection():
+        if not self.fake_init_udp_connection():
             return False
 
         return True
@@ -56,7 +63,7 @@ class SS8:
             bool: True if the connection is successful.
         """
         try:
-            res = requests.get(self.url+"/status", timeout=TEST_CONNECTION_TIMEOUT)
+            res = requests.get(self.api_url+"/status", timeout=TEST_CONNECTION_TIMEOUT)
             if res.status_code == 200:
                 print("Connection successful! Server is reachable.")
             else:
@@ -73,8 +80,11 @@ class SS8:
             return False
         
         return True
-    
+
     def init_udp_connection(self) -> bool:
+        self.top_cam_udp_receiver.start_listening(self.api_url)
+        
+    def fake_init_udp_connection(self) -> bool:
         """
         Initialize the UDP connection to the device.
         Returns:
@@ -138,13 +148,18 @@ class SS8:
         #response = requests.get(self.ip_adress+"/capture")
 
         return self.curr_top_cam_img
-
+        if src == 'top':
+            return self.top_cam_udp_receiver.get_latest_frame()
+        elif src == 'front':
+            return self.front_cam_udp_receiver.get_latest_frame()
+        return None
+    
     def move_forward(self, dist=DEFAULT_MOVING_TIME):
         """
         Move the device forward.
         dist (int): The distance or duration to move. If positive, the device moves for the given time.
         """
-        self._send_req(lambda: requests.post(self.url + "/fwd", json={"ms": dist}), on_success=lambda: print("Moving forward..."))
+        self._send_req(lambda: requests.post(self.api_url + "/fwd", json={"ms": dist}), on_success=lambda: print("Moving forward..."))
 
         pass
 
@@ -153,7 +168,7 @@ class SS8:
         Move the device backward.
         dist (int): The distance or duration to move. If positive, the device moves for the given time.
         """
-        self._send_req(lambda: requests.post(self.url + "/bwd", json={"ms": dist}), on_success=lambda: print("Moving backward..."))
+        self._send_req(lambda: requests.post(self.api_url + "/bwd", json={"ms": dist}), on_success=lambda: print("Moving backward..."))
 
         pass
 
@@ -163,7 +178,7 @@ class SS8:
         dist (int): The distance or duration to rotate. If positive, the device rotates for the given time. 
                     If negative, the device rotates until it stops.
         """
-        self._send_req(lambda: requests.post(self.url + "/hlft", json={"ms": dist}), on_success=lambda: print("Rotating left..."))
+        self._send_req(lambda: requests.post(self.api_url + "/hlft", json={"ms": dist}), on_success=lambda: print("Rotating left..."))
 
         pass
 
@@ -174,7 +189,7 @@ class SS8:
                     If negative, the device rotates until it stops.
         
         """
-        self._send_req(lambda: requests.post(self.url + "/hrgt", json={"ms": dist}), on_success=lambda: print("Rotating right..."))
+        self._send_req(lambda: requests.post(self.api_url + "/hrgt", json={"ms": dist}), on_success=lambda: print("Rotating right..."))
 
         pass
 
@@ -182,7 +197,7 @@ class SS8:
         """
         Stop the device movement.
         """
-        self._send_req(lambda: requests.post(self.url + "/stp"), on_success=lambda: print("Stopping movement..."))
+        self._send_req(lambda: requests.post(self.api_url + "/stp"), on_success=lambda: print("Stopping movement..."))
         pass
 
     def up_camera(self, dist=DEFAULT_MOVING_TIME):
