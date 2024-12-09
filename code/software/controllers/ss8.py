@@ -226,3 +226,10 @@ class SS8:
         print("Stopping camera movement...")
         pass
     
+    def recenter_cam(self):
+        """
+        Recenter the camera.
+        """
+        print("Recentering camera...")
+        print(self.controller.segmenter.get_object_coords(self.controller.ss8.capture_image(), True))
+        pass

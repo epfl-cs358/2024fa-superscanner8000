@@ -54,7 +54,8 @@ class ImageSegmenter:
                 out_mask = cv2.dilate(out_mask, kernel, iterations=1)
             all_mask = cv2.bitwise_or(all_mask, out_mask)
 
-        return cv2.cvtColor(all_mask, cv2.COLOR_GRAY2RGB)
+        self.all_mask = all_mask
+        return cv2.cvtColor(self.all_mask, cv2.COLOR_GRAY2RGB)
     
     def mask_img(self, img:cv2.typing.MatLike) -> cv2.typing.MatLike:
         """
@@ -66,7 +67,19 @@ class ImageSegmenter:
         mask = cv2.cvtColor(self.propagate(img), cv2.COLOR_RGB2GRAY)
         return cv2.bitwise_and(img, img, mask=mask)
         
-
+    def get_object_coords(self, img, update_mask=False):
+        """
+        Get the coordinates of the object in the image.
+        """
+        if update_mask:
+            self.propagate(img)
+        
+        contours, _ = cv2.findContours(self.all_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        if len(contours) > 0:
+            bounding_box = cv2.boundingRect(contours[0])
+            return [bounding_box[0]+bounding_box[2]//2, bounding_box[1]+bounding_box[3]//2]
+        return None
+    
     def convert_img_to_base64(img):
         # Convert the frame to base64
         _, buffer = cv2.imencode('.jpg', img)

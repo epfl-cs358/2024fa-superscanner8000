@@ -24,8 +24,6 @@ class SetupPage(tk.Frame):
         self._display_preview()
         self._display_directionnal_buttons()
         self._display_selection_buttons()
-
-
         
     def _display_directionnal_buttons(self):
         buttons_container = tk.Frame(self.container)
@@ -84,7 +82,6 @@ class SetupPage(tk.Frame):
         def update_preview():
             new_image = self.controller.ss8.capture_image()
             new_image = self.controller.segmenter.mask_img(new_image) if self.object_selected else new_image
-
             return new_image
         
         self.img_preview.display(update_preview, 10)

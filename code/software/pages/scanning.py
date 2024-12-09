@@ -21,6 +21,15 @@ class ScanningPage(tk.Frame):
         button = ttk.Button(self.container, text="Stop scanning", style='Accent.TButton', command=self._interrupt_scan)
         button.pack(pady=10)
 
+        self.start_movement()
+
     def _interrupt_scan(self):
         self.controller.ss8.stop_mov()
         self.controller.show_page('SetupPage')
+
+    def start_movement(self):
+        def center_cam():
+            self.controller.ss8.recenter_cam()
+            self.after(1000, center_cam)
+        
+        center_cam()
