@@ -101,7 +101,10 @@ class SS8:
 
         def update_current_frame():
             ret, frame = cap.read()
-            if not ret or (cv2.waitKey(1) & 0xFF == ord('q')):
+            if(not ret):
+                cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+
+            if (cv2.waitKey(1) & 0xFF == ord('q')):
                 cap.release()
                 cv2.destroyAllWindows()
                 return
