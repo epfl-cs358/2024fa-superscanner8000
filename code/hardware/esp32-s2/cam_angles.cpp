@@ -27,7 +27,10 @@ long CamAngles::angleToSteps(float angle) {
 }
 
 // Convert steps to angle based on steps per revolution
-float CamAngles::stepsToAngle(long steps) {
+float CamAngles::stepsToAngle(int axis) {
+    long steps;
+    if (axis == 1) steps = stepper1.currentPosition();
+    else if (axis == 2) steps = stepper2.currentPosition();
     return (steps / stepsPerRevolution) * 360.0;
 }
 

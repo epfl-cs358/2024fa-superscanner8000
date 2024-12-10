@@ -111,5 +111,10 @@ if __name__ == "__main__":
     posy.grid(row=5, column=2)
     Button(root, text="Goto", command=lambda: car.arm.goto(int(posy.get()), int(posy.get()))).grid(row=5, column=0)
     Button(root, text="Stop Arm", command=car.arm.stop).grid(row=4, column=0)
+
+    txt = Entry(root)
+    txt.insert(0, "0")
+    txt.grid(row=6, column=1)
+    Button(root, text="send", command=lambda: requests.post("http://superscanner8000:80/display", json={"text": txt.get()})).grid(row=6, column=0)
  
     root.mainloop()

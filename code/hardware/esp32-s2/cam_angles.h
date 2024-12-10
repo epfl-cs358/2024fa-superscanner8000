@@ -37,7 +37,7 @@ public:
     void stop();
     
     // Convert steps to angle
-    float stepsToAngle(long steps);
+    float stepsToAngle(int axis);
 };
 
 #endif // CAM_ANGLES_H
