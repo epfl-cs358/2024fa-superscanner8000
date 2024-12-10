@@ -71,7 +71,7 @@ class SetupPage(tk.Frame):
             points = np.array([[x, y]], dtype=np.float32)
     
             # Initialize ImageSegmenter with a random (for now) bounding box
-            self.controller.segmenter.initialize(self.controller.ss8.capture_image(), points=points)
+            #self.controller.segmenter.initialize(self.controller.ss8.capture_image(), points=points)
 
             if(not self.object_selected):
                 self.selection_buttons_frame.pack(anchor=tk.S, pady=20)

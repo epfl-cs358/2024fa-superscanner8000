@@ -3,3 +3,4 @@ __pycache__
 config/sam2_checkpoints/*
 !config/sam2_checkpoints/download_ckpts.sh
 packages/*
+!packages/README.md
