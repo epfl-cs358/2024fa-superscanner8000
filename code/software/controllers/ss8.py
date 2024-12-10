@@ -228,8 +228,24 @@ class SS8:
     
     def recenter_cam(self):
         """
-        Recenter the camera.
+        Recenter the camera to have the object to be scanned in the center of the frame.
         """
         print("Recentering camera...")
-        print(self.controller.segmenter.get_object_coords(self.controller.ss8.capture_image(), True))
-        pass
+        def check_center():
+            frame = self.capture_image()
+            obj_coords = self.controller.segmenter.get_object_coords(frame)
+            frame_center = frame.shape[:2]/2
+            pos_diff = obj_coords - frame_center
+
+            if(pos_diff[0] > 10):
+                self.rotate_right()
+            elif(pos_diff[0] < -10):
+                self.rotate_left()
+            else:
+                self.stop_mov()
+            
+            if(pos_diff[1] > 10):
+                self.down_camera()
+            elif(pos_diff[1] < -10):
+                self.up_camera()
+            

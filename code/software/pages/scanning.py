@@ -33,3 +33,5 @@ class ScanningPage(tk.Frame):
             self.after(1000, center_cam)
         
         center_cam()
+
+    
