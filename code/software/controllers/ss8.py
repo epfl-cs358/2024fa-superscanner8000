@@ -164,16 +164,12 @@ class SS8:
         """
         self._send_req(lambda: requests.post(self.api_url + "/fwd", json={"ms": dist}), on_success=lambda: print("Moving forward..."))
 
-        pass
-
     def move_backward(self, dist=DEFAULT_MOVING_TIME):
         """
         Move the device backward.
         dist (int): The distance or duration to move. If positive, the device moves for the given time.
         """
         self._send_req(lambda: requests.post(self.api_url + "/bwd", json={"ms": dist}), on_success=lambda: print("Moving backward..."))
-
-        pass
 
     def rotate_left(self, dist=DEFAULT_MOVING_TIME):
         """
@@ -182,8 +178,6 @@ class SS8:
                     If negative, the device rotates until it stops.
         """
         self._send_req(lambda: requests.post(self.api_url + "/hlft", json={"ms": dist}), on_success=lambda: print("Rotating left..."))
-
-        pass
 
     def rotate_right(self, dist=DEFAULT_MOVING_TIME):
         """
@@ -194,38 +188,40 @@ class SS8:
         """
         self._send_req(lambda: requests.post(self.api_url + "/hrgt", json={"ms": dist}), on_success=lambda: print("Rotating right..."))
 
-        pass
-
     def stop_mov(self):
         """
         Stop the device movement.
         """
         self._send_req(lambda: requests.post(self.api_url + "/stp"), on_success=lambda: print("Stopping movement..."))
-        pass
 
-    def up_camera(self, dist=DEFAULT_MOVING_TIME):
+    def goto_arm(self, x=0, y=0):
+        """
+        Move the arm up.
+        x (int): The x coordinate to move to.
+        y (int): The y coordinate to move to.
+        """
+        self._send_req(lambda: requests.post(self.api_url + "/arm/goto", json={"x": x, "y": y}), on_success=lambda: print("Moving arm to position..."))
+
+    def stop_arm(self):
+        """
+        Stop the arm movement.
+        """
+        self._send_req(lambda: requests.post(self.api_url + "/arm/stp"), on_success=lambda: print("Stopping arm movement..."))
+
+    def goto_camera(self, alpha=0, beta=0):
         """
         Move the camera up.
         dist (int): The distance or duration to move. If positive, the camera moves for the given time.
         """
-        print("Moving camera up...")
-        pass
-
-    def down_camera(self, dist=DEFAULT_MOVING_TIME):
-        """
-        Move the camera down.
-        dist (int): The distance or duration to move. If positive, the camera moves for the given time.
-        """
-        print("Moving camera down...")
-        pass
+        self._send_req(lambda: requests.post(self.api_url + "/cam/goto", json={"alpha": alpha, "beta": beta}), on_success=lambda: print("Moving camera to position..."))
 
     def stop_cam(self):
         """
         Stop the camera movement.
         """
-        print("Stopping camera movement...")
-        pass
-    
+        self._send_req(lambda: requests.post(self.api_url + "/cam/stp"), on_success=lambda: print("Stopping camera movement...")) 
+
+        
     def recenter_cam(self):
         """
         Recenter the camera to have the object to be scanned in the center of the frame.

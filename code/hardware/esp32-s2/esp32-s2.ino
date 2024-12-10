@@ -1,16 +1,24 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <WebServer.h>
-#include <ArduinoJson.h>
+#include <LiquidCrystal.h>
 #include "password.h"
 #include "wheels.h"
 #include "arm.h"
 #include "cam_angles.h"
+#include <ArduinoJson.h>
 
 WebServer server(80);
 Arm arm = Arm();
 Wheels wheels = Wheels();
-CamAngles camera(12, 13, 14, 15, 36, 37, 38, 39, 200); 
+CamAngles camera(12, 13, 14, 15, 39, 40, 41, 42, 200); 
+
+// LCD pins
+const int rs = 36, en = 35, d4 = 34, d5 = 33, d6 = 20, d7 = 21;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+// output control pins
+#define LCD_CONTRAST_PIN 38 // 10 // yellow on diagram
+#define LCD_BACKLIGHT_PIN 37 // 11 // 2nd from the right on diagram
 
 StaticJsonDocument<250> jsonDocument;
 char buffer[250];
@@ -25,9 +33,16 @@ void setup_routing() {
   server.on("/hrgt", HTTP_POST, hrgt);
   server.on("/hlft", HTTP_POST, hlft);
   server.on("/stp", HTTP_POST, stp);
+
   server.on("/arm/status", arm_status);
   server.on("/arm/goto", HTTP_POST, arm_goto);
-  server.on("/arm/stop", HTTP_POST, arm_stop);
+  server.on("/arm/stp", HTTP_POST, arm_stop);
+
+  server.on("/cam/status", cam_status);
+  server.on("/cam/goto", HTTP_POST, cam_goto);
+  server.on("/cam/stp", HTTP_POST, cam_stop);
+
+  server.on("/display", HTTP_POST, display);
           
   server.begin();    
 }
@@ -141,8 +156,56 @@ void arm_stop() {
   server.send(200, "application/json", "{}");
 }
 
+
+//---- Camera ----
+void cam_status() {
+  jsonDocument.clear();
+  jsonDocument["moving"] = camera.isMoving();
+  jsonDocument["alpha"] = camera.stepsToAngle(1);
+  jsonDocument["beta"] = camera.stepsToAngle(2);
+  serializeJson(jsonDocument, buffer);
+  server.send(200, "application/json", buffer);
+}
+
+void cam_goto() {
+  handlePost();
+  
+  float angle1 = jsonDocument["alpha"];
+  float angle2 = jsonDocument["beta"];
+  camera.moveToAngles(angle1, angle2);
+
+  server.send(200, "application/json", "{}");
+}
+
+void cam_stop() {
+  handlePost();
+  Serial.println("cam stop");
+  camera.stop();
+
+  server.send(200, "application/json", "{}");
+}
+
+void display() {
+  handlePost();
+  Serial.print("Display: ");
+  String text = jsonDocument["text"];
+  Serial.println(text);
+  lcd.clear();
+  lcd.print(text);
+
+  server.send(200, "application/json", "{}");
+}
+
+
 void setup() {     
-  Serial.begin(115200);  
+  //set some defaults
+  analogWrite(LCD_BACKLIGHT_PIN, 255); //set backlight on
+  analogWrite(LCD_CONTRAST_PIN, 100); //set some contrast
+  // set up the LCD's number of columns and rows:
+  lcd.begin(16, 2);
+  lcd.print("Starting...");
+
+  Serial.begin(115200); 
 
   Serial.print("Connecting to Wi-Fi with password ");
   Serial.println(PWD);

@@ -27,8 +27,8 @@ class Wheels {
 
         const int freq;
         const int resolution;
-        const int pwmChannel1;
-        const int pwmChannel2;
+        //const int pwmChannel1;
+        //const int pwmChannel2;
         int dutyCycle;
 
         long t;
