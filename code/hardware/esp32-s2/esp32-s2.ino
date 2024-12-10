@@ -27,7 +27,10 @@ void setup_routing() {
   server.on("/stp", HTTP_POST, stp);
   server.on("/arm/status", arm_status);
   server.on("/arm/goto", HTTP_POST, arm_goto);
-  server.on("/arm/stop", HTTP_POST, arm_stop);
+  server.on("/arm/stp", HTTP_POST, arm_stop);
+  server.on("/cam/status", cam_status);
+  server.on("/cam/goto", HTTP_POST, cam_goto);
+  server.on("/cam/stp", HTTP_POST, cam_stop);
           
   server.begin();    
 }
@@ -140,6 +143,32 @@ void arm_stop() {
   arm.stop();
   server.send(200, "application/json", "{}");
 }
+
+
+//---- Camera ----
+void cam_status() {
+  jsonDocument.clear();
+  jsonDocument["moving"] = camera.isMoving();
+  jsonDocument["alpha"] = camera.stepsToAngle(camera.stepper1.currentPosition());
+  jsonDocument["beta"] = camera.stepsToAngle(camera.stepper2.currentPosition());
+  serializeJson(jsonDocument, buffer);
+  server.send(200, "application/json", buffer);
+}
+
+void cam_goto() {
+  handlePost();
+  Serial.print("cam to: ");
+  Serial.print(jsonDocument["alpha"]);
+  Serial.print(", ");
+  Serial.println(jsonDocument["beta"]);
+  
+  float angle1 = jsonDocument["alpha"];
+  float angle2 = jsonDocument["beta"];
+  camera.moveToAngles(angle1, angle2);
+
+  server.send(200, "application/json", "{}");
+}
+
 
 void setup() {     
   Serial.begin(115200);  

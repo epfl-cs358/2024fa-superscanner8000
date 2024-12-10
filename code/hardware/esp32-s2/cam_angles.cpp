@@ -26,6 +26,11 @@ long CamAngles::angleToSteps(float angle) {
     return static_cast<long>((angle / 360.0) * stepsPerRevolution);
 }
 
+// Convert steps to angle based on steps per revolution
+float CamAngles::stepsToAngle(long steps) {
+    return (steps / stepsPerRevolution) * 360.0;
+}
+
 // Move steppers to specified angles
 void CamAngles::moveToAngles(float angle1, float angle2) {
     long positions[2]; // Array to hold target positions

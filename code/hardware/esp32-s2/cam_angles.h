@@ -35,6 +35,9 @@ public:
 
     // Stop the motors
     void stop();
+    
+    // Convert steps to angle
+    float stepsToAngle(long steps);
 };
 
 #endif // CAM_ANGLES_H
