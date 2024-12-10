@@ -5,8 +5,8 @@
 CamAngles::CamAngles(int s1Pin1, int s1Pin2, int s1Pin3, int s1Pin4, 
                      int s2Pin1, int s2Pin2, int s2Pin3, int s2Pin4, 
                      int stepsPerRev) 
-    : stepper1(AccelStepper::FULL4WIRE, s1Pin1, s1Pin2, s1Pin3, s1Pin4),
-      stepper2(AccelStepper::FULL4WIRE, s2Pin1, s2Pin2, s2Pin3, s2Pin4),
+    : stepper1(AccelStepper::HALF4WIRE, s1Pin1, s1Pin3, s1Pin2, s1Pin4),
+      stepper2(AccelStepper::HALF4WIRE, s2Pin1, s2Pin3, s2Pin2, s2Pin4),
       stepsPerRevolution(stepsPerRev) {
     multiStepper.addStepper(stepper1);
     multiStepper.addStepper(stepper2);
@@ -17,8 +17,8 @@ void CamAngles::setup() {
     stepper1.setMaxSpeed(500.0);
     stepper2.setMaxSpeed(500.0);
 
-    stepper1.setAcceleration(100.0);
-    stepper2.setAcceleration(100.0);
+    stepper1.setAcceleration(100000.0);
+    stepper2.setAcceleration(100000.0);
 }
 
 // Convert angle to steps based on steps per revolution
@@ -37,14 +37,13 @@ float CamAngles::stepsToAngle(int axis) {
 // Move steppers to specified angles
 void CamAngles::moveToAngles(float angle1, float angle2) {
     long positions[2]; // Array to hold target positions
-    positions[0] = angleToSteps(angle1);
-    positions[1] = angleToSteps(angle2);
+    positions[0] = angleToSteps(angle1) + stepper1.currentPosition();
+    positions[1] = angleToSteps(angle2) + stepper1.currentPosition();
 
     Serial.print("Moving to angles: ");
     Serial.print(angle1);
     Serial.print(", ");
     Serial.println(angle2);
-
     multiStepper.moveTo(positions);
 }
 
