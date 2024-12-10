@@ -34,7 +34,7 @@ class UDPReceiver:
         return ip_address
 
     # Function to send the computer IP to the ESP32 via TCP
-    def _send_ip_to_esp32(self, esp32_cam_url):
+    def _send_ip_to_esp32(self, esp32_ip, esp32_port):
         #TODO: Implement this function with esp32_cam_url
 
         # Create a TCP socket to send the IP address to the ESP32
@@ -42,9 +42,28 @@ class UDPReceiver:
             tcp_sock.connect((esp32_ip, esp32_port))
             tcp_sock.send(f"IP:{self.computer_ip}\n".encode())  # Send IP in format "IP:192.168.x.x"
             print(f"Sent IP address {self.computer_ip} to ESP32")
+        
+    def get_ip_of_hostname(self, hostname):
+        try:
+            # Get the IP address of the given hostname
+            ip_address = socket.gethostbyname(hostname)
+            return ip_address
+        except socket.gaierror as e:
+            return f"Error: {e}"
 
     def start_listening(self, esp32_cam_url):
-        self._send_ip_to_esp32(esp32_cam_url)
+        hostname = esp32_cam_url.split(":")[0].split("//")[1]
+        esp32_port = int(esp32_cam_url.split(":")[2])
+
+        # Resolve ESP32 hostname using Zeroconf
+        try:
+            esp32_ip = self.get_ip_of_hostname(hostname)
+            print(f"ESP32 resolved to IP: {esp32_ip}")
+        except Exception as e:
+            print(f"Error resolving ESP32 hostname: {e}")
+            exit(1)
+
+        self._send_ip_to_esp32(esp32_ip, esp32_port)
 
         # Create a UDP socket
         udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

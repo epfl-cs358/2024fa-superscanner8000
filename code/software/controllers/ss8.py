@@ -101,7 +101,10 @@ class SS8:
 
         def update_current_frame():
             ret, frame = cap.read()
-            if not ret or (cv2.waitKey(1) & 0xFF == ord('q')):
+            if(not ret):
+                cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+
+            if (cv2.waitKey(1) & 0xFF == ord('q')):
                 cap.release()
                 cv2.destroyAllWindows()
                 return
@@ -217,3 +220,12 @@ class SS8:
         Stop the camera movement.
         """
         self._send_req(lambda: requests.post(self.api_url + "/cam/stp"), on_success=lambda: print("Stopping camera movement...")) 
+
+        
+    def recenter_cam(self):
+        """
+        Recenter the camera.
+        """
+        print("Recentering camera...")
+        print(self.controller.segmenter.get_object_coords(self.controller.ss8.capture_image(), True))
+        pass

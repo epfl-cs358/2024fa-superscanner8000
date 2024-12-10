@@ -43,7 +43,7 @@ def send_ip_to_esp32(esp32_ip, esp32_port, computer_ip):
 
 # Resolve ESP32 hostname using Zeroconf
 try:
-    esp32_ip = get_ip_of_hostname("superscanner8008.local")
+    esp32_ip = get_ip_of_hostname("superscanner8008")
     print(f"ESP32 resolved to IP: {esp32_ip}")
 except Exception as e:
     print(f"Error resolving ESP32 hostname: {e}")
