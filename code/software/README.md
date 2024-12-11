@@ -118,6 +118,26 @@ Miniconda is a minimal installer for conda. Follow the steps below to install Mi
     python run main.py
    ```
 
+
+
+clone VCG
+
+#Clone OpenMVS
+git clone --recurse-submodules https://github.com/cdcseacave/openMVS.git
+
+#Make build directory:
+cd openMVS
+mkdir make
+cd make
+
+#Run CMake:
+cmake .. -DCMAKE_BUILD_TYPE=Release -DVCG_ROOT=<vcglib-path>
+
+#Build:
+cmake --build . -j4
+
+
+
 ### Additional Commands
 
 - **Deactivate the Environment:**
