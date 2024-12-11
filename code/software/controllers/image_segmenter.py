@@ -93,6 +93,8 @@ if __name__ == "__main__":
 
     while True:
         ret, frame = cap.read()
+        if frame is None:
+            continue
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         if not ret:
             break

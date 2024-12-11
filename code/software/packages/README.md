@@ -1,3 +1,5 @@
 # Packages
 
-You should install sam2 here
+```sh
+./install_dependencies.sh
+```

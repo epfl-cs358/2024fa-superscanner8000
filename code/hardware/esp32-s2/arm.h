@@ -14,7 +14,8 @@ private:
     const long gearFactor;
     const float pulleyFactor;
     const long fullRevolution;
-    void nomaAngles();
+    void posToAngle();
+    void angleToPos();
 public:
     float q1;
     float q2;
@@ -23,7 +24,7 @@ public:
 
     Arm();
     void setup();
-    int setPos(int x, int y);
+    int setPos(int _x, int _y, bool angles = false);
     void stop();
     bool getMoving();
     void update();

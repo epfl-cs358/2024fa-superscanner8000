@@ -11,7 +11,7 @@ Arm::Arm():
     a1(40), 
     a2(40),
     gearFactor(28),
-    pulleyFactor(200 / 18),
+    pulleyFactor(200. / 18.),
     fullRevolution(200), 
     q1(0), 
     q2(0) 
@@ -29,24 +29,28 @@ void Arm::setup() {
 }
 
 int Arm::setPos(int _x, int _y) {
-    x = _x;
-    y = _y;
+    return setPos(_x, _y, false);
+}
 
-    
-    // if the user wants to set the position using the angles
-    q1 = x * PI / 180;
-    q2 = y * PI / 180;
-    
-
-    /*
-    // if the user wants to set the position using the coordinates
-    if (sqrt(pow(x, 2) + pow(y, 2)) > (a1 + a2) || sqrt(pow(x, 2) + pow(y, 2)) < abs(a1 - a2)) {
-        Serial.println("Error: Coordinates out of range.");
-        return -1;
+int Arm::setPos(int _x, int _y, bool angles) {
+    if (angles){
+        if (_x < 0 || _x > 190 || _y < 0 || _y > 190) {
+            Serial.println("Error: Angles out of range.");
+            return -1;
+        }
+        // q1 and q2 are in radians
+        q1 = _x * PI / 180;
+        q2 = _y * PI / 180;
+        angleToPos();
+    } else {
+        if (sqrt(pow(x, 2) + pow(y, 2)) > (a1 + a2) || sqrt(pow(x, 2) + pow(y, 2)) < abs(a1 - a2)) {
+            Serial.println("Error: Coordinates out of range.");
+            return -1;
+        }
+        x = _x;
+        y = _y;
+        posToAngles();
     }
-
-    nomaAngles();
-    */
 
     // Move the steppers
     stepper1.moveTo(gearFactor * fullRevolution * q1 / (2 * PI));
@@ -57,9 +61,16 @@ int Arm::setPos(int _x, int _y) {
 }
 
 void Arm::stop() {
-    stepper1.stop();
-    stepper2.stop();
-    // TODO: set the position and angle to the current position
+    float accel = stepper1.acceleration();
+    stepper1.setAcceleration(10000);
+    stepper2.setAcceleration(10000);
+    stepper1.moveTo(stepper1.currentPosition());
+    stepper2.moveTo(stepper2.currentPosition());
+    q1 = stepper1.currentPosition() * 2 * PI / (gearFactor * fullRevolution);
+    q2 = stepper2.currentPosition() * 2 * PI / (pulleyFactor * fullRevolution);
+    angleToPos();
+    stepper1.setAcceleration(accel);
+    stepper2.setAcceleration(accel);
 }
 
 bool Arm::getMoving() {
@@ -75,7 +86,12 @@ void Arm::update() {
     }
 }
 
-void Arm::nomaAngles() {
+void Arm::posToAngles() {
     q2 = acos((pow(x, 2) + pow(y, 2) - pow(a1, 2) - pow(a2, 2)) / (2 * a1 * a2)); 
     q1 = atan2(y, x) - atan2(a2 * sin(q2), (a1 + a2 * cos(q2))); 
+}
+
+void Arm::angleToPos() {
+    x = a1 * cos(q1) + a2 * cos(q1 + q2);
+    y = a1 * sin(q1) + a2 * sin(q1 + q2);
 }

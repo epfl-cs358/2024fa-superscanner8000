@@ -25,7 +25,7 @@ public:
     void setup();
 
     // Move the steppers to the specified angles
-    void moveToAngles(float angle1, float angle2);
+    int moveToAngles(float angle1, float angle2);
 
     // Check if the motors are moving
     bool isMoving();
