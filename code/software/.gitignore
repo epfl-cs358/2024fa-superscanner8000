@@ -5,4 +5,5 @@ config/sam2_checkpoints/*
 packages/*
 controllers/temp/*
 controllers/dependencies/*
+!packages/install_dependencies.sh
 !packages/README.md

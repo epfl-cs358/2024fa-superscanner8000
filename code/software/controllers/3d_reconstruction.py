@@ -63,4 +63,4 @@ def reconstruction_3dgs(project_path: pathlib.Path):
 if __name__ == "__main__":
 
     pre_process_images(pathlib.Path("temp/broom"), scale_factor=0.5)
-    reconstruction_open_mvs(pathlib.Path("dependencies/openMVS/make/bin"), pathlib.Path("temp/broom"), low_poly=True)
+    reconstruction_open_mvs(pathlib.Path("../packages/openMVS/make/bin"), pathlib.Path("temp/broom"), low_poly=True)

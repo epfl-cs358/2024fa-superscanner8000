@@ -71,39 +71,10 @@ Miniconda is a minimal installer for conda. Follow the steps below to install Mi
    cd ./code/software/packages
    ```
 
-2. **Clone the SAM2 Repository:**
-
-   - Run the following command to clone the SAM2 repository from GitHub:
-     ```sh
-     git clone https://github.com/Gy920/segment-anything-2-real-time.git sam2
-     ```
-
-3. **Navigate to the SAM2 Directory:**
-
-   - Change to the SAM2 directory:
-     ```sh
-     cd sam2
-     ```
-
-4. **Install SAM2:**
-
-   - Run the following command to install SAM2:
-     ```sh
-     pip install -e .
-     ```
-
-5. **Go to the checkpoints folder**
-
-   ```sh
-   cd ../../config/sam2_checkpoints
+2. **Download Additionnal requirements**
+   - ```sh
+      ./install_dependencies
    ```
-
-6. **Run the bash script:**
-
-   - Run the install the checkpoints
-     ```sh
-     ./download_ckpts
-     ```
 
 ### Step 5: Start Using Superscanner8000
 
@@ -120,21 +91,6 @@ Miniconda is a minimal installer for conda. Follow the steps below to install Mi
 
 
 
-clone VCG
-
-#Clone OpenMVS
-git clone --recurse-submodules https://github.com/cdcseacave/openMVS.git
-
-#Make build directory:
-cd openMVS
-mkdir make
-cd make
-
-#Run CMake:
-cmake .. -DCMAKE_BUILD_TYPE=Release -DVCG_ROOT=<vcglib-path>
-
-#Build:
-cmake --build . -j4
 
 
 
