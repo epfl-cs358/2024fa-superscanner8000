@@ -1,15 +1,16 @@
 import os
 import subprocess
+import pathlib
 
 class open_mvs:
-    def __init__(self, mvs_bin_dir, working_dir):
+    def __init__(self, mvs_bin_dir: pathlib.Path, working_dir: pathlib.Path):
         #Colmap directory
         self.mvs_bin_dir = mvs_bin_dir
-        self.working_dir = working_dir
+        self.working_dir = pathlib.Path.cwd() / working_dir
 
     def interface_colmap(self):
-        cmd_path = os.path.join(self.mvs_bin_dir, "InterfaceCOLMAP")
-        output_path = os.path.join(self.mvs_bin_dir, "model_colmap.mvs")
+        cmd_path = self.mvs_bin_dir / "InterfaceCOLMAP"
+        output_path = self.working_dir / pathlib.Path("model_colmap.mvs")
 
         command = [
             cmd_path,
@@ -22,9 +23,9 @@ class open_mvs:
         return return_code
     
     def densify_point_cloud(self):
-        cmd_path = os.path.join(self.mvs_bin_dir, "DensifyPointCloud")
-        input_file = os.path.join(self.mvs_bin_dir, "model_colmap.mvs")
-        output_path = os.path.join(self.mvs_bin_dir, "model_dense.mvs")
+        cmd_path = self.mvs_bin_dir / "DensifyPointCloud"
+        input_file = self.working_dir / pathlib.Path("model_colmap.mvs")
+        output_path = self.working_dir / "model_dense.mvs"
         
         command = [
             cmd_path,
@@ -38,9 +39,10 @@ class open_mvs:
         return return_code
     
     def reconstruct_mesh(self):
-        cmd_path = os.path.join(self.mvs_bin_dir, "ReconstructMesh")
-        input_file = os.path.join(self.mvs_bin_dir, "model_dense.mvs")
-        output_path = os.path.join(self.mvs_bin_dir, "model_dense_mesh.mvs")
+        cmd_path = self.mvs_bin_dir / "ReconstructMesh"
+        input_file = self.working_dir / "model_dense.mvs"
+        output_path = self.working_dir / "model_dense_mesh.mvs"
+
         
         command = [
             cmd_path,
@@ -53,17 +55,17 @@ class open_mvs:
         return return_code
     
     def refine_mesh(self):
-        cmd_path = os.path.join(self.mvs_bin_dir, "RefineMesh")
+        cmd_path = self.mvs_bin_dir / "RefineMesh"
 
         # Check if model_dense_mesh.mvs exists
-        if os.path.exists(os.path.join(self.mvs_bin_dir, "model_dense_mesh.mvs")):
-            input_file = os.path.join(self.mvs_bin_dir, "model_dense_mesh.mvs")
+        if os.path.exists(self.working_dir / "model_dense_mesh.mvs" ):
+            input_file = self.working_dir / "model_dense_mesh.mvs"
         else:
-            input_file = os.path.join(self.mvs_bin_dir, "model_dense.mvs")
+            input_file = self.working_dir / "model_dense.mvs"
 
 
-        output_path = os.path.join(self.mvs_bin_dir, "model_dense_mesh_refine.mvs")
-        mesh_file = os.path.join(self.mvs_bin_dir, "model_dense_mesh.ply")
+        output_path = self.working_dir / "model_dense_mesh_refine.mvs"
+        mesh_file = self.working_dir / "model_dense_mesh.ply"
 
         command = [
             cmd_path,
@@ -77,20 +79,23 @@ class open_mvs:
         return_code = subprocess.call(command)
         return return_code
     
-    def texture_mesh(self):
-        cmd_path = os.path.join(self.mvs_bin_dir, "TextureMesh")
+    def texture_mesh(self, output_path="model.obj"):
+        cmd_path = self.mvs_bin_dir / "TextureMesh"
 
         # Check if model_dense_mesh_refine.mvs exists
-        if os.path.exists(os.path.join(self.mvs_bin_dir, "model_dense_mesh_refine.mvs")):
-            input_file = os.path.join(self.mvs_bin_dir, "model_dense_mesh_refine.mvs")
-        elif os.path.exists(os.path.join(self.mvs_bin_dir, "model_dense_mesh.mvs")):
-            input_file = os.path.join(self.mvs_bin_dir, "model_dense_mesh.mvs")
+        if os.path.exists(self.working_dir / "model_dense_mesh_refine.mvs"):
+            input_file = self.working_dir / "model_dense_mesh_refine.mvs"
+        elif os.path.exists(self.working_dir / "model_dense_mesh.mvs"):
+            input_file = self.working_dir / "model_dense_mesh.mvs"
         else:
-            input_file = os.path.join(self.mvs_bin_dir, "model_dense.mvs")
+            input_file = self.working_dir / "model_dense.mvs"
 
-
-        output_path = os.path.join(self.mvs_bin_dir, "model.obj")
-        mesh_file = os.path.join(self.mvs_bin_dir, "model_dense_mesh_refine.ply")
+        if output_path == "model.obj":
+            output_path = self.working_dir / "model.obj"
+        
+        if os.path.exists(self.working_dir / "model_dense_mesh_refine.ply"):
+            mesh_file = self.working_dir / "model_dense_mesh_refine.ply"
+        mesh_file = self.working_dir / "model_dense_mesh.ply"
 
         command = [
             cmd_path,
@@ -103,3 +108,12 @@ class open_mvs:
         
         return_code = subprocess.call(command)
         return return_code
+    
+    def run_all(self, lowpoly=False):
+        self.interface_colmap()
+        self.densify_point_cloud()
+        self.reconstruct_mesh()
+        if lowpoly:
+            self.refine_mesh()
+        self.texture_mesh()
+        return 0
