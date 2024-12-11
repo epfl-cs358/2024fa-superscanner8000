@@ -172,7 +172,10 @@ void cam_goto() {
   
   float angle1 = jsonDocument["alpha"];
   float angle2 = jsonDocument["beta"];
-  camera.moveToAngles(angle1, angle2);
+  if (camera.moveToAngles(angle1, angle2) == -1){
+    server.send(422, "application/json", "{}");
+    return;
+  }
 
   server.send(200, "application/json", "{}");
 }

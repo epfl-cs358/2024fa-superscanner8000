@@ -14,11 +14,11 @@ CamAngles::CamAngles(int s1Pin1, int s1Pin2, int s1Pin3, int s1Pin4,
 
 // Setup function
 void CamAngles::setup() {
-    stepper1.setMaxSpeed(500.0);
-    stepper2.setMaxSpeed(500.0);
+    stepper1.setMaxSpeed(1000.0);
+    stepper2.setMaxSpeed(1000.0);
 
-    stepper1.setAcceleration(100000.0);
-    stepper2.setAcceleration(100000.0);
+    stepper1.setAcceleration(10000.0);
+    stepper2.setAcceleration(10000.0);
 }
 
 // Convert angle to steps based on steps per revolution
@@ -35,7 +35,11 @@ float CamAngles::stepsToAngle(int axis) {
 }
 
 // Move steppers to specified angles
-void CamAngles::moveToAngles(float angle1, float angle2) {
+int CamAngles::moveToAngles(float angle1, float angle2) {
+    if (angle1 < -190 || angle1 > 190 || angle2 < -190 || angle2 > 190) {
+        Serial.println("Error: Angles out of range.");
+        return -1;
+    }
     long positions[2]; // Array to hold target positions
     positions[0] = angleToSteps(angle1) + stepper1.currentPosition();
     positions[1] = angleToSteps(angle2) + stepper1.currentPosition();
@@ -45,6 +49,7 @@ void CamAngles::moveToAngles(float angle1, float angle2) {
     Serial.print(", ");
     Serial.println(angle2);
     multiStepper.moveTo(positions);
+    return 0;
 }
 
 // Check if the motors are moving
@@ -60,6 +65,11 @@ void CamAngles::update() {
 
 // Stop the motors
 void CamAngles::stop() {
-    stepper1.stop();
-    stepper2.stop();
+    float accel = stepper1.acceleration();
+    stepper1.setAcceleration(10000);
+    stepper2.setAcceleration(10000);
+    stepper1.moveTo(stepper1.currentPosition());
+    stepper2.moveTo(stepper2.currentPosition());
+    stepper1.setAcceleration(accel);
+    stepper2.setAcceleration(accel);
 }
