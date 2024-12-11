@@ -39,6 +39,7 @@ class ImageWidget():
             """
 
             if event == cv2.EVENT_LBUTTONDOWN:
+                print("click")
                 self.img_click_callback(x, y)
 
         cv2.namedWindow("Preview", cv2.WINDOW_AUTOSIZE) 

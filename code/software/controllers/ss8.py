@@ -52,9 +52,9 @@ class SS8:
             return False
         
         # Test connection to the camera hostname and start receiving video stream
-
         if(TEST_SEG_WITH_VID):
-            self.fake_init_udp_connection()
+            if not self.fake_init_udp_connection():
+                return False
         elif not self.init_udp_connection():
             return False
 
@@ -86,7 +86,12 @@ class SS8:
         return True
 
     def init_udp_connection(self) -> bool:
-        self.top_cam_udp_receiver.start_listening(self.top_cam_url)
+        try:
+            self.top_cam_udp_receiver.start_listening(self.top_cam_url)
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return False
+        
         #self.front_cam_udp_receiver.start_listening(self.front_cam_url)
         return True
     

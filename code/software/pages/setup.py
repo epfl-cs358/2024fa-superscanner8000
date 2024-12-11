@@ -64,14 +64,15 @@ class SetupPage(tk.Frame):
     def _display_cam_buttons(self):
         buttons_container = tk.Frame(self.container)
         buttons_container.pack(side=tk.RIGHT, pady=5, padx=50)
-        # Directional buttons
+        # Directional buttons   
 
     def _display_preview(self):
         def img_click_callback(x, y):
             points = np.array([[x, y]], dtype=np.float32)
     
             # Initialize ImageSegmenter with a random (for now) bounding box
-            self.controller.segmenter.initialize(self.controller.ss8.capture_image(), points=points)
+            self.controller.ss8.capture_image()
+            #self.controller.segmenter.initialize(self.controller.ss8.capture_image(), points=points)
 
             if(not self.object_selected):
                 self.selection_buttons_frame.pack(anchor=tk.S, pady=20)
@@ -81,7 +82,7 @@ class SetupPage(tk.Frame):
         
         def update_preview():
             new_image = self.controller.ss8.capture_image()
-            new_image = self.controller.segmenter.mask_img(new_image) if self.object_selected else new_image
+            #new_image = self.controller.segmenter.mask_img(new_image) if self.object_selected else new_image
             return new_image
         
         self.img_preview.display(update_preview, 10)
