@@ -67,8 +67,6 @@ class UDPReceiver:
             exit(1)
 
         self._send_ip_to_esp32(esp32_ip, esp32_port)
-
-        self._send_ip_to_esp32(esp32_ip, esp32_port)
         self.udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.udp_sock.bind((self.udp_ip, self.udp_port))
         self.running = True
@@ -102,7 +100,7 @@ class UDPReceiver:
                     if frame is not None:
                         with self.lock:
                             self.current_frame = frame  # Update the latest frame
-                        print("Frame received and updated.")
+                        #print("Frame received and updated.")
             except Exception as e:
                 print(f"Error while fetching frames: {e}")
 
