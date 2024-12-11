@@ -1,5 +1,35 @@
 import requests
 
+class Cam:
+    def __init__(self, url):
+        self.__url = url
+
+    def goto(self, x_coord, y_coord):
+        r = requests.post(self.__url + "/cam/goto", json={"alpha": x_coord, "beta": y_coord})
+        if r.status_code != 200:
+            return -1
+        return 0
+
+    def stop(self):
+        r = requests.post(self.__url + "/cam/stop", json={"stop": True})
+        if r.status_code != 200:
+            return -1
+        return 0
+    
+    def pos(self):
+        r = requests.get(self.__url + "/cam/status")
+        if r.status_code != 200:
+            return None
+        json = r.json()
+        return (json["x"], json["y"])
+    
+    def is_moving(self):
+        r = requests.get(self.__url + "/cam/status")
+        if r.status_code != 200:
+            return None
+        json = r.json()
+        return json["moving"]
+
 
 class Arm:
     def __init__(self, url):
@@ -36,6 +66,7 @@ class ESP32S2:
     def __init__(self):
         self.url = "http://superscanner8000:80"
         self.arm = Arm(self.url)
+        self.cam = Cam(self.url)
 
     def forward(self, time):
         r = requests.post(self.url + "/fwd", json={"ms": time})
@@ -109,7 +140,21 @@ if __name__ == "__main__":
     posy = Entry(root)
     posy.insert(0, "0")
     posy.grid(row=5, column=2)
-    Button(root, text="Goto", command=lambda: car.arm.goto(int(posy.get()), int(posy.get()))).grid(row=5, column=0)
+    Button(root, text="Goto", command=lambda: car.arm.goto(int(posx.get()), int(posy.get()))).grid(row=5, column=0)
     Button(root, text="Stop Arm", command=car.arm.stop).grid(row=4, column=0)
+
+    txt = Entry(root)
+    txt.insert(0, "0")
+    txt.grid(row=6, column=1)
+    Button(root, text="send", command=lambda: requests.post("http://superscanner8000:80/display", json={"text": txt.get()})).grid(row=6, column=0)
  
+    cposx = Entry(root)
+    cposx.insert(0, "0")
+    cposx.grid(row=8, column=1)
+    cposy = Entry(root)
+    cposy.insert(0, "0")
+    cposy.grid(row=8, column=2)
+    Button(root, text="Goto", command=lambda: car.cam.goto(int(cposx.get()), int(cposy.get()))).grid(row=8, column=0)
+    Button(root, text="Stop Cam", command=car.cam.stop).grid(row=7, column=0)
+
     root.mainloop()

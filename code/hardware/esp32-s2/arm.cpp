@@ -11,7 +11,7 @@ Arm::Arm():
     a1(40), 
     a2(40),
     gearFactor(28),
-    pulleyFactor(200 / 18),
+    pulleyFactor(200. / 18.),
     fullRevolution(200), 
     q1(0), 
     q2(0) 

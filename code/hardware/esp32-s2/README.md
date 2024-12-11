@@ -97,6 +97,31 @@ The API can be accessed from the `SPOT-iot` Wifi using the adress [`http://super
 > 
 > Stops the arm as quickly as possible. Does not need any body
 
+> ### GET `/cam/status`
+>    return format:
+>
+>        {
+>            "alpha": alpha angle where the cam wants to go
+>            "beta": beta angle where the cam wants to go
+>            "moving": boolean indicating whether the camera is moving or not
+>        }
+> 
+> Returns informations about the camera.
+
+> ### POST `/cam/goto`
+>    body format:
+>
+>        {
+>            "alpha": target angle for vertical movement
+>            "betha": target angle for horizontal movement
+>        }
+> 
+> Makes the camera move to the given angles
+
+> ### POST `/cam/stop`
+> 
+> Stops the camera as quickly as possible. Does not need any body
+
 ## class `ESP32S2`
 
 Interfaces with the API to provide an abstracted access to the scanner.

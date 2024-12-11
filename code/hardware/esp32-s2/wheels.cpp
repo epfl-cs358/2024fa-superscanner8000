@@ -1,3 +1,4 @@
+#include "esp32-hal.h"
 #include "wheels.h"
 #include <Arduino.h>
 
@@ -33,8 +34,8 @@ Wheels::Wheels()
 
         freq(30000),
         resolution(8),
-        pwmChannel1(0),
-        pwmChannel2(1),
+        //pwmChannel1(0),
+        //pwmChannel2(1),
         dutyCycle(200),
 
         t(0),
@@ -54,11 +55,14 @@ void Wheels::setup() {
     pinMode(enable2Pin, OUTPUT);
     
     // configure LEDC PWM
-    ledcAttachChannel(enable1Pin, freq, resolution, pwmChannel1);
-    ledcAttachChannel(enable2Pin, freq, resolution, pwmChannel2);
+    //ledcAttachChannel(enable1Pin, freq, resolution, pwmChannel1);
+    //ledcAttachChannel(enable2Pin, freq, resolution, pwmChannel2);
 
-    ledcWrite(enable1Pin, dutyCycle);
-    ledcWrite(enable2Pin, dutyCycle);
+    //ledcWrite(enable1Pin, dutyCycle);
+    //ledcWrite(enable2Pin, dutyCycle);
+
+    analogWrite(enable1Pin, dutyCycle);
+    analogWrite(enable2Pin, dutyCycle);
 }
 
 // updates the wheels. If the target time is set, it will stop the wheels after the target time is reached

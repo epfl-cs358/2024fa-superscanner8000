@@ -5,3 +5,4 @@ config/sam2_checkpoints/*
 packages/*
 controllers/temp/*
 controllers/dependencies/*
+!packages/README.md
