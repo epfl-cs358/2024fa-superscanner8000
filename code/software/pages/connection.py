@@ -1,8 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter.ttk import *
-from assets.style import font
-import time
 
 
 class ConnectionPage(tk.Frame):
