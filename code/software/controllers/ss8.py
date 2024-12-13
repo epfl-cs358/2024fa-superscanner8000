@@ -10,6 +10,7 @@ DEFAULT_FRONT_CAM_URL = "http://superscanner8009:80"
 TEST_CONNECTION_TIMEOUT = 3
 DEFAULT_MOVING_TIME = 5000
 TEST_SEG_WITH_VID = False
+CONNECT_TO_MOV_API = False
 
 class SS8:
     def  __init__(self, controller, disconnected_callback):
@@ -43,12 +44,11 @@ class SS8:
             bool: True if the connection is successful.
         """
 
-        
         self.api_url = api_url
         self.top_cam_url = top_cam_url
         self.front_cam_url = front_cam_url
 
-        if False and not self.init_api_connection():
+        if CONNECT_TO_MOV_API and not self.init_api_connection():
             return False
         
         # Test connection to the camera hostname and start receiving video stream
@@ -232,12 +232,13 @@ class SS8:
         """
         self._send_req(lambda: requests.post(self.api_url + "/cam/stp"), on_success=lambda: print("Stopping camera movement...")) 
 
-        
     def recenter_cam(self):
         """
         Recenter the camera to have the object to be scanned in the center of the frame.
         """
         print("Recentering camera...")
+        # TODO: Implement the recentering logic
+        
         def check_center():
             frame = self.capture_image()
             obj_coords = self.controller.segmenter.get_object_coords(frame)
@@ -255,4 +256,6 @@ class SS8:
                 self.down_camera()
             elif(pos_diff[1] < -10):
                 self.up_camera()
+        
+
             
