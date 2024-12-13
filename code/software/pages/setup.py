@@ -71,8 +71,7 @@ class SetupPage(tk.Frame):
             points = np.array([[x, y]], dtype=np.float32)
     
             # Initialize ImageSegmenter with a random (for now) bounding box
-            self.controller.ss8.capture_image()
-            #self.controller.segmenter.initialize(self.controller.ss8.capture_image(), points=points)
+            self.controller.segmenter.initialize(self.prev_img, points=points)
 
             if(not self.object_selected):
                 self.selection_buttons_frame.pack(anchor=tk.S, pady=20)
@@ -81,9 +80,9 @@ class SetupPage(tk.Frame):
         self.img_preview = ImageWidget(self, 400, 300, img_click_callback)
         
         def update_preview():
-            new_image = self.controller.ss8.capture_image()
-            #new_image = self.controller.segmenter.mask_img(new_image) if self.object_selected else new_image
-            return new_image
+            self.prev_img = self.controller.ss8.capture_image()
+            self.prev_img = self.controller.segmenter.mask_img(self.prev_img) if self.object_selected else self.prev_img
+            return self.prev_img
         
         self.img_preview.display(update_preview, 10)
 
