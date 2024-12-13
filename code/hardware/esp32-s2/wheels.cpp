@@ -2,6 +2,12 @@
 #include "wheels.h"
 #include <Arduino.h>
 
+const float WHEEL_DIAMETER_CM = 15.0; // Diameter of the wheel in cm
+const float WHEEL_CIRCUMFERENCE_CM = 3.1416 * WHEEL_DIAMETER_CM; // Circumference of the wheel in cm
+const int MAX_RPM = 110; // Max RPM of the motor
+const float TRACK_WIDTH_CM = 26.0; // Distance between the two wheels in cm
+
+
 char* directionMap(Direction Direction) {
     switch (Direction) {
         case FORWARD:
@@ -37,6 +43,7 @@ Wheels::Wheels()
         //pwmChannel1(0),
         //pwmChannel2(1),
         dutyCycle(200),
+        distancePerSecond(0.0),
 
         t(0),
         targetTime(0),
@@ -63,6 +70,25 @@ void Wheels::setup() {
 
     analogWrite(enable1Pin, dutyCycle);
     analogWrite(enable2Pin, dutyCycle);
+
+    updateDistancePerSecond();
+}
+
+void Wheels::updateDistancePerSecond() {
+    float currentRPM = MAX_RPM * (dutyCycle / 100.0); // RPM at given duty cycle
+    float rps = currentRPM / 60.0;                    // Rotations per second
+    distancePerSecond = WHEEL_CIRCUMFERENCE_CM * rps; // Distance per second in cm
+}
+
+void Wheels::setDutyCycle(int newDutyCycle) {
+    dutyCycle = newDutyCycle;
+
+    // Update PWM output
+    analogWrite(enable1Pin, dutyCycle);
+    analogWrite(enable2Pin, dutyCycle);
+
+    // Update cached distance per second
+    updateDistancePerSecond();
 }
 
 // updates the wheels. If the target time is set, it will stop the wheels after the target time is reached
@@ -86,7 +112,7 @@ void Wheels::stop() {
 void Wheels::forward(int ms) {
     Wheels::stop();
     t = millis();
-    targetTime = ms;
+    targetTime = ms; 
     direction = FORWARD;
     digitalWrite(motor1Pin1, HIGH);
     digitalWrite(motor1Pin2, LOW);
@@ -143,4 +169,32 @@ void Wheels::hard_right(int ms) {
     digitalWrite(motor1Pin2, HIGH);
     digitalWrite(motor2Pin1, HIGH);
     digitalWrite(motor2Pin2, LOW);
+}
+
+// Function with cm distance 
+
+void Wheels::forward_cm(int cm) {
+    int ms = (cm / distancePerSecond) * 1000; 
+    forward(ms);
+}
+
+void Wheels::backward_cm(int cm) {
+    int ms = (cm / distancePerSecond) * 1000;
+    backward(ms);
+}
+
+void Wheels::hard_left_angle(float angle) {
+    float angularVelocity = (distancePerSecond * 360) / (3.1416 * TRACK_WIDTH_CM);
+    float timeInSeconds = angle / angularVelocity;
+    int ms = timeInSeconds * 1000;
+
+    hard_left(ms);
+}
+
+void Wheels::hard_right_angle(float angle) {
+    float angularVelocity = (distancePerSecond * 360) / (3.1416 * TRACK_WIDTH_CM);
+    float timeInSeconds = angle / angularVelocity;
+    int ms = timeInSeconds * 1000;
+
+    hard_right(ms);
 }
