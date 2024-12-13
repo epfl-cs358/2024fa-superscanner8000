@@ -67,16 +67,16 @@ void get_status() {
 void fwd() {
   handlePost();
   Serial.print("Forward ");
-  Serial.println((int)jsonDocument["ms"]);
-  wheels.forward(jsonDocument["ms"]);
+  Serial.println((int)jsonDocument["cm"]);
+  wheels.forward_cm(jsonDocument["cm"]);
   server.send(200, "application/json", "{}");
 }
 
 void bwd() {
   handlePost();
   Serial.print("Backward ");
-  Serial.println((int)jsonDocument["ms"]);
-  wheels.backward(jsonDocument["ms"]);
+  Serial.println((int)jsonDocument["cm"]);
+  wheels.backward_cm(jsonDocument["cm"]);
   server.send(200, "application/json", "{}");
 }
 
@@ -99,16 +99,16 @@ void rgt() {
 void hrgt() {
   handlePost();
   Serial.print("Hard right ");
-  Serial.println((int)jsonDocument["ms"]);
-  wheels.hard_right(jsonDocument["ms"]);
+  Serial.println((int)jsonDocument["angle"]);
+  wheels.hard_right_angle(jsonDocument["angle"]);
   server.send(200, "application/json", "{}");
 }
 
 void hlft() {
   handlePost();
   Serial.print("Hard left ");
-  Serial.println((int)jsonDocument["ms"]);
-  wheels.hard_left(jsonDocument["ms"]);
+  Serial.println((int)jsonDocument["angle"]);
+  wheels.hard_left_angle(jsonDocument["angle"]);
   server.send(200, "application/json", "{}");
 }
 
