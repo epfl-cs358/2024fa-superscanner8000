@@ -1,7 +1,14 @@
 # Superscanner8000
 
 ** photo of finished SuperScanner8000 **
-
+## Authors
+   - Noa Emien Ette
+   - Kevan Lam Hopyang
+   - Louis Léonard Marie Larcher
+   - Antoin Baptiste Gauthier
+   - Mateo Tiedra
+   - Ugo Novello
+      
 ## Project Description 
 
 The core of this project idea is to make a mobile robot capable of identifying the object of interest and taking pictures of it from all (possible) angles. This would be paired with a desktop application that would receive the images and apply the user-selected 3D reconstruction algorithm.
@@ -36,7 +43,7 @@ Below is a brief explanation of this repository's structure to provide context a
 
 ## Make your own SuperScanner8000
 
-This section is dedicated to explaining how to build this project yourself!
+This section is dedicated to explaining how to build this project yourself! (All the printing/cutting part are available)
 
 ### Hardware
 
