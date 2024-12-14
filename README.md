@@ -2,12 +2,12 @@
 
 ** photo of finished SuperScanner8000 **
 ## Authors
-   - Noa Emien Ette
-   - Kevan Lam Hopyang
-   - Louis Léonard Marie Larcher
-   - Antoin Baptiste Gauthier
-   - Mateo Tiedra
-   - Ugo Novello
+   - [Noa Emien Ette](https://github.com/Noaemien)
+   - [Kevan Lam Hopyang](https://github.com/KevanLam)
+   - [Louis Léonard Marie Larcher](https://github.com/loulou413)
+   - [Antoine Baptiste Gauthier](https://github.com/gautierantoine195)
+   - [Mateo Tiedra](https://github.com/mateotiedra)
+   - [Ugo Novello](https://github.com/Laggrif)
       
 ## Project Description 
 
