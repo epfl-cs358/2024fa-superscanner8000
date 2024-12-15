@@ -39,7 +39,7 @@ class Wheels {
     public:
         Direction direction;
 
-        Wheels();
+        Wheels(int m1Pin1, int m1Pin2, int m1En, int m2Pin1, int m2Pin2, int m2En);
         void setup();
         void setDutyCycle(int newDutyCycle);
         void forward(int ms);

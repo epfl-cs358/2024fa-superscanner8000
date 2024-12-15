@@ -22,7 +22,7 @@ public:
     long x;
     long y;
 
-    Arm();
+    Arm(int m1Step, int m1Dir, int m2Step, int m2Dir, int _enablePin);
     void setup();
     int setPos(int _x, int _y, bool angles = false);
     void stop();

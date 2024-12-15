@@ -2,10 +2,10 @@
 #include <AccelStepper.h>
 #include <Arduino.h>
 
-Arm::Arm():   
-    enablePin(40), 
-    stepper1(AccelStepper::DRIVER, 8, 9), 
-    stepper2(AccelStepper::DRIVER, 10, 11), 
+Arm::Arm(int m1Step, int m1Dir, int m2Step, int m2Dir, int _enablePin):   
+    enablePin(_enablePin), 
+    stepper1(AccelStepper::DRIVER, m1Step, m1Dir), 
+    stepper2(AccelStepper::DRIVER, m2Step, m2Dir), 
     x(0), 
     y(0), 
     a1(40), 
@@ -17,6 +17,7 @@ Arm::Arm():
     q2(0) 
     {}
 
+// Setup function for the arm. Initializes the steppers and sets the enable pin
 void Arm::setup() {
     pinMode(enablePin, OUTPUT);
     digitalWrite(enablePin, LOW);
@@ -32,6 +33,11 @@ int Arm::setPos(int _x, int _y) {
     return setPos(_x, _y, false);
 }
 
+/** Set the position of the arm in either angles or coordinates
+ * @param _x the x coordinate or angle in degrees
+ * @param _y the y coordinate or angle in degrees
+ * @param angles true if the input is in angles, false if it is in coordinates
+ */
 int Arm::setPos(int _x, int _y, bool angles) {
     if (angles){
         if (_x < 0 || _x > 190 || _y < 0 || _y > 190) {
@@ -60,6 +66,7 @@ int Arm::setPos(int _x, int _y, bool angles) {
     return 0;
 }
 
+// Stop the arm
 void Arm::stop() {
     float accel = stepper1.acceleration();
     stepper1.setAcceleration(10000);
@@ -73,10 +80,12 @@ void Arm::stop() {
     stepper2.setAcceleration(accel);
 }
 
+// Check if the arm is moving
 bool Arm::getMoving() {
     return stepper1.distanceToGo() != 0 || stepper2.distanceToGo() != 0;
 }
 
+// Update function to move the arm
 void Arm::update() {
     if (stepper1.distanceToGo() != 0) {
         stepper1.run();
@@ -86,11 +95,13 @@ void Arm::update() {
     }
 }
 
+// Convert position to angles
 void Arm::posToAngles() {
     q2 = acos((pow(x, 2) + pow(y, 2) - pow(a1, 2) - pow(a2, 2)) / (2 * a1 * a2)); 
     q1 = atan2(y, x) - atan2(a2 * sin(q2), (a1 + a2 * cos(q2))); 
 }
 
+// Convert angles to position
 void Arm::angleToPos() {
     x = a1 * cos(q1) + a2 * cos(q1 + q2);
     y = a1 * sin(q1) + a2 * sin(q1 + q2);

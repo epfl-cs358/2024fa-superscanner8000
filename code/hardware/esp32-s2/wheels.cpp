@@ -29,19 +29,15 @@ char* directionMap(Direction Direction) {
     }
 }
 
-Wheels::Wheels()
-    :   motor1Pin1(2), 
-        motor1Pin2(3),
-        enable1Pin(1),
+Wheels::Wheels(int m1Pin1, int m1Pin2, int m1En, int m2Pin1, int m2Pin2, int m2En)
+    :   motor1Pin1(m1Pin1), 
+        motor1Pin2(m1Pin2),
+        enable1Pin(m1En),
 
-        motor2Pin1(5),
-        motor2Pin2(4),
-        enable2Pin(6),
+        motor2Pin1(m2Pin1),
+        motor2Pin2(m2Pin2),
+        enable2Pin(m2En),
 
-        freq(30000),
-        resolution(8),
-        //pwmChannel1(0),
-        //pwmChannel2(1),
         dutyCycle(200),
         distancePerSecond(0.0),
 
@@ -60,13 +56,6 @@ void Wheels::setup() {
     pinMode(motor2Pin1, OUTPUT);
     pinMode(motor2Pin2, OUTPUT);
     pinMode(enable2Pin, OUTPUT);
-    
-    // configure LEDC PWM
-    //ledcAttachChannel(enable1Pin, freq, resolution, pwmChannel1);
-    //ledcAttachChannel(enable2Pin, freq, resolution, pwmChannel2);
-
-    //ledcWrite(enable1Pin, dutyCycle);
-    //ledcWrite(enable2Pin, dutyCycle);
 
     analogWrite(enable1Pin, dutyCycle);
     analogWrite(enable2Pin, dutyCycle);
@@ -100,6 +89,7 @@ void Wheels::update() {
     }
 }
 
+// stop the wheels
 void Wheels::stop() {
     targetTime = 0;
     direction = STOP;
@@ -109,6 +99,9 @@ void Wheels::stop() {
     digitalWrite(motor2Pin2, LOW);
 }
 
+/** move the wheels forward for ms milliseconds. Moves indefinitely if ms is smaller than 0
+ * @param ms the time in milliseconds to move, smaller than 0 to move indefinitely
+ */
 void Wheels::forward(int ms) {
     Wheels::stop();
     t = millis();
@@ -120,6 +113,9 @@ void Wheels::forward(int ms) {
     digitalWrite(motor2Pin2, LOW);
 }
 
+/** move the wheels backward for ms milliseconds. Moves indefinitely if ms is smaller than 0
+ * @param ms the time in milliseconds to move, smaller than 0 to move indefinitely
+ */
 void Wheels::backward(int ms) {
     Wheels::stop();
     t = millis();
@@ -131,6 +127,9 @@ void Wheels::backward(int ms) {
     digitalWrite(motor2Pin2, HIGH);
 }
 
+/** turn one wheel left for ms milliseconds. Moves indefinitely if ms is smaller than 0
+ * @param ms the time in milliseconds to turn, smaller than 0 to move indefinitely
+ */
 void Wheels::left(int ms) {
     Wheels::stop();
     t = millis();
@@ -140,6 +139,9 @@ void Wheels::left(int ms) {
     digitalWrite(motor1Pin2, LOW);
 }
 
+/** turn one wheel right for ms milliseconds. Moves indefinitely if ms is smaller than 0
+ * @param ms the time in milliseconds to turn, smaller than 0 to move indefinitely
+ */
 void Wheels::right(int ms) {
     Wheels::stop();
     t = millis();
@@ -149,6 +151,9 @@ void Wheels::right(int ms) {
     digitalWrite(motor2Pin2, LOW);
 }
 
+/** turn both wheels left (turn on itself) for ms milliseconds. Moves indefinitely if ms is smaller than 0
+ * @param ms the time in milliseconds to turn, smaller than 0 to move indefinitely
+ */
 void Wheels::hard_left(int ms) {
     Wheels::stop();
     t = millis();
@@ -160,6 +165,9 @@ void Wheels::hard_left(int ms) {
     digitalWrite(motor2Pin2, HIGH);
 }
 
+/** turn both wheels right (turn on itself) for ms milliseconds. Moves indefinitely if ms is smaller than 0
+ * @param ms the time in milliseconds to turn, smaller than 0 to move indefinitely
+ */
 void Wheels::hard_right(int ms) {
     Wheels::stop();
     t = millis();
@@ -171,18 +179,27 @@ void Wheels::hard_right(int ms) {
     digitalWrite(motor2Pin2, LOW);
 }
 
-// Function with cm distance 
+// Function with cm distance
 
+/** move the wheels forward for cm centimeters
+ * @param cm the distance in centimeters to move
+ */
 void Wheels::forward_cm(int cm) {
     int ms = (cm / distancePerSecond) * 1000; 
     forward(ms);
 }
 
+/** move the wheels backward for cm centimeters
+ * @param cm the distance in centimeters to move
+ */
 void Wheels::backward_cm(int cm) {
     int ms = (cm / distancePerSecond) * 1000;
     backward(ms);
 }
 
+/** turn left on itself for angle degrees
+ * @param angle the angle in degrees to turn
+ */
 void Wheels::hard_left_angle(float angle) {
     float angularVelocity = (distancePerSecond * 360) / (3.1416 * TRACK_WIDTH_CM);
     float timeInSeconds = angle / angularVelocity;
@@ -191,6 +208,9 @@ void Wheels::hard_left_angle(float angle) {
     hard_left(ms);
 }
 
+/** turn right on itself for angle degrees
+ * @param angle the angle in degrees to turn
+ */
 void Wheels::hard_right_angle(float angle) {
     float angularVelocity = (distancePerSecond * 360) / (3.1416 * TRACK_WIDTH_CM);
     float timeInSeconds = angle / angularVelocity;

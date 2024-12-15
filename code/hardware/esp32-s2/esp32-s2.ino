@@ -122,8 +122,10 @@ void stp() {
 // return the current position of the arm and if it is currently moving
 void arm_status() {
   jsonDocument.clear();
-  jsonDocument["target x"] = arm.x;
-  jsonDocument["target y"] = arm.y;
+  jsonDocument["x"] = arm.x;
+  jsonDocument["y"] = arm.y;
+  jsonDocument["q1"] = arm.q1;
+  jsonDocument["q2"] = arm.q2;
   jsonDocument["moving"] = arm.getMoving();
   serializeJson(jsonDocument, buffer);
   server.send(200, "application/json", buffer);
@@ -138,7 +140,12 @@ void arm_goto() {
 
   float currentSum = arm.q1 + arm.q2;
 
-  if (arm.setPos(x, y) == -1) {
+  bool angles = false;
+  if (jsonDocument.containsKey("angles")) {
+    angles = jsonDocument["angles"];
+  }
+
+  if (arm.setPos(x, y, angles) == -1) {
     server.send(422, "application/json", "{}");
     return;
   }
@@ -188,6 +195,7 @@ void cam_stop() {
   server.send(200, "application/json", "{}");
 }
 
+//---- Display ----
 void display() {
   handlePost();
   Serial.print("Display: ");
