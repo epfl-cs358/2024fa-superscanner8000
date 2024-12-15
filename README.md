@@ -47,21 +47,48 @@ This section is dedicated to explaining how to build this project yourself! (All
 
 ### Hardware
 
-#### Main Body
+##### Main Body
 
 ###### Base
+
+Laser cut the following MDF (4mm) files :
+   - [Bottom Base](design/dxf/bottom_base.dxf)
+   - [Side Base](design/dxf/side_full.dxf)
+   - [Top Base Front](design/dxf/top_base_front.dxf)
+   - [Top Base Back](design/dxf/top_base_back.dxf)
+
+The side is made to be foldable to give our SuperScanner8000 round corners. Be careful with these specific parts as they could break. 
+You can assemble the bottom and side by glueing them but we recommend glueing the top parts once you have all the electronics setup inside.
 
 ###### Wheels
 
 ###### Structures for electronics
 
-#### Arm
+3D print the following parts :
+   - [CNC Shield Support](design/prints/CNC_shield_support.stl)
+   - [ESP32-S2 Support](design/prints/ESP32-S2_support.stl)
+   - [LiPo Support](design/prints/LiPo_support.stl)
+   - [Chihai Support](design/prints/chihai_supports.stl)
+   - [LiPo Bottom](design/prints/lipo_box/Lipo_bottom.stl)
+   - [LiPo Box](design/prints/lipo_box/Lipo_box.stl)
 
 ##### Arm
 
-##### Motor Housings
+###### Arm
 
-##### Gearbox
+3D print the parts in this folder :
+   - [Arm Folder](design/prints/long_arm)
+
+###### Gearbox
+
+3D print the parts in this folder :
+   - [Actuator Folder](design/prints/actuators)
+
+###### Motor Housings
+
+3D print the following parts :
+   - [Nema17 Housings](design/prints/housing_on_base.stl)
+
 
 ### Software
 
