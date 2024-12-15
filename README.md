@@ -48,19 +48,22 @@ This section is dedicated to explaining how to build this project yourself! (All
 ### Prerequisites
 Comprehensive list of elements we used in our project along with needed equipment. To construct the device, one should
 
-BUY:
+Buy:
 
 - 3 mm and 2.5 mm Screws
-- 2 Esp-32 Cam
+- 2 Esp-32 Cam + ov5640 (for the camera on top => better image resolution, if you got a better camera, use it)
 - Lot of PETG
-- 2 NEMA-17
+- 2 NEMA-17 (stepper motor) (17HS4401 + A4988)
+- 2 Chihai CHF-GM37-550ABHL (brush motor) + L298N (driver)
+- 2 28BYJ-48 StepperMotor (stepper motor) + ULN2003 (driver)
 
 Have access to:
 
 - LIPO Batterie
 - LIPO box (you can make it your own : [LIPO Protection tuto](https://github.com/epfl-cs358/cs358-resources/tree/main/cad/lipo_protection))
-- 3D printer with TPU filament
-- 3D printer with PET filament
+- Batterie management system (3S 12V 40A Lithium Batterie BMS)
+- 3D printer with TPU filament (for the wheel)
+- 3D printer with PET filament (bunch of it, pla should make it right too)
 - Laser cutting machine
 - MDF board 4mm
 - Driller
