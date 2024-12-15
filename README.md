@@ -50,9 +50,9 @@ Comprehensive list of elements we used in our project along with needed equipmen
 
 BUY:
 
-*3 mm and 2.5 mm Screws
-*2 Esp-32 Cam
-*Lot of PETG
+1. 3 mm and 2.5 mm Screws
+* 2 Esp-32 Cam
+* Lot of PETG
 *2 NEMA-17
 
 Have access to:
