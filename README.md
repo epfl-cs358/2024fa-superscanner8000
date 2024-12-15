@@ -1,5 +1,5 @@
 # Superscanner8000
-
+![CAD of the assembled Superrrrscanner](https://github.com/epfl-cs358/2024fa-superscanner8000/blob/main/image/Assembled-V2.gif)
 ** photo of finished SuperScanner8000 **
 ## Authors
    - [Noa Emien Ette](https://github.com/Noaemien)
