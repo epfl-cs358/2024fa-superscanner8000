@@ -119,7 +119,9 @@ You should print 2 times esp_case2 for the cam in the box that we use for object
 3D print the following parts :
    - [Nema17 Housings](design/prints/housing_on_base.stl)
 
-
+### Electronic
+#### Diagram
+![elctronic diagram](Proposal/images/WiringDiagram.png)
 ### Software
 
 
