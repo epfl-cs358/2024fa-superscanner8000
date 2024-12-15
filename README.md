@@ -50,22 +50,22 @@ Comprehensive list of elements we used in our project along with needed equipmen
 
 BUY:
 
-1. 3 mm and 2.5 mm Screws
-* 2 Esp-32 Cam
-* Lot of PETG
-*2 NEMA-17
+- 3 mm and 2.5 mm Screws
+- 2 Esp-32 Cam
+- Lot of PETG
+- 2 NEMA-17
 
 Have access to:
 
-*LIPO Batterie
-*LIPO box (you can make it your own : [LIPO Protection tuto](https://github.com/epfl-cs358/cs358-resources/tree/main/cad/lipo_protection))
-*3D printer with TPU filament
-*3D printer with PET filament
-*Laser cutting machine
-*MDF board 4mm
-*Driller
-*Bunch of different screwdrivers
-*Soldering kit
+- LIPO Batterie
+- LIPO box (you can make it your own : [LIPO Protection tuto](https://github.com/epfl-cs358/cs358-resources/tree/main/cad/lipo_protection))
+- 3D printer with TPU filament
+- 3D printer with PET filament
+- Laser cutting machine
+- MDF board 4mm
+- Driller
+- Bunch of different screwdrivers
+- Soldering kit
 
 ### Hardware
 
