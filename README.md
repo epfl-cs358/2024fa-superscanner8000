@@ -1,5 +1,5 @@
 # Superscanner8000
-![CAD of the assembled Superrrrscanner](https://github.com/epfl-cs358/2024fa-superscanner8000/blob/main/image/Assembled-V2.gif)
+![CAD of the assembled Superrrrscanner](Proposal/images/Assembled-V2.gif)
 ** photo of finished SuperScanner8000 **
 ## Authors
    - [Noa Emien Ette](https://github.com/Noaemien)
@@ -66,11 +66,12 @@ Have access to:
 - 3D printer with PET filament (bunch of it, pla should make it right too)
 - Laser cutting machine
 - MDF board 4mm
+- Airsoft Bullets (gearbox)
 - Driller
 - Bunch of different screwdrivers
 - Soldering kit
 
-### Hardware
+### Hardware Assembly
 
 ##### Main Body
 
@@ -97,12 +98,16 @@ You can assemble the bottom and side by glueing them but we recommend glueing th
    - [LiPo Bottom](design/prints/lipo_box/Lipo_bottom.stl)
    - [LiPo Box](design/prints/lipo_box/Lipo_box.stl)
 
+Here, drill your own hole to make your own wire management.
+
 ##### Arm
 
 ###### Arm
 
 3D print the parts in this folder :
    - [Arm Folder](design/prints/long_arm)
+
+You should print 2 times esp_case2 for the cam in the box that we use for object detection.
 
 ###### Gearbox
 
