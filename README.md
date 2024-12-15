@@ -123,5 +123,9 @@ You should print 2 times esp_case2 for the cam in the box that we use for object
 #### Diagram
 ![elctronic diagram](Proposal/images/WiringDiagram.png)
 ### Software
+## Gratitude and Appreciation
+We would like to express our special thanks to our assisstant [Pinar](https://github.com/pinar-oray) and [Julian](https://github.com/julianmarmier), whose insights and suggestions were instrumental in shaping our super scanner. We are also grateful to [Timofey](https://github.com/kreslotim) for his technical support and encouragement and constructive feedback.
+
+And I (Kevan) would like to thanks my peers, my friends for this fun project.
 
 
