@@ -1,6 +1,6 @@
 # Superscanner8000
 ![CAD of the assembled Superrrrscanner](Proposal/images/Assembled-V2.gif)
-**photo of finished SuperScanner8000**
+- **photo of finished SuperScanner8000**
 ## Authors
    - [Noa Emien Ette](https://github.com/Noaemien)
    - [Kevan Lam Hopyang](https://github.com/KevanLam)
