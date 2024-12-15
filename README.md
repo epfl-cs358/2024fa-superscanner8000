@@ -45,6 +45,28 @@ Below is a brief explanation of this repository's structure to provide context a
 
 This section is dedicated to explaining how to build this project yourself! (All the printing/cutting part are available)
 
+### Prerequisites
+Comprehensive list of elements we used in our project along with needed equipment. To construct the device, one should
+
+BUY:
+
+*3 mm and 2.5 mm Screws
+*2 Esp-32 Cam
+*Lot of PETG
+*2 NEMA-17
+
+Have access to:
+
+*LIPO Batterie
+*LIPO box (you can make it your own : [LIPO Protection tuto](https://github.com/epfl-cs358/cs358-resources/tree/main/cad/lipo_protection))
+*3D printer with TPU filament
+*3D printer with PET filament
+*Laser cutting machine
+*MDF board 4mm
+*Driller
+*Bunch of different screwdrivers
+*Soldering kit
+
 ### Hardware
 
 ##### Main Body
