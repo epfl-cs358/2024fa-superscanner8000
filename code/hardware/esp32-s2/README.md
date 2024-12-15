@@ -75,8 +75,10 @@ The API can be accessed from the `SPOT-iot` Wifi using the adress [`http://super
 >    return format:
 >
 >        {
->            "target x": x position where the arm is or wants to go if in movement
->            "target y": y position where the arm is or wants to go if in movement
+>            "x": x position where the arm is
+>            "y": y position where the arm is
+>            "q1": angle of first stepper in degrees
+>            "q2": angle of the second stepper in degrees
 >            "moving": boolean indicating whether the arm is moving or not
 >        }
 > 
@@ -88,10 +90,11 @@ The API can be accessed from the `SPOT-iot` Wifi using the adress [`http://super
 >        {
 >            "x": target x position
 >            "y": target y position
+>            "angles": boolean indicationg whether x and y are positions or angles
 >        }
 > 
 > Makes the arm move to the given position
->> might return error code `422` if coordinates are not valid
+>> might return error code `422` if coordinates or angles are not valid
 
 > ### POST `/arm/stop`
 > 
@@ -117,6 +120,7 @@ The API can be accessed from the `SPOT-iot` Wifi using the adress [`http://super
 >        }
 > 
 > Makes the camera move to the given angles
+>> Might return error code `422` if angles are not valid
 
 > ### POST `/cam/stop`
 > 
