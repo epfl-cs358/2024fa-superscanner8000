@@ -17,6 +17,9 @@ BODY_ANGLE_TO_TIME = 1 # Time to rotate the body by 1 radian            TODO: Up
 BODY_DIST_TO_TIME = 1 # Time to move the body by 1 cm                   TODO: Update this value
 TOP_CAM_ANGLE_TO_TIME = 1 # Time to rotate the top camera by 1 radian
 
+# SS8 cam constants
+TOP_CAM_FOV = 60
+
 # Dev config constants
 TEST_CONNECTION_TIMEOUT = 3
 TEST_SEG_WITH_VID = False
@@ -237,7 +240,10 @@ class SS8:
         x (int): The x coordinate to move to.
         y (int): The y coordinate to move to.
         """
-        self._send_req(lambda: requests.post(self.api_url + "/arm/goto", json={"x": x, "y": y}), on_success=lambda: print("Moving arm to position..."))
+        if (x == 0 and y == 0):
+            self._send_req(lambda: requests.post(self.api_url + "/arm/goto", json={"x": 0, "y": 0, "angles": True}), on_success=lambda: print("Moving arm to home position..."))
+        else:
+            self._send_req(lambda: requests.post(self.api_url + "/arm/goto", json={"x": x, "y": y}), on_success=lambda: print("Moving arm to position..."))
 
     def stop_arm(self):
         """
@@ -269,31 +275,34 @@ class SS8:
             return 
 
         self._send_req(lambda: requests.get(self.api_url + "/cam/status"), on_success=on_success)
+
     def recenter_cam(self, next=None):
         """
         Recenter the camera to have the object to be scanned in the center of the frame.
         next (function): The function to call after the camera has been recentered.
         """
         print("Recentering camera...")
-        # TODO: Implement the recentering logic
+
+        def pixels_to_angle(pixels, resolution):
+            return pixels * TOP_CAM_FOV / resolution[0] * np.pi / 180
         
-        def check_center():
+        while abs(pos_diff[0]) > 10 and abs(pos_diff[1]) > 10:
             frame = self.capture_image()
             obj_coords = self.controller.segmenter.get_object_coords(frame)
             frame_center = frame.shape[:2]/2
             pos_diff = obj_coords - frame_center
 
             if(pos_diff[0] > 10):
-                self.rotate_right()
+                self.rotate_right(pixels_to_angle(pos_diff[0], frame.shape[1]))
             elif(pos_diff[0] < -10):
-                self.rotate_left()
+                self.rotate_left(pixels_to_angle(pos_diff[0], frame.shape[1]))
             else:
                 self.stop_mov()
             
             if(pos_diff[1] > 10):
-                self.down_camera()
+                self.down_camera(pixels_to_angle(pos_diff[1], frame.shape[0]))
             elif(pos_diff[1] < -10):
-                self.up_camera()
+                self.up_camera(pixels_to_angle(pos_diff[1], frame.shape[0]))
         
 
             
