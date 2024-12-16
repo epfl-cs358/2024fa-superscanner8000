@@ -3,11 +3,14 @@ import cv2
 import numpy as np
 import threading
 from urllib.parse import urlparse
+import tempfile
+import os
 
 
 DEFAULT_UDP_IP = "0.0.0.0"  # Listen on all available interfaces
 DEFAULT_UDP_PORT = 12346    # Port used for receiving the stream
 DEFAULT_UDP_PORT = 12349   # Port used for receiving the stream
+frame_counter = 0
 
 
 class UDPReceiver:
@@ -114,6 +117,25 @@ class UDPReceiver:
             print("No frame available.")
             return None
 
+    def save_frame(self, frame):  # Save the current frame to a file
+        """
+        Save the given frame to a temporary folder with a unique filename.
+        """
+        global frame_counter
+        if frame is not None:
+            # Get the system's temporary directory
+            temp_dir = tempfile.gettempdir()
+            # Construct the full path for the file with a numbered filename
+            filename = f"frame_{frame_counter}.jpg"
+            temp_file_path = os.path.join(temp_dir, filename)
+            # Save the frame to the temporary folder
+            cv2.imwrite(temp_file_path, frame)
+            print(f"Saved frame {frame_counter} to {temp_file_path}")
+            # Increment the frame counter
+            frame_counter += 1
+        else:
+            print("No frame available to save.")
+
     def stop(self):
         """
         Stops the background frame fetching and closes the UDP socket.
@@ -128,16 +150,17 @@ if __name__ == "__main__":
     DEFAULT_TOP_CAM_URL = "http://superscanner8008:80"
     DEFAULT_FRONT_CAM_URL = "http://superscanner8009:80"
     top_cam_udp_receiver = UDPReceiver(12346, "0.0.0.0")
-    front_cam_udp_receiver = UDPReceiver(12349, "0.0.0.0")
+    #front_cam_udp_receiver = UDPReceiver(12349, "0.0.0.0")
     top_cam_udp_receiver.start_listening(DEFAULT_TOP_CAM_URL)
-    front_cam_udp_receiver.start_listening(DEFAULT_FRONT_CAM_URL)
+    #ront_cam_udp_receiver.start_listening(DEFAULT_FRONT_CAM_URL)
     ContVid = True
     def update_frame():
-        cv2.namedWindow('front', cv2.WINDOW_NORMAL)
+        #cv2.namedWindow('front', cv2.WINDOW_NORMAL)
         cv2.namedWindow('top', cv2.WINDOW_NORMAL)
         while ContVid :
-            if front_cam_udp_receiver.current_frame is not None :
-                cv2.imshow('front', front_cam_udp_receiver.current_frame)
+            #if front_cam_udp_receiver.current_frame is not None :
+
+                #cv2.imshow('front', front_cam_udp_receiver.current_frame)
             if top_cam_udp_receiver.current_frame is not None :
                 cv2.imshow('top', top_cam_udp_receiver.current_frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):  # Allow exit with 'q' key
@@ -147,6 +170,9 @@ if __name__ == "__main__":
     thread = threading.Thread(target=update_frame)
     thread.start()
     print("fdgdfgfd")
+    top_cam_udp_receiver.save_frame(top_cam_udp_receiver.current_frame)
+
+
 
     
 
