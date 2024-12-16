@@ -138,6 +138,8 @@ class Object_Detector:
         while True:
             print('Detecting occupancy')
             frame = self.ss8.capture_image('front')
+            if frame is None:
+                continue
             depth = self._get_depth_map(frame)
             occupancy_map = self._get_occupancy_map(depth)
 
