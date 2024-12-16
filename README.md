@@ -50,15 +50,12 @@ Comprehensive list of elements we used in our project along with needed equipmen
 
 Buy:
 
-- 3 mm and 2.5 mm Screws
 - 2 Esp-32 Cam + ov5640 (for the camera on top => better image resolution, if you got a better camera, use it)
 - Lot of PETG
 - 2 NEMA-17 (stepper motor) (17HS4401 + A4988)
 - 2 Chihai CHF-GM37-550ABHL (brush motor) + L298N (driver)
 - 2 28BYJ-48 StepperMotor (stepper motor) + ULN2003 (driver)
-- 4 Magnets
-- 6 small ball bearings (for the gearbox)
-- 4 small omni bearings (for the caster wheel)
+- QAPass 1602a
 
 Have access to:
 
@@ -70,6 +67,11 @@ Have access to:
 - Laser cutting machine
 - MDF board 4mm
 - Airsoft Bullets (gearbox)
+- 6 small ball bearings (gearbox)
+- 4 small omni bearings (caster wheel)
+- Ball (caster wheel : e.g. table football ball)
+- 4 Magnets (QAPass)
+- 3 mm and 2.5 mm Screws
 - Driller
 - Bunch of different screwdrivers
 - Soldering kit
@@ -134,7 +136,7 @@ You should print 2 times esp_case2 for the cam in the box that we use for object
    - [Motor Clamp](design/prints/actuators/Nema17_clamp.stl)
    - [Motor Mount](design/prints/actuators/nema17_mount.stl)
 
-You'll also need the 6 ball bearings to create this gearbox.
+You'll also need the 6 ball bearings and the airsoft bullets to create this gearbox.
 We followed [this tutorial](https://www.thingiverse.com/thing:4428749/) to create our gearbox.
 
 ###### Motor Housings
