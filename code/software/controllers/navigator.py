@@ -5,17 +5,21 @@ import config.dev_config as dconfig
 
 STEP_DISTANCE = 5
 DEFAULT_CALLIBRATION_DISTANCE = 10000
-CENTER_THRESHOLD = 50
+CENTER_THRESHOLD = 25
 SHOW_NAVIGATION = True
 
 class Navigator:
-    def __init__(self, ss8, segmenter):
+    def __init__(self, ss8, on_break, on_finish):
         self.ss8 = ss8
+        self.on_break = on_break
+        self.on_finish = on_finish
+
+        print(on_break)
 
         self.trajectory = []
-        self.ss8_pos = np.array([0, 0])
+        self.ss8_pos = np.array([0., 0.])
         self.ss8_angle = math.pi / 2
-        self.obj_pos = np.array([0, 0])
+        self.obj_pos = np.array([0., 0.])
         self.obstacles = np.array([])
         self.moving = False
 
@@ -25,6 +29,10 @@ class Navigator:
         iteration (int): The number of iteration to do.
         """
 
+        print('Callibrating...')
+
+        self._set_circle_trajectory(50, step_nbr)
+        return 
         if not dconfig.SIMULATION_MODE:
             self._align_ss8_to_obj()
 
@@ -53,14 +61,28 @@ class Navigator:
         """
         self.obstacles = np.append(self.obstacles, ForcePoint(self.ss8_pos+relative_position, size, 3))
         
-    def start_moving(self):
+    async def start_moving(self, interation):
         self.moving = True
 
+        await self.callibrate(interation)
+
         async def move():
-            dep = self._compute_next_deplacement()
-            await self._move_of(dep)
+
+            next_dep, must_take_break = self._compute_next_deplacement()
+
+            if must_take_break:
+                await self._pause_and_resume()
+
             if self.moving:
-                asyncio.run(move())
+                abs_angle = math.atan2(next_dep[1], next_dep[0])
+                diff_angle = abs_angle - self.ss8_angle
+                norm = np.linalg.norm(next_dep)
+                # print('Next deplacement : ', next_dep)
+
+                await self._move_of(diff_angle, norm)
+                await move()
+
+        await move()
 
     def stop_moving(self):
         self.moving = False
@@ -100,38 +122,48 @@ class Navigator:
         radius (int): The radius of the circle.
         step_nbr (int): The number of steps in the circle.
         """
-        self.obj_pos = self.pos - np.array([radius, 0])
+        self.obj_pos = self.ss8_pos - np.array([radius, 0])
         self.trajectory = []
-        for a in range(0, 360, 360//step_nbr):
-            x = radius * math.cos(math.radians(a))
+        for a in range(360//step_nbr, 360, 360//step_nbr):
+            x = radius * (math.cos(math.radians(a))-1)
             y = radius * math.sin(math.radians(a))
+            #print('Point : ', x, y)
             self.trajectory.append((ForcePoint(np.array([x, y])), math.radians(a)))
     
     def _compute_next_deplacement(self):
         """
         Get the next deplacement to reach the next point in the trajectory while avoiding the obstacles.
         """
+        new_reach_point = False
         
         # Get the angle to reach the next point
-        angle = np.tan(self.ss8_pos - self.obj_pos)
+        tracking_vec = self.ss8_pos - self.obj_pos
+        angle = math.atan2(tracking_vec[1], tracking_vec[0]) % (2*np.pi)
 
         # Get the next point in the trajectory (the one with the closest angle above the current angle)
         reach_point = self.trajectory[0]
         while reach_point[1] < angle:
-            self.moving = False
+            if(len(self.trajectory) <= 0):
+                self.moving = False
+                self.on_finish()
+                return np.array([0, 0]), False
             reach_point = self.trajectory.pop(0)
-            
+            print('Reach point : ', reach_point[0].get_pos())
+            new_reach_point = True
+
         reach_point = self.trajectory[0][0]
+        print(f'\n\nCurrent position : {self.ss8_pos} || Current angle : {angle} \n Reach point : {reach_point.get_pos()} || Reach angle : {self.trajectory[0][1]} \n\n')
+
 
         # Compute the next deplacement with the contribution of the obstacles and the reach point
         next_dep = reach_point.get_contribution(self.ss8_pos)
-        for obs in self.obstacle:
-            next_dep += obs.get_contribution(self.ss8_pos)
+        """ for obs in self.obstacles:
+            next_dep += obs.get_contribution(self.ss8_pos) """
 
         next_dep = (next_dep / np.linalg.norm(next_dep)) * STEP_DISTANCE
-        angle = np.tan(next_dep) - self.ss8_angle
+        
 
-        return angle, STEP_DISTANCE
+        return next_dep, new_reach_point
     
     async def _move_of(self, angle, distance):
         """
@@ -141,16 +173,30 @@ class Navigator:
         """
 
         # Rotate the ss8 to the given angle (rotate left if the angle smaller than PI, right otherwise)
+        angle = angle % (2*np.pi)
+        
         if angle < np.pi:
             await self.ss8.rotate_left(angle)
         else:
             await self.ss8.rotate_right(2*np.pi - angle)
         
+        self.ss8_angle = (self.ss8_angle + angle) % (2*np.pi)
+        
         # Move the ss8 forward
         await self.ss8.move_forward(distance)
+        self.ss8_pos += np.array([distance * math.cos(self.ss8_angle), distance * math.sin(self.ss8_angle)])
+        return
+    
+    async def _pause_and_resume(self):
+        """
+        Pause the movement and restart it.
+        """
+        self.moving = False
+        self.on_break()
+        self.moving = True
         return
 
-DEFAULT_FORCE_NORM = 1
+DEFAULT_FORCE_NORM = 1000
 DEFAULT_DIST_ORDER = 1
 
 class ForcePoint:
@@ -171,10 +217,13 @@ class ForcePoint:
         pos (tuple): The position to compute the contribution.
         """
 
-        dist = np.array(pos) - self.pos
+        dist =  self.pos - np.array(pos)
         dist_norm = np.linalg.norm(dist, ord=self.dist_order)
 
         if dist_norm < 0.1:
             return np.array([0, 0])
 
         return (self.force / (dist_norm ** self.dist_order)) * (dist / dist_norm)
+    
+    def get_pos(self):
+        return self.pos

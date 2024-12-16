@@ -149,7 +149,7 @@ class SS8:
 
     # Instrucitons methods
 
-    async def _send_req(self, req_func, on_error=lambda: None, on_success=lambda: None):
+    async def _send_req(self, req_func, on_error=lambda: None):
         """
         Send a request to the connected device.
 
@@ -178,8 +178,8 @@ class SS8:
         ms = dist*BODY_DIST_TO_TIME
 
         if not dconfig.SIMULATION_MODE:
-            print("Moving forward...")
             await self._send_req(lambda: requests.post(self.api_url + "/fwd", json={"ms": ms}))
+        print(f"Moving forward of {dist} cm...")
         
         if wait_for_completion:
             await asyncio.sleep(ms*0.001)
@@ -194,42 +194,44 @@ class SS8:
 
         if not dconfig.SIMULATION_MODE:
             await self._send_req(lambda: requests.post(self.api_url + "/bwd", json={"ms": ms}))
-        print("Moving backward...")
+        print(f"Moving backward of {dist} cm...")
 
         if wait_for_completion:
             await asyncio.sleep(ms*0.001)
 
         return
         
-    async def rotate_left(self, dist=DEFAULT_ROTATING_ANGLE, wait_for_completion=True):
+    async def rotate_left(self, angle=DEFAULT_ROTATING_ANGLE, wait_for_completion=True):
         """
         Rotate the device to the left.
-        dist (int): The distance or duration to rotate. If positive, the device rotates for the given time. 
+        angle (int): The angleance or duration to rotate. If positive, the device rotates for the given time. 
                     If negative, the device rotates until it stops.
         """
-        ms=dist*BODY_ANGLE_TO_TIME
+        ms=angle*BODY_ANGLE_TO_TIME
 
         if not dconfig.SIMULATION_MODE:
-            await self._send_req(lambda: requests.post(self.api_url + "/hlft", json={"ms": dist*BODY_ANGLE_TO_TIME}))
-        print("Rotating left...")
+            await self._send_req(lambda: requests.post(self.api_url + "/hlft", json={"ms": angle*BODY_ANGLE_TO_TIME}))
+        
+        print(f"Rotating left of {round(angle*180/np.pi)} degrees...")
 
         if wait_for_completion:
             await asyncio.sleep(ms*0.001)
 
         return
         
-    async def rotate_right(self, dist=DEFAULT_ROTATING_ANGLE, wait_for_completion=True):
+    async def rotate_right(self, angle=DEFAULT_ROTATING_ANGLE, wait_for_completion=True):
         """
         Rotate the device to the right.
-        dist (int): The distance or duration to rotate. If positive, the device rotates for the given time. 
+        angle (int): The angleance or duration to rotate. If positive, the device rotates for the given time. 
                     If negative, the device rotates until it stops.
         
         """
-        ms=dist*BODY_ANGLE_TO_TIME
+        ms=angle*BODY_ANGLE_TO_TIME
 
         if not dconfig.SIMULATION_MODE:
-            await self._send_req(lambda: requests.post(self.api_url + "/hrgt", json={"ms": dist*BODY_ANGLE_TO_TIME}))
-        print("Rotating right...")
+            await self._send_req(lambda: requests.post(self.api_url + "/hrgt", json={"ms": angle*BODY_ANGLE_TO_TIME}))
+        print(f"Rotating right of {round(angle*180/np.pi, 1)} degrees...")
+
         
         if wait_for_completion:
             await asyncio.sleep(ms*0.001)
