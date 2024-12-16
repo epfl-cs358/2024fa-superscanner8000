@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter.ttk import *
 from controllers.navigator import Navigator
+from controllers.object_detector import Object_Detector
 import asyncio
 
 CALIBRATION_ITERATION = 4
@@ -26,6 +27,9 @@ class ScanningPage(tk.Frame):
         button.pack(pady=10)
 
         self.nav = Navigator(self.controller.ss8, self._save_image, lambda: print('Finish first round'))
+        
+        self.detector = Object_Detector(self.nav, self.ss8, visualize=False)
+        
         asyncio.run(self._start_scanning())
 
     async def _start_scanning(self):
@@ -35,10 +39,10 @@ class ScanningPage(tk.Frame):
         # Start the movement
         mov_coroutine = asyncio.create_task(self.nav.start_moving(4))
 
-        # TODO : Start the detection of obstacles and save them to the navigator with self.nav.add_obstacle()
-        print('Start adding obstacles')
+        detector_coroutine = asyncio.create_task(self.detector.detect_occupancy())
 
         await mov_coroutine
+        await detector_coroutine
 
     def _interrupt_scan(self):
         self.controller.ss8.stop_mov()

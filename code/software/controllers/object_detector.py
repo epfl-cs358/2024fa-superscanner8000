@@ -1,16 +1,15 @@
 import cv2
 import numpy as np
 import torch
-from image_segmenter import ImageSegmenter
-from navigator import Navigator
-from ss8 import SS8
+from controllers.image_segmenter import ImageSegmenter
+from controllers.navigator import Navigator
+from controllers.ss8 import SS8
 import sys, pathlib, asyncio
 
 path_to_da = pathlib.Path(__file__).parent / "packages/depth_anything_v2"
 sys.path.insert(0, str(path_to_da))
-from depth_anything_v2.dpt import DepthAnythingV2
+from packages.depth_anything_v2.depth_anything_v2.dpt import DepthAnythingV2
 
-import rerun as rr
 import time
 
 class Object_Detector:
@@ -137,6 +136,7 @@ class Object_Detector:
     
     async def detect_occupancy(self):
         while True:
+            print('Detecting occupancy')
             frame = self.ss8.capture_image('front')
             depth = self._get_depth_map(frame)
             occupancy_map = self._get_occupancy_map(depth)
