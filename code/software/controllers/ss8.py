@@ -19,6 +19,12 @@ DEFAULT_ROTATING_ANGLE = np.pi/2
 BODY_ANGLE_TO_TIME = 1591.55 # Time to rotate the body by 1 radian            TODO: Update this value
 BODY_DIST_TO_TIME = 66 # Time to move the body by 1 cm                   TODO: Update this value
 TOP_CAM_ANGLE_TO_TIME = 1 # Time to rotate the top camera by 1 radian
+TOP_CAM_FOV = 60
+
+# Dev config constants
+TEST_CONNECTION_TIMEOUT = 3
+TEST_SEG_WITH_VID = False
+CONNECT_TO_MOV_API = False
 
 class SS8:
     def  __init__(self, controller, disconnected_callback):
@@ -254,9 +260,12 @@ class SS8:
         x (int): The x coordinate to move to.
         y (int): The y coordinate to move to.
         """
-        
+            
         if not dconfig.SIMULATION_MODE:
-            await self._send_req(lambda: requests.post(self.api_url + "/arm/goto", json={"x": x, "y": y}))
+            if (x == 0 and y == 0):
+                await self._send_req(lambda: requests.post(self.api_url + "/arm/goto", json={"x": 0, "y": 0, "angles": True}))
+            else:
+                await self._send_req(lambda: requests.post(self.api_url + "/arm/goto", json={"x": x, "y": y}))
         print("Moving arm to position...")
 
         return

@@ -50,23 +50,30 @@ Comprehensive list of elements we used in our project along with needed equipmen
 
 Buy:
 
-- 3 mm and 2.5 mm Screws
 - 2 Esp-32 Cam + ov5640 (for the camera on top => better image resolution, if you got a better camera, use it)
 - Lot of PETG
 - 2 NEMA-17 (stepper motor) (17HS4401 + A4988)
 - 2 Chihai CHF-GM37-550ABHL (brush motor) + L298N (driver)
 - 2 28BYJ-48 StepperMotor (stepper motor) + ULN2003 (driver)
+- QAPass 1602a
 
 Have access to:
 
 - LIPO Batterie
 - LIPO box (you can make it your own : [LIPO Protection tuto](https://github.com/epfl-cs358/cs358-resources/tree/main/cad/lipo_protection))
 - Batterie management system (3S 12V 40A Lithium Batterie BMS)
-- 3D printer with TPU filament (for the wheel)
+- 3D printer with TPU filament (for the outer wheel)
 - 3D printer with PET filament (bunch of it, pla should make it right too)
 - Laser cutting machine
 - MDF board 4mm
 - Airsoft Bullets (gearbox)
+- 6 small ball bearings (gearbox)
+- 4 small omni bearings (caster wheel)
+- Ball (caster wheel : e.g. table football ball)
+- 4 Magnets (QAPass)
+- Belt (Arm)
+- 6mm Stailness Steel bar (Arm)
+- 3 mm and 2.5 mm Screws
 - Driller
 - Bunch of different screwdrivers
 - Soldering kit
@@ -87,6 +94,17 @@ The side is made to be foldable to give our SuperScanner8000 round corners. Be c
 You can assemble the bottom and side by glueing them but we recommend glueing the top parts once you have all the electronics setup inside.
 
 ###### Wheels
+
+3D print the following parts : 
+   - 2 * [Inner Wheel](design/prints/inner_wheel.stl)
+   - 2 * [Outer Wheel](design/prints/outer_wheel.stl) (Beware you need to print this in TPU)
+
+###### Caster Wheel
+
+3D print the following folder : 
+   - [Caster Wheel Folder](design/prints/caster)
+
+You will also need the 4 omni bearings for this part.
 
 ###### Structures for electronics
 
@@ -111,13 +129,28 @@ You should print 2 times esp_case2 for the cam in the box that we use for object
 
 ###### Gearbox
 
-3D print the parts in this folder :
-   - [Actuator Folder](design/prints/actuators)
+3D print the parts in the actuator folder :
+   - [15th Planet Carrier](design/prints/actuators/15th_planet_carrier.stl)
+   - [15th Sun](design/prints/actuators/15th_sun_stage1.stl)
+   - 3 * [25th Planet Stage 1](design/prints/actuators/25th_planet_stage1.stl)
+   - 3 * [25th Planet Stage 2](design/prints/actuators/25th_planet_stage2.stl)
+   - [Motor Base Ring](design/prints/actuators/Nema17_base_ring.stl)
+   - [Motor Clamp](design/prints/actuators/Nema17_clamp.stl)
+   - [Motor Mount](design/prints/actuators/nema17_mount.stl)
+
+You'll also need the 6 ball bearings and the airsoft bullets to create this gearbox.
+We followed [this tutorial](https://www.thingiverse.com/thing:4428749/) to create our gearbox.
 
 ###### Motor Housings
 
 3D print the following parts :
    - [Nema17 Housings](design/prints/housing_on_base.stl)
+
+Here we also used some small carpet textile to reduce the stepper motor noise.
+
+###### Assembly Of The Arm
+
+Once you have printed all these components you will firstly you'll want to screw the 4 arm parts together as well as the upper arm (make sure you add the metal/stainless steel bar at the elbow and the camera in the upper arm section). You can also screw the housings to the top of the base and screw the gearbox to a stepper motor in parallel. Now you can screw the arm to the gearbox and finally place the stepper motors in the housings (first thebelt one and then the gearbox one, don't forget the carpet). Add the belt and you'll be good to go!
 
 ### Electronic
 #### Diagram

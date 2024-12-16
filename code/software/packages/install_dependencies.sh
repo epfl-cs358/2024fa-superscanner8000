@@ -5,6 +5,9 @@ pip install -e .
 
 cd ..
 
+#clone depth anything v2
+git clone https://github.com/DepthAnything/Depth-Anything-V2.git depth_anything_v2
+
 #clone VCG repo
 git clone https://github.com/cnr-isti-vclab/vcglib.git
 

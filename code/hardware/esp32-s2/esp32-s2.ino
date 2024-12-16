@@ -7,20 +7,15 @@
 #include "arm.h"
 #include "cam_angles.h"
 #include <ArduinoJson.h>
+#include "display.h"
 
 WebServer server(80);
-Arm arm = Arm(8, 9, 10, 11, 7);
-Wheels wheels = Wheels(2, 3, 1, 5, 4, 6);
+Arm arm(8, 9, 10, 11, 7);
+Wheels wheels(2, 3, 1, 5, 4, 6);
 CamAngles camera(12, 13, 14, 15, 39, 40, 41, 42, 200); 
+Display display(36, 35, 34, 33, 20, 21, 38, 37);
 
-// LCD pins
-const int rs = 36, en = 35, d4 = 34, d5 = 33, d6 = 20, d7 = 21;
-LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
-// output control pins
-#define LCD_CONTRAST_PIN 38 // 10 // yellow on diagram
-#define LCD_BACKLIGHT_PIN 37 // 11 // 2nd from the right on diagram
-
-StaticJsonDocument<250> jsonDocument;
+StaticJsonDocument<250> jsonDocument; 
 char buffer[250];
 
 // set the endpoints for the API
@@ -42,7 +37,8 @@ void setup_routing() {
   server.on("/cam/goto", HTTP_POST, cam_goto);
   server.on("/cam/stp", HTTP_POST, cam_stop);
 
-  server.on("/display", HTTP_POST, display);
+  server.on("/text", HTTP_POST, text);
+  server.on("scroll", HTTP_POST, scroll);
           
   server.begin();    
 }
@@ -196,27 +192,37 @@ void cam_stop() {
 }
 
 //---- Display ----
-void display() {
+void text() {
   handlePost();
-  Serial.print("Display: ");
+  
   String text = jsonDocument["text"];
-  Serial.println(text);
-  lcd.clear();
-  lcd.print(text);
+  
+  display.print(text);
+
+  server.send(200, "application/json", "{}");
+}
+
+void scroll() {
+  handlePost();
+  
+  String text1 = jsonDocument["text1"];
+  String text2 = jsonDocument["text2"];
+  
+  display.scroll(text1, text2);
 
   server.send(200, "application/json", "{}");
 }
 
 
-void setup() {     
-  //set some defaults
-  analogWrite(LCD_BACKLIGHT_PIN, 255); //set backlight on
-  analogWrite(LCD_CONTRAST_PIN, 100); //set some contrast
-  // set up the LCD's number of columns and rows:
-  lcd.begin(16, 2);
-  lcd.print("Starting...");
-
+void setup() {
   Serial.begin(115200); 
+
+  arm.setup();
+  wheels.setup();
+  camera.setup();
+  display.setup();
+
+  display.scroll("Connecting to Wi-Fi", "Please wait");
 
   Serial.print("Connecting to Wi-Fi with password ");
   Serial.println(PWD);
@@ -227,20 +233,17 @@ void setup() {
     Serial.print(".");
     delay(500);
   }
- 
+  
+  display.scroll("Connected to Wi-Fi with hostname superscanner8000", "");
   Serial.print("Connected! IP Address: ");
   Serial.println(WiFi.localIP()); 
   setup_routing();
-
-  arm.setup();
-  wheels.setup();
-  camera.setup();
 }    
        
 void loop() {    
   server.handleClient();     
   arm.update();
-  yield();
   wheels.update();
   camera.update();
+  display.update();
 }
