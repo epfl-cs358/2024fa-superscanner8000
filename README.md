@@ -56,13 +56,16 @@ Buy:
 - 2 NEMA-17 (stepper motor) (17HS4401 + A4988)
 - 2 Chihai CHF-GM37-550ABHL (brush motor) + L298N (driver)
 - 2 28BYJ-48 StepperMotor (stepper motor) + ULN2003 (driver)
+- 4 Magnets
+- 6 small ball bearings (for the gearbox)
+- 4 small omni bearings (for the caster wheel)
 
 Have access to:
 
 - LIPO Batterie
 - LIPO box (you can make it your own : [LIPO Protection tuto](https://github.com/epfl-cs358/cs358-resources/tree/main/cad/lipo_protection))
 - Batterie management system (3S 12V 40A Lithium Batterie BMS)
-- 3D printer with TPU filament (for the wheel)
+- 3D printer with TPU filament (for the outer wheel)
 - 3D printer with PET filament (bunch of it, pla should make it right too)
 - Laser cutting machine
 - MDF board 4mm
@@ -88,6 +91,17 @@ You can assemble the bottom and side by glueing them but we recommend glueing th
 
 ###### Wheels
 
+3D print the following parts : 
+   - 2 * [Inner Wheel](design/prints/inner_wheel.stl)
+   - 2 * [Outer Wheel](design/prints/outer_wheel.stl) (Beware you need to print this in TPU)
+
+###### Caster Wheel
+
+3D print the following folder : 
+   - [Caster Wheel Folder](design/prints/caster)
+
+You will also need the 4 omni bearings for this part.
+
 ###### Structures for electronics
 
 3D print the following parts :
@@ -111,13 +125,24 @@ You should print 2 times esp_case2 for the cam in the box that we use for object
 
 ###### Gearbox
 
-3D print the parts in this folder :
-   - [Actuator Folder](design/prints/actuators)
+3D print the parts in the actuator folder :
+   - [15th Planet Carrier](design/prints/actuators/15th_planet_carrier.stl)
+   - [15th Sun](design/prints/actuators/15th_sun_stage1.stl)
+   - 3 * [25th Planet Stage 1](design/prints/actuators/25th_planet_stage1.stl)
+   - 3 * [25th Planet Stage 2](design/prints/actuators/25th_planet_stage2.stl)
+   - [Motor Base Ring](design/prints/actuators/Nema17_base_ring.stl)
+   - [Motor Clamp](design/prints/actuators/Nema17_clamp.stl)
+   - [Motor Mount](design/prints/actuators/nema17_mount.stl)
+
+You'll also need the 6 ball bearings to create this gearbox.
+We followed [this tutorial](https://www.thingiverse.com/thing:4428749/) to create our gearbox.
 
 ###### Motor Housings
 
 3D print the following parts :
    - [Nema17 Housings](design/prints/housing_on_base.stl)
+
+Here we also used some small carpet textile to reduce the stepper motor noise.
 
 ### Electronic
 #### Diagram
