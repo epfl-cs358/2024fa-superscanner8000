@@ -23,6 +23,9 @@ class Object_Detector:
             # Initialize rerun
             rr.init("Occupancy Map", spawn=True)
 
+        self.must_detect = False
+        self._init_depth_anything()
+
 
     def _init_depth_anything(self):
         # Init DepthAnything model
@@ -93,7 +96,7 @@ class Object_Detector:
         occupancy_map = (depth > threshold_distance).astype(np.uint8) # 1 = occupied, 0 = free
         return occupancy_map
     
-    def _project_to_world(self, pixel_index, T, R, depth, hfov):
+    def _project_to_world(self, pixel_index, T, R, depth, hfov, frame):
         '''
         pixel_index: 3x1 array with the pixel index
         T: 3x1 array with the translation vector
@@ -101,7 +104,7 @@ class Object_Detector:
         depth: pixel depth value
         hfov: horizontal field of view
         '''
-        world_position = (np.linalg.inv(self._get_intrinsic_matrix(hfov)) @ pixel_index - T) @ np.linalg.inv(R)
+        world_position = (np.linalg.inv(self._get_intrinsic_matrix(hfov, frame)) @ pixel_index - T) @ np.linalg.inv(R)
         return world_position * depth
     
     def _compute_perspective_views(self, depth, rgb, T, R, pixel_size = 16, hfov = np.pi/6):
@@ -127,19 +130,33 @@ class Object_Detector:
                 top_view[i:i+pixel_size, d:d+pixel_size] = 0
 
                 pixel_index = np.array([i, j, 1]).reshape(3, 1)
-                pixel_coords = self._project_to_world(pixel_index, T, R, value, hfov)
+                pixel_coords = self._project_to_world(pixel_index, T, R, value, hfov, rgb)
 
                 pos_3d.append(pixel_coords)
                 colors.append(pixelated_rgb[j, i])
         
         return top_view, pixelated_depth, np.array(pos_3d), np.array(colors)
-    
+
+    async def start_detection(self):
+        self.must_detect = True
+        
+        async def update_preview():
+            cv2.waitKey(1)
+            print('Updating preview')
+            prev_img = self.ss8.capture_image('front')
+            if(prev_img is not None):
+                cv2.imshow('frontcam', prev_img)
+            await asyncio.sleep(1/24)
+            await update_preview()
+
+        #await update_preview()
+        await self.detect_occupancy()
+
     async def detect_occupancy(self):
-        while True:
-            print('Detecting occupancy')
-            frame = self.ss8.capture_image('front')
-            if frame is None:
-                continue
+        print('Detecting occupancy')
+        frame = self.ss8.capture_image('front')
+
+        if frame is not None:
             depth = self._get_depth_map(frame)
             occupancy_map = self._get_occupancy_map(depth)
 
@@ -153,11 +170,13 @@ class Object_Detector:
 
             for pos in pos_3d:
                 self.navigator.add_obstacle(pos)
-            
-            await asyncio.sleep(0.1)
-
-
-
+        
+        await asyncio.sleep(0.1)
+        
+        print(self.must_detect)
+        if self.must_detect:
+            await self.detect_occupancy()
+        
 
 if __name__ == "__main__":
     # Load webcam

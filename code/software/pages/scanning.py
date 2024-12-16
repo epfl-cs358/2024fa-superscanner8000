@@ -37,12 +37,12 @@ class ScanningPage(tk.Frame):
         self.controller.ss8.turn_on_tracker()
 
         # Start the movement
-        mov_coroutine = asyncio.create_task(self.nav.start_moving(4))
+        #mov_coroutine = asyncio.create_task(self.nav.start_moving(4))
 
-        # detector_coroutine = asyncio.create_task(self.detector.detect_occupancy())
+        detector_coroutine = asyncio.create_task(self.detector.start_detection())
 
-        await mov_coroutine
-        #await detector_coroutine
+        #await mov_coroutine
+        await detector_coroutine
 
     def _interrupt_scan(self):
         self.controller.ss8.stop_mov()

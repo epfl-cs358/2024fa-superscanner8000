@@ -35,7 +35,7 @@ class SS8:
         self.connection_lost_callback = disconnected_callback
 
         self.top_cam_udp_receiver = UDPReceiver(12346, "0.0.0.0")
-        self.front_cam_udp_receiver = UDPReceiver(22222, "0.0.0.0")
+        self.front_cam_udp_receiver = UDPReceiver(12349, "0.0.0.0")
 
     # Connection methods
 

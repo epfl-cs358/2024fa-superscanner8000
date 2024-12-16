@@ -100,12 +100,14 @@ class UDPReceiver:
                     # Decode the JPEG frame into an OpenCV image
                     frame = cv2.imdecode(np.frombuffer(jpg_frame, np.uint8), cv2.IMREAD_COLOR)
 
+                    
                     if frame is not None:
                         with self.lock:
                             self.current_frame = frame  # Update the latest frame
                         #print("Frame received and updated.")
             except Exception as e:
-                print(f"Error while fetching frames: {e}")
+                #print(f"Error while fetching frames: {e}")
+                pass
 
     def get_current_frame(self):
         """
