@@ -38,6 +38,20 @@ class Navigator:
 
         self.ss8.move_forward(iteration_dist, lambda: save_and_forward(1, iteration, on_finish))            
 
+    def add_obstacle(self, relative_position, size=1):
+        """
+        Add an obstacle to the navigator.
+        relative_position (NDArray[Any]): The relative position in sheeric coords of the obstacle to the ss8 (in cm).
+        """
+        self.obstacles = np.append(self.obstacles, ForcePoint(self.ss8_pos+relative_position, size, 3))
+        
+    def start_moving(self):
+        self.moving = True
+        self._compute_next_deplacement()
+    
+    def stop_moving(self):
+        self.moving = False
+
     def _align_ss8_to_obj(self):
         frame = self.capture_image()
         obj_coords = self.segmenter.get_object_coords(frame)
@@ -67,7 +81,7 @@ class Navigator:
 
             self.ss8.forward()
         
-    def set_circle_trajectory(self, radius, step_nbr):
+    def _set_circle_trajectory(self, radius, step_nbr):
         """
         Compute the trajectory of a circle.
         radius (int): The radius of the circle.
@@ -80,7 +94,7 @@ class Navigator:
             y = radius * math.sin(math.radians(a))
             self.trajectory.append((ForcePoint(np.array([x, y])), math.radians(a)))
     
-    def _next_deplacement(self):
+    def _compute_next_deplacement(self):
         """
         Get the next deplacement to reach the next point in the trajectory while avoiding the obstacles.
         """
@@ -104,22 +118,8 @@ class Navigator:
         next_dep = (next_dep / np.linalg.norm(next_dep)) * STEP_DISTANCE
         angle = np.tan(next_dep) - self.ss8_angle
 
-        self._mov_of(angle, STEP_DISTANCE, self._next_deplacement if self.moving else None)
+        self._mov_of(angle, STEP_DISTANCE, self._compute_next_deplacement if self.moving else None)
     
-    def add_obstacle(self, relative_position):
-        """
-        Add an obstacle to the navigator.
-        relative_position (NDArray[Any]): The relative position in sheeric coords of the obstacle to the ss8 (in cm).
-        """
-        self.obstacles = np.append(self.obstacles, ForcePoint(self.ss8_pos+relative_position, 1, 4))
-        
-    def start_moving(self):
-        self.moving = True
-        self._next_deplacement()
-    
-    def stop_moving(self):
-        self.moving = False
-
     def _mov_of(self, angle, distance, next):
         """
         Move the device of a given angle and distance.
