@@ -71,6 +71,8 @@ Have access to:
 - 4 small omni bearings (caster wheel)
 - Ball (caster wheel : e.g. table football ball)
 - 4 Magnets (QAPass)
+- Belt (Arm)
+- 6mm Stailness Steel bar (Arm)
 - 3 mm and 2.5 mm Screws
 - Driller
 - Bunch of different screwdrivers
@@ -145,6 +147,10 @@ We followed [this tutorial](https://www.thingiverse.com/thing:4428749/) to creat
    - [Nema17 Housings](design/prints/housing_on_base.stl)
 
 Here we also used some small carpet textile to reduce the stepper motor noise.
+
+###### Assembly Of The Arm
+
+Once you have printed all these components you will firstly you'll want to screw the 4 arm parts together as well as the upper arm (make sure you add the metal/stainless steel bar at the elbow and the camera in the upper arm section). You can also screw the housings to the top of the base and screw the gearbox to a stepper motor in parallel. Now you can screw the arm to the gearbox and finally place the stepper motors in the housings (first thebelt one and then the gearbox one, don't forget the carpet). Add the belt and you'll be good to go!
 
 ### Electronic
 #### Diagram
