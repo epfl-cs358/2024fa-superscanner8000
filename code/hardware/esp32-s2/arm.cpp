@@ -48,6 +48,7 @@ int Arm::setPos(int _x, int _y, bool angles) {
         q1 = _x * PI / 180;
         q2 = _y * PI / 180;
         angleToPos();
+        return 0;
     } else {
         if (sqrt(pow(x, 2) + pow(y, 2)) > (a1 + a2) || sqrt(pow(x, 2) + pow(y, 2)) < abs(a1 - a2)) {
             Serial.println("Error: Coordinates out of range.");
@@ -56,6 +57,7 @@ int Arm::setPos(int _x, int _y, bool angles) {
         x = _x;
         y = _y;
         posToAngles();
+        return 0;
     }
 
     // Move the steppers
