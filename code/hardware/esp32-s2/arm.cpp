@@ -100,6 +100,11 @@ void Arm::update() {
 // Convert position to angles
 void Arm::posToAngles() {
     q2 = acos((pow(x, 2) + pow(y, 2) - pow(a1, 2) - pow(a2, 2)) / (2 * a1 * a2)); 
+    if (q2 < 0) {
+        q2 = -q2;
+    } else if (q2 > 180) {
+        q2 = 360 - q2;
+    }
     q1 = atan2(y, x) - atan2(a2 * sin(q2), (a1 + a2 * cos(q2))); 
 }
 
