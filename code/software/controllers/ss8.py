@@ -1,14 +1,24 @@
 import requests 
 import cv2
 import os
+import numpy as np
 
 from controllers.udp_receiver import UDPReceiver
 
+# SS8 connection constants
 DEFAULT_API_URL = "http://superscanner8000:80"
 DEFAULT_TOP_CAM_URL = "http://superscanner8008:80"
 DEFAULT_FRONT_CAM_URL = "http://superscanner8009:80"
+
+# SS8 movement constants
+DEFAULT_MOVING_DIST = 5
+DEFAULT_ROTATING_ANGLE = np.pi/2
+BODY_ANGLE_TO_TIME = 1 # Time to rotate the body by 1 radian            TODO: Update this value
+BODY_DIST_TO_TIME = 1 # Time to move the body by 1 cm                   TODO: Update this value
+TOP_CAM_ANGLE_TO_TIME = 1 # Time to rotate the top camera by 1 radian
+
+# Dev config constants
 TEST_CONNECTION_TIMEOUT = 3
-DEFAULT_MOVING_TIME = 5000
 TEST_SEG_WITH_VID = False
 CONNECT_TO_MOV_API = False
 
@@ -129,7 +139,7 @@ class SS8:
 
         return True
     
-    def _send_req(self, req_func, on_error=lambda: None, on_success=lambda: None):
+    def _send_req(self, req_func, on_error=lambda: None, on_success=lambda: None, next=lambda:None):
         """
         Send a request to the connected device.
 
@@ -141,7 +151,7 @@ class SS8:
         try:
             res = req_func()
             if res.status_code == 200:
-                on_success()
+                on_success(res.json())
             else:
                 on_error()
         except requests.ConnectionError:
@@ -168,36 +178,52 @@ class SS8:
         
         return None
     
-    def move_forward(self, dist=DEFAULT_MOVING_TIME):
+    def move_forward(self, dist=DEFAULT_MOVING_DIST, next=lambda: None):
         """
         Move the device forward.
         dist (int): The distance or duration to move. If positive, the device moves for the given time.
         """
-        self._send_req(lambda: requests.post(self.api_url + "/fwd", json={"ms": dist}), on_success=lambda: print("Moving forward..."))
+        ms = dist*BODY_DIST_TO_TIME
+        self._send_req(lambda: requests.post(self.api_url + "/fwd", json={"ms": ms}), on_success=lambda: print("Moving forward..."))
+        
+        if next is not None:
+            self.controller.after(int(ms), next)
 
-    def move_backward(self, dist=DEFAULT_MOVING_TIME):
+    def move_backward(self, dist=DEFAULT_MOVING_DIST, next=lambda: None):
         """
         Move the device backward.
         dist (int): The distance or duration to move. If positive, the device moves for the given time.
         """
-        self._send_req(lambda: requests.post(self.api_url + "/bwd", json={"ms": dist}), on_success=lambda: print("Moving backward..."))
-
-    def rotate_left(self, dist=DEFAULT_MOVING_TIME):
+        ms=dist*BODY_DIST_TO_TIME
+        self._send_req(lambda: requests.post(self.api_url + "/bwd", json={"ms": ms}), on_success=lambda: print("Moving backward..."))
+        
+        if next is not None:
+            self.controller.after(int(ms), next)
+        
+    def rotate_left(self, dist=DEFAULT_ROTATING_ANGLE, next=lambda: None):
         """
         Rotate the device to the left.
         dist (int): The distance or duration to rotate. If positive, the device rotates for the given time. 
                     If negative, the device rotates until it stops.
         """
-        self._send_req(lambda: requests.post(self.api_url + "/hlft", json={"ms": dist}), on_success=lambda: print("Rotating left..."))
+        ms=dist*BODY_ANGLE_TO_TIME
+        self._send_req(lambda: requests.post(self.api_url + "/hlft", json={"ms": dist*BODY_ANGLE_TO_TIME}), on_success=lambda: print("Rotating left..."))
 
-    def rotate_right(self, dist=DEFAULT_MOVING_TIME):
+        if next is not None:
+            self.controller.after(int(ms), next)
+        
+    def rotate_right(self, dist=DEFAULT_ROTATING_ANGLE, next=lambda: None):
         """
         Rotate the device to the right.
         dist (int): The distance or duration to rotate. If positive, the device rotates for the given time. 
                     If negative, the device rotates until it stops.
         
         """
-        self._send_req(lambda: requests.post(self.api_url + "/hrgt", json={"ms": dist}), on_success=lambda: print("Rotating right..."))
+        ms=dist*BODY_ANGLE_TO_TIME
+        self._send_req(lambda: requests.post(self.api_url + "/hrgt", json={"ms": dist*BODY_ANGLE_TO_TIME}), on_success=lambda: print("Rotating right..."))
+
+        if next is not None:
+            self.controller.after(int(ms), next)
 
     def stop_mov(self):
         """
@@ -232,9 +258,21 @@ class SS8:
         """
         self._send_req(lambda: requests.post(self.api_url + "/cam/stp"), on_success=lambda: print("Stopping camera movement...")) 
 
-    def recenter_cam(self):
+    def get_top_cam_angle(self, getter=lambda: None):
+        """
+        Get the angle of the top camera.
+        """
+
+        def on_success(data):
+            print(data)
+            getter(data)
+            return 
+
+        self._send_req(lambda: requests.get(self.api_url + "/cam/status"), on_success=on_success)
+    def recenter_cam(self, next=None):
         """
         Recenter the camera to have the object to be scanned in the center of the frame.
+        next (function): The function to call after the camera has been recentered.
         """
         print("Recentering camera...")
         # TODO: Implement the recentering logic
