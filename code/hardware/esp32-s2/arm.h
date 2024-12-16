@@ -14,7 +14,7 @@ private:
     const long gearFactor;
     const float pulleyFactor;
     const long fullRevolution;
-    void posToAngle();
+    void posToAngles();
     void angleToPos();
 public:
     float q1;
@@ -24,6 +24,7 @@ public:
 
     Arm(int m1Step, int m1Dir, int m2Step, int m2Dir, int _enablePin);
     void setup();
+    int setPos(int _x, int _y);
     int setPos(int _x, int _y, bool angles = false);
     void stop();
     bool getMoving();

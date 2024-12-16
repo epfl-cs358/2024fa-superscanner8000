@@ -9,8 +9,8 @@
 #include <ArduinoJson.h>
 
 WebServer server(80);
-Arm arm = Arm();
-Wheels wheels = Wheels();
+Arm arm = Arm(8, 9, 10, 11, 7);
+Wheels wheels = Wheels(2, 3, 1, 5, 4, 6);
 CamAngles camera(12, 13, 14, 15, 39, 40, 41, 42, 200); 
 
 // LCD pins

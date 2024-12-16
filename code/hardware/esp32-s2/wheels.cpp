@@ -40,7 +40,12 @@ Wheels::Wheels(int m1Pin1, int m1Pin2, int m1En, int m2Pin1, int m2Pin2, int m2E
         motor2Pin2(m2Pin2),
         enable2Pin(m2En),
 
-        dutyCycle(200),
+        freq(30000),
+        resolution(8),
+        pwmChannel1(0),
+        pwmChannel2(1),
+
+        dutyCycle(255),
         distancePerSecond(0.0),
 
         t(0),
@@ -58,9 +63,13 @@ void Wheels::setup() {
     pinMode(motor2Pin1, OUTPUT);
     pinMode(motor2Pin2, OUTPUT);
     pinMode(enable2Pin, OUTPUT);
-
+    
     analogWrite(enable1Pin, dutyCycle);
+    analogWriteResolution(enable1Pin, 8);
+    analogWriteFrequency(enable1Pin, 30000);
     analogWrite(enable2Pin, dutyCycle);
+    analogWriteResolution(enable2Pin, 8);
+    analogWriteFrequency(enable2Pin, 30000);
 
     updateDistancePerSecond();
 }
@@ -75,8 +84,8 @@ void Wheels::setDutyCycle(int newDutyCycle) {
     dutyCycle = newDutyCycle;
 
     // Update PWM output
-    analogWrite(enable1Pin, dutyCycle);
-    analogWrite(enable2Pin, dutyCycle);
+    analogWrite(enable1Pin, freq);
+    analogWrite(enable2Pin, resolution);
 
     // Update cached distance per second
     updateDistancePerSecond();

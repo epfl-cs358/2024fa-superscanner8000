@@ -1,6 +1,6 @@
 # Superscanner8000
-
-** photo of finished SuperScanner8000 **
+![CAD of the assembled Superrrrscanner](Proposal/images/Assembled-V2.gif)
+- **photo of finished SuperScanner8000**
 ## Authors
    - [Noa Emien Ette](https://github.com/Noaemien)
    - [Kevan Lam Hopyang](https://github.com/KevanLam)
@@ -45,24 +45,88 @@ Below is a brief explanation of this repository's structure to provide context a
 
 This section is dedicated to explaining how to build this project yourself! (All the printing/cutting part are available)
 
-### Hardware
+### Prerequisites
+Comprehensive list of elements we used in our project along with needed equipment. To construct the device, one should
 
-#### Main Body
+Buy:
+
+- 3 mm and 2.5 mm Screws
+- 2 Esp-32 Cam + ov5640 (for the camera on top => better image resolution, if you got a better camera, use it)
+- Lot of PETG
+- 2 NEMA-17 (stepper motor) (17HS4401 + A4988)
+- 2 Chihai CHF-GM37-550ABHL (brush motor) + L298N (driver)
+- 2 28BYJ-48 StepperMotor (stepper motor) + ULN2003 (driver)
+
+Have access to:
+
+- LIPO Batterie
+- LIPO box (you can make it your own : [LIPO Protection tuto](https://github.com/epfl-cs358/cs358-resources/tree/main/cad/lipo_protection))
+- Batterie management system (3S 12V 40A Lithium Batterie BMS)
+- 3D printer with TPU filament (for the wheel)
+- 3D printer with PET filament (bunch of it, pla should make it right too)
+- Laser cutting machine
+- MDF board 4mm
+- Airsoft Bullets (gearbox)
+- Driller
+- Bunch of different screwdrivers
+- Soldering kit
+
+### Hardware Assembly
+
+##### Main Body
 
 ###### Base
+
+Laser cut the following MDF (4mm) files :
+   - [Bottom Base](design/dxf/bottom_base.dxf)
+   - [Side Base](design/dxf/side_full.dxf)
+   - [Top Base Front](design/dxf/top_base_front.dxf)
+   - [Top Base Back](design/dxf/top_base_back.dxf)
+
+The side is made to be foldable to give our SuperScanner8000 round corners. Be careful with these specific parts as they could break. 
+You can assemble the bottom and side by glueing them but we recommend glueing the top parts once you have all the electronics setup inside.
 
 ###### Wheels
 
 ###### Structures for electronics
 
-#### Arm
+3D print the following parts :
+   - [CNC Shield Support](design/prints/CNC_shield_support.stl)
+   - [ESP32-S2 Support](design/prints/ESP32-S2_support.stl)
+   - [LiPo Support](design/prints/LiPo_support.stl)
+   - [Chihai Support](design/prints/chihai_supports.stl)
+   - [LiPo Bottom](design/prints/lipo_box/Lipo_bottom.stl)
+   - [LiPo Box](design/prints/lipo_box/Lipo_box.stl)
+
+Here, drill your own hole to make your own wire management.
 
 ##### Arm
 
-##### Motor Housings
+###### Arm
 
-##### Gearbox
+3D print the parts in this folder :
+   - [Arm Folder](design/prints/long_arm)
 
+You should print 2 times esp_case2 for the cam in the box that we use for object detection.
+
+###### Gearbox
+
+3D print the parts in this folder :
+   - [Actuator Folder](design/prints/actuators)
+
+###### Motor Housings
+
+3D print the following parts :
+   - [Nema17 Housings](design/prints/housing_on_base.stl)
+
+### Electronic
+#### Diagram
+![elctronic diagram](Proposal/images/WiringDiagram.png)
 ### Software
+The structure of the software as well as an installation guide can be found in the [software directory](code/software).
+## Gratitude and Appreciation
+We would like to express our special thanks to our assisstant [Pinar](https://github.com/pinar-oray) and [Julian](https://github.com/julianmarmier), whose insights and suggestions were instrumental in shaping our super scanner. We are also grateful to [Timofey](https://github.com/kreslotim) for his technical support and encouragement and constructive feedback.
+
+And I (Kevan) would like to thanks my peers, my friends for this fun project.
 
 
