@@ -104,7 +104,8 @@ class Object_Detector:
         depth: pixel depth value
         hfov: horizontal field of view
         '''
-        world_position = (np.linalg.inv(self._get_intrinsic_matrix(hfov, frame)) @ pixel_index - T) @ np.linalg.inv(R)
+        
+        world_position = np.linalg.inv(R) @ (np.linalg.inv(self._get_intrinsic_matrix(hfov, frame)) @ pixel_index - T)
         return world_position * depth
     
     def _compute_perspective_views(self, depth, rgb, T, R, pixel_size = 16, hfov = np.pi/6):
