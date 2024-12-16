@@ -303,7 +303,17 @@ class SS8:
         print("Stopping camera movement...")
         
         return
+    
+    def display_text(self, text):
+        """
+        Display text on the device screen.
+        text (str): The text to display.
+        """
+        if not dconfig.SIMULATION_MODE:
+            requests.post(self.api_url + "/text", json={"text": text})
+        print(f"Displaying text: {text}")
 
+        return
     # Camera control methods
 
     async def get_top_cam_angle(self):

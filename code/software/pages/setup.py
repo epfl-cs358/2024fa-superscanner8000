@@ -6,6 +6,9 @@ import asyncio
 
 from widgets.image import ImageWidget
 
+DEFAULT_VERTICAL_PRECISION = 5
+DEFAULT_HORIZONTAL_PRECISION = 10
+
 class SetupPage(tk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent)
@@ -25,6 +28,8 @@ class SetupPage(tk.Frame):
         self._display_preview()
         self._display_directionnal_buttons()
         self._display_selection_buttons()
+
+        self.controller.ss8.display_text("Connected")
         
     def _display_directionnal_buttons(self):
         buttons_container = tk.Frame(self.container)
@@ -75,6 +80,7 @@ class SetupPage(tk.Frame):
             self.controller.segmenter.initialize(self.controller.ss8.capture_image(), points=points)
 
             if(not self.object_selected):
+                self.controller.ss8.display_text("Image selected")
                 self.selection_buttons_frame.pack(anchor=tk.S, pady=20)
                 self.object_selected = True
 
@@ -101,10 +107,20 @@ class SetupPage(tk.Frame):
 
         self.selection_buttons_frame = tk.Frame(self.container)
 
+        ttk.Label(self.selection_buttons_frame, text="Vertical precision").grid(row=0, column=0, padx=5, pady=5)
+        self.vert_prec_entry = ttk.Entry(self.selection_buttons_frame)
+        self.vert_prec_entry.insert(tk.END, DEFAULT_VERTICAL_PRECISION)
+        self.vert_prec_entry.grid(row=1, column=0, padx=5, pady=5)
+
+        ttk.Label(self.selection_buttons_frame, text="Horizontal precision").grid(row=0, column=1, padx=5, pady=5)
+        self.hor_prec_entry = ttk.Entry(self.selection_buttons_frame)
+        self.hor_prec_entry.insert(tk.END, DEFAULT_HORIZONTAL_PRECISION)
+        self.hor_prec_entry.grid(row=1, column=1, padx=5, pady=5)
+
         cancel_button = ttk.Button(self.selection_buttons_frame, text="Cancel selection")
-        cancel_button.grid(row=0, column=0, padx=5)
+        cancel_button.grid(row=2, column=0, padx=5, pady=5)
         cancel_button.bind("<ButtonRelease-1>", lambda event: cancel_selection())
 
         start_button = ttk.Button(self.selection_buttons_frame, text="Start the scan", style='Accent.TButton')
-        start_button.grid(row=0, column=1, padx=5)
+        start_button.grid(row=2, column=1, padx=5, pady=5)
         start_button.bind("<ButtonRelease-1>", lambda event: start_scan())
