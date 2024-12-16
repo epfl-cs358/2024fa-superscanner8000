@@ -109,7 +109,6 @@ class UDPReceiver:
         Returns the most recently fetched frame immediately.
         """
         if self.current_frame is not None:
-            cv2.waitKey(1)
             return self.current_frame
         else:
             print("No frame available.")
