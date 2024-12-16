@@ -28,7 +28,7 @@ class ScanningPage(tk.Frame):
 
         self.nav = Navigator(self.controller.ss8, self._save_image, lambda: print('Finish first round'))
         
-        self.detector = Object_Detector(self.nav, self.ss8, visualize=False)
+        self.detector = Object_Detector(self.nav, self.controller.ss8, visualize=False)
         
         asyncio.run(self._start_scanning())
 

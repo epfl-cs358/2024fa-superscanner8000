@@ -14,10 +14,10 @@ DEFAULT_FRONT_CAM_URL = "http://superscanner8009:80"
 TEST_CONNECTION_TIMEOUT = 3
 
 # SS8 movement constants
-DEFAULT_MOVING_DIST = 1000
-DEFAULT_ROTATING_ANGLE = np.pi/2
-BODY_ANGLE_TO_TIME = 1591.55 # Time to rotate the body by 1 radian            TODO: Update this value
-BODY_DIST_TO_TIME = 66 # Time to move the body by 1 cm                   TODO: Update this value
+DEFAULT_MOVING_DIST = 10
+DEFAULT_ROTATING_ANGLE = 2*np.pi
+BODY_ANGLE_TO_TIME = 280 # Time to rotate the body by 1 radian            TODO: Update this value
+BODY_DIST_TO_TIME = 28 # Time to move the body by 1 cm                   TODO: Update this value
 TOP_CAM_ANGLE_TO_TIME = 1 # Time to rotate the top camera by 1 radian
 TOP_CAM_FOV = 60
 
