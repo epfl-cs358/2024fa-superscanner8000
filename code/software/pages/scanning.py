@@ -4,6 +4,8 @@ from tkinter.ttk import *
 from controllers.navigator import Navigator
 import numpy as np
 
+CALIBRATION_ITERATION = 4
+
 class ScanningPage(tk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent)
@@ -23,8 +25,9 @@ class ScanningPage(tk.Frame):
         button = ttk.Button(self.container, text="Save image", style='Accent.TButton', command=self._save_image)
         button.pack(pady=10)
 
-        self.nav = Navigator()
-        self.start_movement()
+        self.nav = Navigator(self.controller.ss8, self.controller.segmenter)
+        self.nav.start_callibration(CALIBRATION_ITERATION, on_finish=self._start_scanning)
+        self._start_scanning()
 
     def _interrupt_scan(self):
         self.controller.ss8.stop_mov()
@@ -39,6 +42,9 @@ class ScanningPage(tk.Frame):
 
         # TODO : Detect obstacles and save them to the navigator
 
+        # Start the movement
+        self.nav.callibrate(4, on_finish=self.nav.start_moving)
+        
     def _save_image(self):
         # TODO : Save the image to a tmp folder
         pass
