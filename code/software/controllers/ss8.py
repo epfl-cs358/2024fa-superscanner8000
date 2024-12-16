@@ -1,7 +1,9 @@
 import requests 
+import asyncio
 import cv2
 import os
 import numpy as np
+import config.dev_config as dconfig
 
 from controllers.udp_receiver import UDPReceiver
 
@@ -9,15 +11,14 @@ from controllers.udp_receiver import UDPReceiver
 DEFAULT_API_URL = "http://superscanner8000:80"
 DEFAULT_TOP_CAM_URL = "http://superscanner8008:80"
 DEFAULT_FRONT_CAM_URL = "http://superscanner8009:80"
+TEST_CONNECTION_TIMEOUT = 3
 
 # SS8 movement constants
-DEFAULT_MOVING_DIST = 5
+DEFAULT_MOVING_DIST = 1000
 DEFAULT_ROTATING_ANGLE = np.pi/2
-BODY_ANGLE_TO_TIME = 1 # Time to rotate the body by 1 radian            TODO: Update this value
-BODY_DIST_TO_TIME = 1 # Time to move the body by 1 cm                   TODO: Update this value
+BODY_ANGLE_TO_TIME = 1591.55 # Time to rotate the body by 1 radian            TODO: Update this value
+BODY_DIST_TO_TIME = 66 # Time to move the body by 1 cm                   TODO: Update this value
 TOP_CAM_ANGLE_TO_TIME = 1 # Time to rotate the top camera by 1 radian
-
-# SS8 cam constants
 TOP_CAM_FOV = 60
 
 # Dev config constants
@@ -35,6 +36,8 @@ class SS8:
 
         self.top_cam_udp_receiver = UDPReceiver(12346, "0.0.0.0")
         self.front_cam_udp_receiver = UDPReceiver(22222, "0.0.0.0")
+
+    # Connection methods
 
     def get_default_urls(self):
         """
@@ -61,11 +64,11 @@ class SS8:
         self.top_cam_url = top_cam_url
         self.front_cam_url = front_cam_url
 
-        if CONNECT_TO_MOV_API and not self.init_api_connection():
+        if dconfig.CONNECT_TO_MOV_API and not self.init_api_connection():
             return False
         
         # Test connection to the camera hostname and start receiving video stream
-        if(TEST_SEG_WITH_VID):
+        if(dconfig.TEST_SEG_WITH_VID):
             if not self.fake_init_udp_connection():
                 return False
         elif not self.init_udp_connection():
@@ -99,13 +102,21 @@ class SS8:
         return True
 
     def init_udp_connection(self) -> bool:
-        try:
-            self.top_cam_udp_receiver.start_listening(self.top_cam_url)
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            return False
+        if dconfig.CONNECT_TO_TOP_CAM :
+            try:
+                self.top_cam_udp_receiver.start_listening(self.top_cam_url)
+            except Exception as e:
+                print(f"An error occurred for the top cam: {e}")
+                return False
         
-        #self.front_cam_udp_receiver.start_listening(self.front_cam_url)
+        if dconfig.CONNECT_TO_FRONT_CAM:
+            try:
+                self.front_cam_udp_receiver.start_listening(self.front_cam_url)
+            except Exception as e:
+                print(f"An error occurred for the front cam: {e}")
+                return False
+        
+        
         return True
     
     def fake_init_udp_connection(self) -> bool:
@@ -141,8 +152,10 @@ class SS8:
         update_current_frame()
 
         return True
-    
-    def _send_req(self, req_func, on_error=lambda: None, on_success=lambda: None, next=lambda:None):
+
+    # Instrucitons methods
+
+    async def _send_req(self, req_func, on_error=lambda: None, on_success=lambda: None):
         """
         Send a request to the connected device.
 
@@ -154,7 +167,7 @@ class SS8:
         try:
             res = req_func()
             if res.status_code == 200:
-                on_success(res.json())
+                return res.json()
             else:
                 on_error()
         except requests.ConnectionError:
@@ -163,6 +176,166 @@ class SS8:
             print(f"An error occurred: {e}")
             self.connection_lost_callback()
     
+    async def move_forward(self, dist=DEFAULT_MOVING_DIST, wait_for_completion=True):
+        """
+        Move the device forward.
+        dist (int): The distance or duration to move. If positive, the device moves for the given time.
+        """
+        ms = dist*BODY_DIST_TO_TIME
+
+        if not dconfig.SIMULATION_MODE:
+            print("Moving forward...")
+            await self._send_req(lambda: requests.post(self.api_url + "/fwd", json={"ms": ms}))
+        
+        if wait_for_completion:
+            await asyncio.sleep(ms*0.001)
+        return
+
+    async def move_backward(self, dist=DEFAULT_MOVING_DIST, wait_for_completion=True):
+        """
+        Move the device backward.
+        dist (int): The distance or duration to move. If positive, the device moves for the given time.
+        """
+        ms=dist*BODY_DIST_TO_TIME
+
+        if not dconfig.SIMULATION_MODE:
+            await self._send_req(lambda: requests.post(self.api_url + "/bwd", json={"ms": ms}))
+        print("Moving backward...")
+
+        if wait_for_completion:
+            await asyncio.sleep(ms*0.001)
+
+        return
+        
+    async def rotate_left(self, dist=DEFAULT_ROTATING_ANGLE, wait_for_completion=True):
+        """
+        Rotate the device to the left.
+        dist (int): The distance or duration to rotate. If positive, the device rotates for the given time. 
+                    If negative, the device rotates until it stops.
+        """
+        ms=dist*BODY_ANGLE_TO_TIME
+
+        if not dconfig.SIMULATION_MODE:
+            await self._send_req(lambda: requests.post(self.api_url + "/hlft", json={"ms": dist*BODY_ANGLE_TO_TIME}))
+        print("Rotating left...")
+
+        if wait_for_completion:
+            await asyncio.sleep(ms*0.001)
+
+        return
+        
+    async def rotate_right(self, dist=DEFAULT_ROTATING_ANGLE, wait_for_completion=True):
+        """
+        Rotate the device to the right.
+        dist (int): The distance or duration to rotate. If positive, the device rotates for the given time. 
+                    If negative, the device rotates until it stops.
+        
+        """
+        ms=dist*BODY_ANGLE_TO_TIME
+
+        if not dconfig.SIMULATION_MODE:
+            await self._send_req(lambda: requests.post(self.api_url + "/hrgt", json={"ms": dist*BODY_ANGLE_TO_TIME}))
+        print("Rotating right...")
+        
+        if wait_for_completion:
+            await asyncio.sleep(ms*0.001)
+
+        return
+
+    async def stop_mov(self):
+        """
+        Stop the device movement.
+        """
+        if not dconfig.SIMULATION_MODE:
+            print("Stopping movement...")
+            await self._send_req(lambda: requests.post(self.api_url + "/stp"))
+
+        return
+
+    async def goto_arm(self, x=0, y=0):
+        """
+        Move the arm up.
+        x (int): The x coordinate to move to.
+        y (int): The y coordinate to move to.
+        """
+            
+        if not dconfig.SIMULATION_MODE:
+            if (x == 0 and y == 0):
+                await self._send_req(lambda: requests.post(self.api_url + "/arm/goto", json={"x": 0, "y": 0, "angles": True}))
+            else:
+                await self._send_req(lambda: requests.post(self.api_url + "/arm/goto", json={"x": x, "y": y}))
+        print("Moving arm to position...")
+
+        return
+
+    async def stop_arm(self):
+        """
+        Stop the arm movement.
+        """
+        
+        if not dconfig.SIMULATION_MODE:
+            await self._send_req(lambda: requests.post(self.api_url + "/arm/stp"))
+        print("Stopping arm movement...")
+
+        return
+
+    async def goto_camera(self, alpha=0, beta=0):
+        """
+        Move the camera up.
+        dist (int): The distance or duration to move. If positive, the camera moves for the given time.
+        """
+        
+        if not dconfig.SIMULATION_MODE:
+            await self._send_req(lambda: requests.post(self.api_url + "/cam/goto", json={"alpha": alpha, "beta": beta}))
+        print("Moving camera to position...")
+        
+        return 
+
+    async def stop_cam(self):
+        """
+        Stop the camera movement.
+        """
+        
+        if not dconfig.SIMULATION_MODE:
+            await self._send_req(lambda: requests.post(self.api_url + "/cam/stp")) 
+        print("Stopping camera movement...")
+        
+        return
+
+    # Camera control methods
+
+    async def get_top_cam_angle(self):
+        """
+        Get the angle of the top camera.
+        """
+        data = await self._send_req(lambda: requests.get(self.api_url + "/cam/status"))
+        return data
+    
+    def turn_on_tracker(self):
+        """
+        Start the object tracking. The camera will try to keep the object in the center of its view.
+        """
+        print("Start tracking the object...")
+        # TODO: Implement the recentering logic
+        
+        def check_center():
+            frame = self.capture_image()
+            obj_coords = self.controller.segmenter.get_object_coords(frame)
+            frame_center = frame.shape[:2]/2
+            pos_diff = obj_coords - frame_center
+
+            if(pos_diff[0] > 10):
+                self.rotate_right()
+            elif(pos_diff[0] < -10):
+                self.rotate_left()
+            else:
+                self.stop_mov()
+            
+            if(pos_diff[1] > 10):
+                self.down_camera()
+            elif(pos_diff[1] < -10):
+                self.up_camera()
+
     def capture_image(self, src='arm'):
         """
         Captures an image from the ESP32.
@@ -172,7 +345,7 @@ class SS8:
         Returns:
             cv2.typing.MatLike: The captured image in a format compatible with OpenCV.
         """
-        if(TEST_SEG_WITH_VID):
+        if(dconfig.TEST_SEG_WITH_VID):
             return self.fake_current_frame
         elif src == 'arm':
             return self.top_cam_udp_receiver.get_current_frame()
@@ -180,129 +353,6 @@ class SS8:
             return self.front_cam_udp_receiver.get_current_frame()
         
         return None
-    
-    def move_forward(self, dist=DEFAULT_MOVING_DIST, next=lambda: None):
-        """
-        Move the device forward.
-        dist (int): The distance or duration to move. If positive, the device moves for the given time.
-        """
-        ms = dist*BODY_DIST_TO_TIME
-        self._send_req(lambda: requests.post(self.api_url + "/fwd", json={"ms": ms}), on_success=lambda: print("Moving forward..."))
-        
-        if next is not None:
-            self.controller.after(int(ms), next)
-
-    def move_backward(self, dist=DEFAULT_MOVING_DIST, next=lambda: None):
-        """
-        Move the device backward.
-        dist (int): The distance or duration to move. If positive, the device moves for the given time.
-        """
-        ms=dist*BODY_DIST_TO_TIME
-        self._send_req(lambda: requests.post(self.api_url + "/bwd", json={"ms": ms}), on_success=lambda: print("Moving backward..."))
-        
-        if next is not None:
-            self.controller.after(int(ms), next)
-        
-    def rotate_left(self, dist=DEFAULT_ROTATING_ANGLE, next=lambda: None):
-        """
-        Rotate the device to the left.
-        dist (int): The distance or duration to rotate. If positive, the device rotates for the given time. 
-                    If negative, the device rotates until it stops.
-        """
-        ms=dist*BODY_ANGLE_TO_TIME
-        self._send_req(lambda: requests.post(self.api_url + "/hlft", json={"ms": dist*BODY_ANGLE_TO_TIME}), on_success=lambda: print("Rotating left..."))
-
-        if next is not None:
-            self.controller.after(int(ms), next)
-        
-    def rotate_right(self, dist=DEFAULT_ROTATING_ANGLE, next=lambda: None):
-        """
-        Rotate the device to the right.
-        dist (int): The distance or duration to rotate. If positive, the device rotates for the given time. 
-                    If negative, the device rotates until it stops.
-        
-        """
-        ms=dist*BODY_ANGLE_TO_TIME
-        self._send_req(lambda: requests.post(self.api_url + "/hrgt", json={"ms": dist*BODY_ANGLE_TO_TIME}), on_success=lambda: print("Rotating right..."))
-
-        if next is not None:
-            self.controller.after(int(ms), next)
-
-    def stop_mov(self):
-        """
-        Stop the device movement.
-        """
-        self._send_req(lambda: requests.post(self.api_url + "/stp"), on_success=lambda: print("Stopping movement..."))
-
-    def goto_arm(self, x=0, y=0):
-        """
-        Move the arm up.
-        x (int): The x coordinate to move to.
-        y (int): The y coordinate to move to.
-        """
-        if (x == 0 and y == 0):
-            self._send_req(lambda: requests.post(self.api_url + "/arm/goto", json={"x": 0, "y": 0, "angles": True}), on_success=lambda: print("Moving arm to home position..."))
-        else:
-            self._send_req(lambda: requests.post(self.api_url + "/arm/goto", json={"x": x, "y": y}), on_success=lambda: print("Moving arm to position..."))
-
-    def stop_arm(self):
-        """
-        Stop the arm movement.
-        """
-        self._send_req(lambda: requests.post(self.api_url + "/arm/stp"), on_success=lambda: print("Stopping arm movement..."))
-
-    def goto_camera(self, alpha=0, beta=0):
-        """
-        Move the camera up.
-        dist (int): The distance or duration to move. If positive, the camera moves for the given time.
-        """
-        self._send_req(lambda: requests.post(self.api_url + "/cam/goto", json={"alpha": alpha, "beta": beta}), on_success=lambda: print("Moving camera to position..."))
-
-    def stop_cam(self):
-        """
-        Stop the camera movement.
-        """
-        self._send_req(lambda: requests.post(self.api_url + "/cam/stp"), on_success=lambda: print("Stopping camera movement...")) 
-
-    def get_top_cam_angle(self, getter=lambda: None):
-        """
-        Get the angle of the top camera.
-        """
-
-        def on_success(data):
-            print(data)
-            getter(data)
-            return 
-
-        self._send_req(lambda: requests.get(self.api_url + "/cam/status"), on_success=on_success)
-
-    def recenter_cam(self, next=None):
-        """
-        Recenter the camera to have the object to be scanned in the center of the frame.
-        next (function): The function to call after the camera has been recentered.
-        """
-        print("Recentering camera...")
-
-        def pixels_to_angle(pixels, resolution):
-            return pixels * TOP_CAM_FOV / resolution[0] * np.pi / 180
-        
-        while abs(pos_diff[0]) > 10 and abs(pos_diff[1]) > 10:
-            frame = self.capture_image()
-            obj_coords = self.controller.segmenter.get_object_coords(frame)
-            frame_center = frame.shape[:2]/2
-            pos_diff = obj_coords - frame_center
-
-            if(pos_diff[0] > 10):
-                self.rotate_right(pixels_to_angle(pos_diff[0], frame.shape[1]))
-            elif(pos_diff[0] < -10):
-                self.rotate_left(pixels_to_angle(pos_diff[0], frame.shape[1]))
-            else:
-                self.stop_mov()
-            
-            if(pos_diff[1] > 10):
-                self.down_camera(pixels_to_angle(pos_diff[1], frame.shape[0]))
-            elif(pos_diff[1] < -10):
-                self.up_camera(pixels_to_angle(pos_diff[1], frame.shape[0]))
-        
+     
 
             

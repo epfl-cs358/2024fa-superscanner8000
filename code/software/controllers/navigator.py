@@ -1,9 +1,12 @@
 import math
 import numpy as np
+import asyncio
+import config.dev_config as dconfig
 
 STEP_DISTANCE = 5
 DEFAULT_CALLIBRATION_DISTANCE = 10000
 CENTER_THRESHOLD = 50
+SHOW_NAVIGATION = True
 
 class Navigator:
     def __init__(self, ss8, segmenter):
@@ -16,27 +19,51 @@ class Navigator:
         self.obstacles = np.array([])
         self.moving = False
 
-    def callibrate(self, iteration, distance=DEFAULT_CALLIBRATION_DISTANCE, on_finish=lambda:None):
+    async def callibrate(self, iteration, distance=DEFAULT_CALLIBRATION_DISTANCE, step_nbr=10):
         """
         Start the callibration of the device.
         iteration (int): The number of iteration to do.
         """
 
-        self._align_ss8_to_obj()
+        if not dconfig.SIMULATION_MODE:
+            self._align_ss8_to_obj()
 
         iteration_dist = distance / iteration
-        angles = np.array([])
+        measures = np.array([])
 
-        self.ss8.move_backward(int(-iteration/2*iteration_dist), lambda: self.ss8.get_arm_cam_angle(lambda angle: angles.append(angle.alpha)))
+        start_point = -iteration/2*iteration_dist
+        await self.ss8.move_backward(int(start_point))
+        measures.append(np.array([np.abs(start_point), await self.ss8.get_arm_cam_angle()]))
 
-        def save_and_forward(i, max, on_finish):
-            self.ss8.get_arm_cam_angle(lambda angle: angles.append(angle.alpha))
-            if(i+1<max):
-                self.ss8.move_forward(iteration_dist, lambda: save_and_forward(i+1, max))
-            else :
-                self.ss8.move_backward(int(-iteration/2*iteration_dist), on_finish)
+        for i in range(1, iteration):
+            await self.ss8.move_forward(iteration_dist)
 
-        self.ss8.move_forward(iteration_dist, lambda: save_and_forward(1, iteration, on_finish))            
+            if not dconfig.SIMULATION_MODE:
+                measure = [np.abs(start_point+i*iteration_dist), await self.ss8.get_arm_cam_angle()]
+                measures.append(np.array(measure))
+
+        await self.ss8.move_backward(int(-iteration/2*iteration_dist))
+
+        return np.mean(np.tan(measures[:, 0]) * measures[:, 1])
+
+    def add_obstacle(self, relative_position, size=1):
+        """
+        Add an obstacle to the navigator.
+        relative_position (NDArray[Any]): The relative position in sheeric coords of the obstacle to the ss8 (in cm).
+        """
+        self.obstacles = np.append(self.obstacles, ForcePoint(self.ss8_pos+relative_position, size, 3))
+        
+    def start_moving(self):
+        self.moving = True
+
+        async def move():
+            dep = self._compute_next_deplacement()
+            await self._move_of(dep)
+            if self.moving:
+                asyncio.run(move())
+
+    def stop_moving(self):
+        self.moving = False
 
     def _align_ss8_to_obj(self):
         frame = self.capture_image()
@@ -67,7 +94,7 @@ class Navigator:
 
             self.ss8.forward()
         
-    def set_circle_trajectory(self, radius, step_nbr):
+    def _set_circle_trajectory(self, radius, step_nbr):
         """
         Compute the trajectory of a circle.
         radius (int): The radius of the circle.
@@ -80,7 +107,7 @@ class Navigator:
             y = radius * math.sin(math.radians(a))
             self.trajectory.append((ForcePoint(np.array([x, y])), math.radians(a)))
     
-    def _next_deplacement(self):
+    def _compute_next_deplacement(self):
         """
         Get the next deplacement to reach the next point in the trajectory while avoiding the obstacles.
         """
@@ -104,23 +131,9 @@ class Navigator:
         next_dep = (next_dep / np.linalg.norm(next_dep)) * STEP_DISTANCE
         angle = np.tan(next_dep) - self.ss8_angle
 
-        self._mov_of(angle, STEP_DISTANCE, self._next_deplacement if self.moving else None)
+        return angle, STEP_DISTANCE
     
-    def add_obstacle(self, relative_position):
-        """
-        Add an obstacle to the navigator.
-        relative_position (NDArray[Any]): The relative position in sheeric coords of the obstacle to the ss8 (in cm).
-        """
-        self.obstacles = np.append(self.obstacles, ForcePoint(self.ss8_pos+relative_position, 1, 4))
-        
-    def start_moving(self):
-        self.moving = True
-        self._next_deplacement()
-    
-    def stop_moving(self):
-        self.moving = False
-
-    def _mov_of(self, angle, distance, next):
+    async def _move_of(self, angle, distance):
         """
         Move the device of a given angle and distance.
         angle (float): The angle to move.
@@ -129,9 +142,13 @@ class Navigator:
 
         # Rotate the ss8 to the given angle (rotate left if the angle smaller than PI, right otherwise)
         if angle < np.pi:
-            rotation_time = self.ss8.rotate_left(angle)
+            await self.ss8.rotate_left(angle)
         else:
-            rotation_time = self.ss8.rotate_right(2*np.pi - angle, self.ss8.move_forward(distance, next))
+            await self.ss8.rotate_right(2*np.pi - angle)
+        
+        # Move the ss8 forward
+        await self.ss8.move_forward(distance)
+        return
 
 DEFAULT_FORCE_NORM = 1
 DEFAULT_DIST_ORDER = 1
