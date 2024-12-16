@@ -62,7 +62,7 @@ int Arm::setPos(int _x, int _y, bool angles) {
 
     // Move the steppers
     stepper1.moveTo(gearFactor * fullRevolution * q1 / (2 * PI));
-    stepper2.moveTo(-1 * pulleyFactor * fullRevolution * q2 / (2 * PI));
+    stepper2.moveTo(pulleyFactor * fullRevolution * q2 / (2 * PI));
 
     Serial.println("Moving to : " + String(fullRevolution * q1 / (2 * PI)) + ", " + String(fullRevolution * q2 / (2 * PI)));
     return 0;
