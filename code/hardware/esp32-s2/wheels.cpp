@@ -6,7 +6,9 @@ const float WHEEL_DIAMETER_CM = 15.0; // Diameter of the wheel in cm
 const float WHEEL_CIRCUMFERENCE_CM = 3.1416 * WHEEL_DIAMETER_CM; // Circumference of the wheel in cm
 const int MAX_RPM = 110; // Max RPM of the motor
 const float TRACK_WIDTH_CM = 26.0; // Distance between the two wheels in cm
-
+const float CM_PER_SECOND = 15.0; // Distance per second in cm
+const float SECONDS_PER_TURN = 10; // Time in seconds to turn 360 degrees
+const float ANGLE_PER_SECOND = 360 / SECONDS_PER_TURN; // Angle per second in degrees
 
 char* directionMap(Direction Direction) {
     switch (Direction) {
@@ -185,7 +187,7 @@ void Wheels::hard_right(int ms) {
  * @param cm the distance in centimeters to move
  */
 void Wheels::forward_cm(int cm) {
-    int ms = (cm / distancePerSecond) * 1000; 
+    int ms = (cm / CM_PER_SECOND) * 1000; 
     forward(ms);
 }
 
@@ -193,7 +195,7 @@ void Wheels::forward_cm(int cm) {
  * @param cm the distance in centimeters to move
  */
 void Wheels::backward_cm(int cm) {
-    int ms = (cm / distancePerSecond) * 1000;
+    int ms = (cm / CM_PER_SECOND) * 1000;
     backward(ms);
 }
 
@@ -201,8 +203,8 @@ void Wheels::backward_cm(int cm) {
  * @param angle the angle in degrees to turn
  */
 void Wheels::hard_left_angle(float angle) {
-    float angularVelocity = (distancePerSecond * 360) / (3.1416 * TRACK_WIDTH_CM);
-    float timeInSeconds = angle / angularVelocity;
+    // float angularVelocity = (distancePerSecond * 360) / (3.1416 * TRACK_WIDTH_CM);
+    float timeInSeconds = angle / ANGLE_PER_SECOND;
     int ms = timeInSeconds * 1000;
 
     hard_left(ms);
@@ -212,8 +214,8 @@ void Wheels::hard_left_angle(float angle) {
  * @param angle the angle in degrees to turn
  */
 void Wheels::hard_right_angle(float angle) {
-    float angularVelocity = (distancePerSecond * 360) / (3.1416 * TRACK_WIDTH_CM);
-    float timeInSeconds = angle / angularVelocity;
+    // float angularVelocity = (distancePerSecond * 360) / (3.1416 * TRACK_WIDTH_CM);
+    float timeInSeconds = angle / ANGLE_PER_SECOND;
     int ms = timeInSeconds * 1000;
 
     hard_right(ms);
