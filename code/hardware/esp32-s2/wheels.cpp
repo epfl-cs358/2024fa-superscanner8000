@@ -6,7 +6,9 @@ const float WHEEL_DIAMETER_CM = 15.0; // Diameter of the wheel in cm
 const float WHEEL_CIRCUMFERENCE_CM = 3.1416 * WHEEL_DIAMETER_CM; // Circumference of the wheel in cm
 const int MAX_RPM = 110; // Max RPM of the motor
 const float TRACK_WIDTH_CM = 26.0; // Distance between the two wheels in cm
-
+const float CM_PER_SECOND = 15.0; // Distance per second in cm
+const float SECONDS_PER_TURN = 10; // Time in seconds to turn 360 degrees
+const float ANGLE_PER_SECOND = 360 / SECONDS_PER_TURN; // Angle per second in degrees
 
 char* directionMap(Direction Direction) {
     switch (Direction) {
@@ -38,7 +40,12 @@ Wheels::Wheels(int m1Pin1, int m1Pin2, int m1En, int m2Pin1, int m2Pin2, int m2E
         motor2Pin2(m2Pin2),
         enable2Pin(m2En),
 
-        dutyCycle(200),
+        freq(30000),
+        resolution(8),
+        pwmChannel1(0),
+        pwmChannel2(1),
+
+        dutyCycle(255),
         distancePerSecond(0.0),
 
         t(0),
@@ -56,9 +63,13 @@ void Wheels::setup() {
     pinMode(motor2Pin1, OUTPUT);
     pinMode(motor2Pin2, OUTPUT);
     pinMode(enable2Pin, OUTPUT);
-
+    
     analogWrite(enable1Pin, dutyCycle);
+    analogWriteResolution(enable1Pin, 8);
+    analogWriteFrequency(enable1Pin, 30000);
     analogWrite(enable2Pin, dutyCycle);
+    analogWriteResolution(enable2Pin, 8);
+    analogWriteFrequency(enable2Pin, 30000);
 
     updateDistancePerSecond();
 }
@@ -73,8 +84,8 @@ void Wheels::setDutyCycle(int newDutyCycle) {
     dutyCycle = newDutyCycle;
 
     // Update PWM output
-    analogWrite(enable1Pin, dutyCycle);
-    analogWrite(enable2Pin, dutyCycle);
+    analogWrite(enable1Pin, freq);
+    analogWrite(enable2Pin, resolution);
 
     // Update cached distance per second
     updateDistancePerSecond();
@@ -185,7 +196,7 @@ void Wheels::hard_right(int ms) {
  * @param cm the distance in centimeters to move
  */
 void Wheels::forward_cm(int cm) {
-    int ms = (cm / distancePerSecond) * 1000; 
+    int ms = (cm / CM_PER_SECOND) * 1000; 
     forward(ms);
 }
 
@@ -193,7 +204,7 @@ void Wheels::forward_cm(int cm) {
  * @param cm the distance in centimeters to move
  */
 void Wheels::backward_cm(int cm) {
-    int ms = (cm / distancePerSecond) * 1000;
+    int ms = (cm / CM_PER_SECOND) * 1000;
     backward(ms);
 }
 
@@ -201,8 +212,8 @@ void Wheels::backward_cm(int cm) {
  * @param angle the angle in degrees to turn
  */
 void Wheels::hard_left_angle(float angle) {
-    float angularVelocity = (distancePerSecond * 360) / (3.1416 * TRACK_WIDTH_CM);
-    float timeInSeconds = angle / angularVelocity;
+    // float angularVelocity = (distancePerSecond * 360) / (3.1416 * TRACK_WIDTH_CM);
+    float timeInSeconds = angle / ANGLE_PER_SECOND;
     int ms = timeInSeconds * 1000;
 
     hard_left(ms);
@@ -212,8 +223,8 @@ void Wheels::hard_left_angle(float angle) {
  * @param angle the angle in degrees to turn
  */
 void Wheels::hard_right_angle(float angle) {
-    float angularVelocity = (distancePerSecond * 360) / (3.1416 * TRACK_WIDTH_CM);
-    float timeInSeconds = angle / angularVelocity;
+    // float angularVelocity = (distancePerSecond * 360) / (3.1416 * TRACK_WIDTH_CM);
+    float timeInSeconds = angle / ANGLE_PER_SECOND;
     int ms = timeInSeconds * 1000;
 
     hard_right(ms);

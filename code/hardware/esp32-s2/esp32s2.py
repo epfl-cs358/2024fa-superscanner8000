@@ -36,7 +36,7 @@ class Arm:
         self.__url = url
 
     def goto(self, x_coord, y_coord):
-        r = requests.post(self.__url + "/arm/goto", json={"x": x_coord, "y": y_coord})
+        r = requests.post(self.__url + "/arm/goto", json={"x": x_coord, "y": y_coord, "angles": True})
         if r.status_code != 200:
             return -1
         return 0
