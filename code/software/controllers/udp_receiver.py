@@ -7,11 +7,11 @@ from urllib.parse import urlparse
 
 DEFAULT_UDP_IP = "0.0.0.0"  # Listen on all available interfaces
 DEFAULT_UDP_PORT = 12346    # Port used for receiving the stream
+DEFAULT_UDP_PORT = 12349   # Port used for receiving the stream
 
 
 class UDPReceiver:
-    def __init__(self, controller, udp_port=DEFAULT_UDP_PORT, udp_ip=DEFAULT_UDP_IP):
-        self.controller = controller
+    def __init__(self, udp_port=DEFAULT_UDP_PORT, udp_ip=DEFAULT_UDP_IP):
         self.udp_port = udp_port
         self.udp_ip = udp_ip
         self.udp_sock = None
@@ -100,7 +100,7 @@ class UDPReceiver:
                     if frame is not None:
                         with self.lock:
                             self.current_frame = frame  # Update the latest frame
-                        #print("Frame received and updated.")
+                        print("Frame received and updated.")
             except Exception as e:
                 print(f"Error while fetching frames: {e}")
 
@@ -123,3 +123,34 @@ class UDPReceiver:
         if self.udp_sock:
             self.udp_sock.close()
         print("Stopped frame fetching.")
+
+
+if __name__ == "__main__":
+    DEFAULT_TOP_CAM_URL = "http://superscanner8008:80"
+    DEFAULT_FRONT_CAM_URL = "http://superscanner8009:80"
+    top_cam_udp_receiver = UDPReceiver(12346, "0.0.0.0")
+    front_cam_udp_receiver = UDPReceiver(12349, "0.0.0.0")
+    top_cam_udp_receiver.start_listening(DEFAULT_TOP_CAM_URL)
+    front_cam_udp_receiver.start_listening(DEFAULT_FRONT_CAM_URL)
+    ContVid = True
+    def update_frame():
+        cv2.namedWindow('front', cv2.WINDOW_NORMAL)
+        cv2.namedWindow('top', cv2.WINDOW_NORMAL)
+        while ContVid :
+            if front_cam_udp_receiver.current_frame is not None :
+                cv2.imshow('front', front_cam_udp_receiver.current_frame)
+            if top_cam_udp_receiver.current_frame is not None :
+                cv2.imshow('top', top_cam_udp_receiver.current_frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):  # Allow exit with 'q' key
+                break
+        threading.Timer(0. ,update_frame).start()
+
+    thread = threading.Thread(target=update_frame)
+    thread.start()
+    print("fdgdfgfd")
+
+    
+
+"""
+    cv2.imshow('top', top_cam_udp_receiver.current_frame)
+"""
