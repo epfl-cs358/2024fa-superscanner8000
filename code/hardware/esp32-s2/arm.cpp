@@ -48,6 +48,7 @@ int Arm::setPos(int _x, int _y, bool angles) {
         q1 = _x * PI / 180;
         q2 = _y * PI / 180;
         angleToPos();
+        return 0;
     } else {
         if (sqrt(pow(x, 2) + pow(y, 2)) > (a1 + a2) || sqrt(pow(x, 2) + pow(y, 2)) < abs(a1 - a2)) {
             Serial.println("Error: Coordinates out of range.");
@@ -56,11 +57,12 @@ int Arm::setPos(int _x, int _y, bool angles) {
         x = _x;
         y = _y;
         posToAngles();
+        return 0;
     }
 
     // Move the steppers
     stepper1.moveTo(gearFactor * fullRevolution * q1 / (2 * PI));
-    stepper2.moveTo(-1 * pulleyFactor * fullRevolution * q2 / (2 * PI));
+    stepper2.moveTo(pulleyFactor * fullRevolution * q2 / (2 * PI));
 
     Serial.println("Moving to : " + String(fullRevolution * q1 / (2 * PI)) + ", " + String(fullRevolution * q2 / (2 * PI)));
     return 0;
@@ -98,6 +100,11 @@ void Arm::update() {
 // Convert position to angles
 void Arm::posToAngles() {
     q2 = acos((pow(x, 2) + pow(y, 2) - pow(a1, 2) - pow(a2, 2)) / (2 * a1 * a2)); 
+    if (q2 < 0) {
+        q2 = -q2;
+    } else if (q2 > 180) {
+        q2 = 360 - q2;
+    }
     q1 = atan2(y, x) - atan2(a2 * sin(q2), (a1 + a2 * cos(q2))); 
 }
 
