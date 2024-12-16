@@ -5,6 +5,7 @@ import os
 
 from controllers.ss8 import SS8
 from controllers.image_segmenter import ImageSegmenter
+from controllers.navigator import Navigator
 
 # Pages
 from pages.connection import ConnectionPage
@@ -32,6 +33,8 @@ class App(tk.Tk):
 
         # Init the image segmenter
         self.segmenter = ImageSegmenter(model_cfg="sam2_hiera_s.yaml", checkpoint="config/sam2_checkpoints/sam2_hiera_small.pt", expand_pixels=10)
+
+        self.nav = Navigator(self.ss8, lambda: print('Finish first round'))
 
         # Init pages
         self.pages = {}
@@ -64,7 +67,6 @@ class App(tk.Tk):
         self.current_frame.tkraise()
         self.update_idletasks()
         
-
     def _connection_lost_callback(self):
         """Callback function to be called when the connection is lost."""
         print("Connection lost")

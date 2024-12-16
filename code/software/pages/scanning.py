@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter.ttk import *
-from controllers.navigator import Navigator
 from controllers.object_detector import Object_Detector
 import asyncio
 
@@ -23,10 +22,7 @@ class ScanningPage(tk.Frame):
         button = ttk.Button(self.container, text="Stop scanning", style='Accent.TButton', command=self._interrupt_scan)
         button.pack(pady=10)
         
-        button = ttk.Button(self.container, text="Save image", style='Accent.TButton', command=self._save_image)
-        button.pack(pady=10)
-
-        self.nav = Navigator(self.controller.ss8, self._save_image, lambda: print('Finish first round'))
+        self.nav = self.controller.nav
         
         self.detector = Object_Detector(self.nav, self.controller.ss8, visualize=False)
         
@@ -37,18 +33,13 @@ class ScanningPage(tk.Frame):
         self.controller.ss8.turn_on_tracker()
 
         # Start the movement
-        #mov_coroutine = asyncio.create_task(self.nav.start_moving(4))
+        mov_coroutine = asyncio.create_task(self.nav.start_moving(4))
 
         detector_coroutine = asyncio.create_task(self.detector.start_detection())
-
-        #await mov_coroutine
+        
+        await mov_coroutine
         await detector_coroutine
 
     def _interrupt_scan(self):
         self.controller.ss8.stop_mov()
         self.controller.show_page('SetupPage')
-
-    def _save_image(self):
-        # TODO : Save the image to a tmp folder
-        print('Take picture')
-        pass

@@ -9,12 +9,9 @@ CENTER_THRESHOLD = 25
 SHOW_NAVIGATION = True
 
 class Navigator:
-    def __init__(self, ss8, on_break, on_finish):
+    def __init__(self, ss8, on_finish):
         self.ss8 = ss8
-        self.on_break = on_break
         self.on_finish = on_finish
-
-        print(on_break)
 
         self.trajectory = []
         self.ss8_pos = np.array([0., 0.])
@@ -22,6 +19,18 @@ class Navigator:
         self.obj_pos = np.array([0., 0.])
         self.obstacles = np.array([])
         self.moving = False
+
+        self.vertical_precision = dconfig.DEFAULT_VERTICAL_PRECISION
+        self.horizontal_precision = dconfig.DEFAULT_HORIZONTAL_PRECISION
+
+    def set_precision(self, vertical, horizontal):
+        """
+        Set the precision of the navigator.
+        vertical (int): The vertical precision.
+        horizontal (int): The horizontal precision.
+        """
+        self.vertical_precision = vertical
+        self.horizontal_precision = horizontal
 
     async def callibrate(self, iteration, distance=DEFAULT_CALLIBRATION_DISTANCE, step_nbr=10):
         """
@@ -192,7 +201,7 @@ class Navigator:
         Pause the movement and restart it.
         """
         self.moving = False
-        self.on_break()
+        print('Take picture')
         self.moving = True
         return
 

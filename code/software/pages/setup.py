@@ -6,8 +6,7 @@ import asyncio
 
 from widgets.image import ImageWidget
 
-DEFAULT_VERTICAL_PRECISION = 5
-DEFAULT_HORIZONTAL_PRECISION = 10
+from config.dev_config import DEFAULT_VERTICAL_PRECISION, DEFAULT_HORIZONTAL_PRECISION
 
 class SetupPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -95,10 +94,6 @@ class SetupPage(tk.Frame):
         self.img_preview.display(update_preview, 10)
 
     def _display_selection_buttons(self):
-        def start_scan():
-            """Start the scanning process and destroy the preview window"""
-            self.img_preview.destroy()
-            self.controller.show_page("ScanningPage")
         
         def cancel_selection():
             self.selection_buttons_frame.pack_forget()
@@ -123,4 +118,11 @@ class SetupPage(tk.Frame):
 
         start_button = ttk.Button(self.selection_buttons_frame, text="Start the scan", style='Accent.TButton')
         start_button.grid(row=2, column=1, padx=5, pady=5)
-        start_button.bind("<ButtonRelease-1>", lambda event: start_scan())
+        start_button.bind("<ButtonRelease-1>", lambda event: self._start_scan())
+
+    
+    def _start_scan(self):
+        """Start the scanning process and destroy the preview window"""
+        self.controller.navigator.set_precision(int(self.vert_prec_entry.get()), int(self.hor_prec_entry.get()))
+        self.img_preview.destroy()
+        self.controller.show_page("ScanningPage")
