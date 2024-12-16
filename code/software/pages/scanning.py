@@ -34,7 +34,8 @@ class ScanningPage(tk.Frame):
         self.controller.ss8.turn_on_tracker()
 
         # Start the movement
-        await self.nav.callibrate(4)
+        # await self.nav.callibrate(4)
+        self._set_circle_trajectory(1000, 10)
         self.nav.start_moving()
 
         # TODO : Start the detection of obstacles and save them to the navigator with self.nav.add_obstacle()

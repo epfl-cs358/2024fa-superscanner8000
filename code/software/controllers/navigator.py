@@ -1,10 +1,12 @@
 import math
 import numpy as np
 import asyncio
+import config.dev_config as dconfig
 
 STEP_DISTANCE = 5
 DEFAULT_CALLIBRATION_DISTANCE = 10000
 CENTER_THRESHOLD = 50
+SHOW_NAVIGATION = True
 
 class Navigator:
     def __init__(self, ss8, segmenter):
@@ -17,27 +19,32 @@ class Navigator:
         self.obstacles = np.array([])
         self.moving = False
 
-    async def callibrate(self, iteration, distance=DEFAULT_CALLIBRATION_DISTANCE, on_finish=lambda:None):
+    async def callibrate(self, iteration, distance=DEFAULT_CALLIBRATION_DISTANCE, step_nbr=10):
         """
         Start the callibration of the device.
         iteration (int): The number of iteration to do.
         """
 
-        self._align_ss8_to_obj()
+        if not dconfig.SIMULATION_MODE:
+            self._align_ss8_to_obj()
 
         iteration_dist = distance / iteration
-        angles = np.array([])
+        measures = np.array([])
 
-        self.ss8.move_backward(int(-iteration/2*iteration_dist), lambda: self.ss8.get_arm_cam_angle(lambda angle: angles.append(angle.alpha)))
+        start_point = -iteration/2*iteration_dist
+        await self.ss8.move_backward(int(start_point))
+        measures.append(np.array([np.abs(start_point), await self.ss8.get_arm_cam_angle()]))
 
-        def save_and_forward(i, max, on_finish):
-            self.ss8.get_arm_cam_angle(lambda angle: angles.append(angle.alpha))
-            if(i+1<max):
-                self.ss8.move_forward(iteration_dist, lambda: save_and_forward(i+1, max))
-            else :
-                self.ss8.move_backward(int(-iteration/2*iteration_dist), on_finish)
+        for i in range(1, iteration):
+            await self.ss8.move_forward(iteration_dist)
 
-        self.ss8.move_forward(iteration_dist, lambda: save_and_forward(1, iteration, on_finish))            
+            if not dconfig.SIMULATION_MODE:
+                measure = [np.abs(start_point+i*iteration_dist), await self.ss8.get_arm_cam_angle()]
+                measures.append(np.array(measure))
+
+        await self.ss8.move_backward(int(-iteration/2*iteration_dist))
+
+        return np.mean(np.tan(measures[:, 0]) * measures[:, 1])
 
     def add_obstacle(self, relative_position, size=1):
         """

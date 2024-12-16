@@ -100,7 +100,7 @@ class UDPReceiver:
                     if frame is not None:
                         with self.lock:
                             self.current_frame = frame  # Update the latest frame
-                        print("Frame received and updated.")
+                        #print("Frame received and updated.")
             except Exception as e:
                 print(f"Error while fetching frames: {e}")
 
