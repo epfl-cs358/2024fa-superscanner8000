@@ -1,5 +1,6 @@
 import math
 import numpy as np
+import asyncio
 
 STEP_DISTANCE = 5
 DEFAULT_CALLIBRATION_DISTANCE = 10000
@@ -16,7 +17,7 @@ class Navigator:
         self.obstacles = np.array([])
         self.moving = False
 
-    def callibrate(self, iteration, distance=DEFAULT_CALLIBRATION_DISTANCE, on_finish=lambda:None):
+    async def callibrate(self, iteration, distance=DEFAULT_CALLIBRATION_DISTANCE, on_finish=lambda:None):
         """
         Start the callibration of the device.
         iteration (int): The number of iteration to do.
@@ -47,8 +48,13 @@ class Navigator:
         
     def start_moving(self):
         self.moving = True
-        self._compute_next_deplacement()
-    
+
+        async def move():
+            dep = self._compute_next_deplacement()
+            await self._move_of(dep)
+            if self.moving:
+                asyncio.run(move())
+
     def stop_moving(self):
         self.moving = False
 
@@ -118,9 +124,9 @@ class Navigator:
         next_dep = (next_dep / np.linalg.norm(next_dep)) * STEP_DISTANCE
         angle = np.tan(next_dep) - self.ss8_angle
 
-        self._mov_of(angle, STEP_DISTANCE, self._compute_next_deplacement if self.moving else None)
+        return angle, STEP_DISTANCE
     
-    def _mov_of(self, angle, distance, next):
+    async def _move_of(self, angle, distance):
         """
         Move the device of a given angle and distance.
         angle (float): The angle to move.
@@ -129,9 +135,13 @@ class Navigator:
 
         # Rotate the ss8 to the given angle (rotate left if the angle smaller than PI, right otherwise)
         if angle < np.pi:
-            rotation_time = self.ss8.rotate_left(angle)
+            await self.ss8.rotate_left(angle)
         else:
-            rotation_time = self.ss8.rotate_right(2*np.pi - angle, self.ss8.move_forward(distance, next))
+            await self.ss8.rotate_right(2*np.pi - angle)
+        
+        # Move the ss8 forward
+        await self.ss8.move_forward(distance)
+        return
 
 DEFAULT_FORCE_NORM = 1
 DEFAULT_DIST_ORDER = 1

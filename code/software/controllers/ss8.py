@@ -1,4 +1,5 @@
 import requests 
+import asyncio
 import cv2
 import os
 import numpy as np
@@ -21,6 +22,8 @@ TOP_CAM_ANGLE_TO_TIME = 1 # Time to rotate the top camera by 1 radian
 TEST_CONNECTION_TIMEOUT = 3
 TEST_SEG_WITH_VID = False
 CONNECT_TO_MOV_API = False
+CONNECT_TO_TOP_CAM = True
+CONNECT_TO_FRONT_CAM = False
 
 class SS8:
     def  __init__(self, controller, disconnected_callback):
@@ -32,6 +35,8 @@ class SS8:
 
         self.top_cam_udp_receiver = UDPReceiver(12346, "0.0.0.0")
         self.front_cam_udp_receiver = UDPReceiver(22222, "0.0.0.0")
+
+    # Connection methods
 
     def get_default_urls(self):
         """
@@ -96,13 +101,21 @@ class SS8:
         return True
 
     def init_udp_connection(self) -> bool:
-        try:
-            self.top_cam_udp_receiver.start_listening(self.top_cam_url)
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            return False
+        if CONNECT_TO_TOP_CAM :
+            try:
+                self.top_cam_udp_receiver.start_listening(self.top_cam_url)
+            except Exception as e:
+                print(f"An error occurred for the top cam: {e}")
+                return False
         
-        #self.front_cam_udp_receiver.start_listening(self.front_cam_url)
+        if CONNECT_TO_FRONT_CAM:
+            try:
+                self.front_cam_udp_receiver.start_listening(self.front_cam_url)
+            except Exception as e:
+                print(f"An error occurred for the front cam: {e}")
+                return False
+        
+        
         return True
     
     def fake_init_udp_connection(self) -> bool:
@@ -138,8 +151,10 @@ class SS8:
         update_current_frame()
 
         return True
-    
-    def _send_req(self, req_func, on_error=lambda: None, on_success=lambda: None, next=lambda:None):
+
+    # Instrucitons methods
+
+    async def _send_req(self, req_func, on_error=lambda: None, on_success=lambda: None):
         """
         Send a request to the connected device.
 
@@ -151,7 +166,7 @@ class SS8:
         try:
             res = req_func()
             if res.status_code == 200:
-                on_success(res.json())
+                return res.json()
             else:
                 on_error()
         except requests.ConnectionError:
@@ -160,59 +175,41 @@ class SS8:
             print(f"An error occurred: {e}")
             self.connection_lost_callback()
     
-    def capture_image(self, src='arm'):
-        """
-        Captures an image from the ESP32.
-        
-        Args:
-            src (str): The source from which to capture the image. Default is 'arm'.
-        Returns:
-            cv2.typing.MatLike: The captured image in a format compatible with OpenCV.
-        """
-        if(TEST_SEG_WITH_VID):
-            return self.fake_current_frame
-        elif src == 'arm':
-            return self.top_cam_udp_receiver.get_current_frame()
-        elif src == 'front':
-            return self.front_cam_udp_receiver.get_current_frame()
-        
-        return None
-    
-    def move_forward(self, dist=DEFAULT_MOVING_DIST, next=lambda: None):
+    async def move_forward(self, dist=DEFAULT_MOVING_DIST):
         """
         Move the device forward.
         dist (int): The distance or duration to move. If positive, the device moves for the given time.
         """
         ms = dist*BODY_DIST_TO_TIME
-        self._send_req(lambda: requests.post(self.api_url + "/fwd", json={"ms": ms}), on_success=lambda: print("Moving forward..."))
-        
-        if next is not None:
-            self.controller.after(int(ms), next)
+        await self._send_req(lambda: requests.post(self.api_url + "/fwd", json={"ms": ms}))
+        print("Moving forward...")
+        await asyncio.sleep(ms*0.001)
+        return
 
-    def move_backward(self, dist=DEFAULT_MOVING_DIST, next=lambda: None):
+    async def move_backward(self, dist=DEFAULT_MOVING_DIST):
         """
         Move the device backward.
         dist (int): The distance or duration to move. If positive, the device moves for the given time.
         """
         ms=dist*BODY_DIST_TO_TIME
-        self._send_req(lambda: requests.post(self.api_url + "/bwd", json={"ms": ms}), on_success=lambda: print("Moving backward..."))
+        await self._send_req(lambda: requests.post(self.api_url + "/bwd", json={"ms": ms}))
+        print("Moving backward...")
+        await asyncio.sleep(ms*0.001)
+        return
         
-        if next is not None:
-            self.controller.after(int(ms), next)
-        
-    def rotate_left(self, dist=DEFAULT_ROTATING_ANGLE, next=lambda: None):
+    async def rotate_left(self, dist=DEFAULT_ROTATING_ANGLE):
         """
         Rotate the device to the left.
         dist (int): The distance or duration to rotate. If positive, the device rotates for the given time. 
                     If negative, the device rotates until it stops.
         """
         ms=dist*BODY_ANGLE_TO_TIME
-        self._send_req(lambda: requests.post(self.api_url + "/hlft", json={"ms": dist*BODY_ANGLE_TO_TIME}), on_success=lambda: print("Rotating left..."))
-
-        if next is not None:
-            self.controller.after(int(ms), next)
+        await self._send_req(lambda: requests.post(self.api_url + "/hlft", json={"ms": dist*BODY_ANGLE_TO_TIME}))
+        print("Rotating left...")
+        await asyncio.sleep(ms*0.001)
+        return
         
-    def rotate_right(self, dist=DEFAULT_ROTATING_ANGLE, next=lambda: None):
+    async def rotate_right(self, dist=DEFAULT_ROTATING_ANGLE):
         """
         Rotate the device to the right.
         dist (int): The distance or duration to rotate. If positive, the device rotates for the given time. 
@@ -220,61 +217,69 @@ class SS8:
         
         """
         ms=dist*BODY_ANGLE_TO_TIME
-        self._send_req(lambda: requests.post(self.api_url + "/hrgt", json={"ms": dist*BODY_ANGLE_TO_TIME}), on_success=lambda: print("Rotating right..."))
+        await self._send_req(lambda: requests.post(self.api_url + "/hrgt", json={"ms": dist*BODY_ANGLE_TO_TIME}))
+        print("Rotating right...")
+        await asyncio.sleep(ms*0.001)
+        return
 
-        if next is not None:
-            self.controller.after(int(ms), next)
-
-    def stop_mov(self):
+    async def stop_mov(self):
         """
         Stop the device movement.
         """
-        self._send_req(lambda: requests.post(self.api_url + "/stp"), on_success=lambda: print("Stopping movement..."))
+        await self._send_req(lambda: requests.post(self.api_url + "/stp"))
+        print("Stopping movement...")
+        return
 
-    def goto_arm(self, x=0, y=0):
+    async def goto_arm(self, x=0, y=0):
         """
         Move the arm up.
         x (int): The x coordinate to move to.
         y (int): The y coordinate to move to.
         """
-        self._send_req(lambda: requests.post(self.api_url + "/arm/goto", json={"x": x, "y": y}), on_success=lambda: print("Moving arm to position..."))
+        await self._send_req(lambda: requests.post(self.api_url + "/arm/goto", json={"x": x, "y": y}))
+        print("Moving arm to position...")
+        return
 
-    def stop_arm(self):
+    async def stop_arm(self):
         """
         Stop the arm movement.
         """
-        self._send_req(lambda: requests.post(self.api_url + "/arm/stp"), on_success=lambda: print("Stopping arm movement..."))
+        await self._send_req(lambda: requests.post(self.api_url + "/arm/stp"))
+        print("Stopping arm movement...")
+        return
 
-    def goto_camera(self, alpha=0, beta=0):
+    async def goto_camera(self, alpha=0, beta=0):
         """
         Move the camera up.
         dist (int): The distance or duration to move. If positive, the camera moves for the given time.
         """
-        self._send_req(lambda: requests.post(self.api_url + "/cam/goto", json={"alpha": alpha, "beta": beta}), on_success=lambda: print("Moving camera to position..."))
+        await self._send_req(lambda: requests.post(self.api_url + "/cam/goto", json={"alpha": alpha, "beta": beta}))
+        print("Moving camera to position...")
+        return 
 
-    def stop_cam(self):
+    async def stop_cam(self):
         """
         Stop the camera movement.
         """
-        self._send_req(lambda: requests.post(self.api_url + "/cam/stp"), on_success=lambda: print("Stopping camera movement...")) 
+        await self._send_req(lambda: requests.post(self.api_url + "/cam/stp")) 
+        print("Stopping camera movement...")
+        return
 
-    def get_top_cam_angle(self, getter=lambda: None):
+    async def get_top_cam_angle(self):
         """
         Get the angle of the top camera.
         """
 
-        def on_success(data):
-            print(data)
-            getter(data)
-            return 
+        data = await self._send_req(lambda: requests.get(self.api_url + "/cam/status"), on_success=on_success)
+        return data
+    
+    # Camera control methods
 
-        self._send_req(lambda: requests.get(self.api_url + "/cam/status"), on_success=on_success)
-    def recenter_cam(self, next=None):
+    def turn_on_tracker(self):
         """
-        Recenter the camera to have the object to be scanned in the center of the frame.
-        next (function): The function to call after the camera has been recentered.
+        Start the object tracking. The camera will try to keep the object in the center of its view.
         """
-        print("Recentering camera...")
+        print("Start tracking the object...")
         # TODO: Implement the recentering logic
         
         def check_center():
@@ -294,6 +299,24 @@ class SS8:
                 self.down_camera()
             elif(pos_diff[1] < -10):
                 self.up_camera()
+
+    def capture_image(self, src='arm'):
+        """
+        Captures an image from the ESP32.
         
+        Args:
+            src (str): The source from which to capture the image. Default is 'arm'.
+        Returns:
+            cv2.typing.MatLike: The captured image in a format compatible with OpenCV.
+        """
+        if(TEST_SEG_WITH_VID):
+            return self.fake_current_frame
+        elif src == 'arm':
+            return self.top_cam_udp_receiver.get_current_frame()
+        elif src == 'front':
+            return self.front_cam_udp_receiver.get_current_frame()
+        
+        return None
+     
 
             

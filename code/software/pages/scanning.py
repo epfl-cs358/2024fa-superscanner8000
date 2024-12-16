@@ -3,6 +3,7 @@ from tkinter import ttk
 from tkinter.ttk import *
 from controllers.navigator import Navigator
 import numpy as np
+import asyncio
 
 CALIBRATION_ITERATION = 4
 
@@ -26,25 +27,22 @@ class ScanningPage(tk.Frame):
         button.pack(pady=10)
 
         self.nav = Navigator(self.controller.ss8, self.controller.segmenter)
-        self.nav.start_callibration(CALIBRATION_ITERATION, on_finish=self._start_scanning)
-        self._start_scanning()
+        asyncio.run(self._start_scanning())
+
+    async def _start_scanning(self):
+        # Start centering the camera all the time
+        self.controller.ss8.turn_on_tracker()
+
+        # Start the movement
+        await self.nav.callibrate(4)
+        self.nav.start_moving()
+
+        # TODO : Start the detection of obstacles and save them to the navigator with self.nav.add_obstacle()
 
     def _interrupt_scan(self):
         self.controller.ss8.stop_mov()
         self.controller.show_page('SetupPage')
 
-    def _start_scanning(self):
-        # Start centering the camera all the time
-        def center_cam():
-            self.controller.ss8.recenter_cam()
-            self.after(100, center_cam)
-        center_cam()
-
-        # TODO : Detect obstacles and save them to the navigator
-
-        # Start the movement
-        self.nav.callibrate(4, on_finish=self.nav.start_moving)
-        
     def _save_image(self):
         # TODO : Save the image to a tmp folder
         pass
