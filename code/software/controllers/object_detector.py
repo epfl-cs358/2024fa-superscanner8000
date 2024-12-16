@@ -78,16 +78,18 @@ class Object_Detector:
         pixelated_image = cv2.resize(pixelated_image_small, (width, height), interpolation=cv2.INTER_NEAREST)
 
         return pixelated_image
-    
+
+        # TODO: Nearest ground point is at 24 cm, so we can use this as a base value
     def _get_depth_map(self, frame: np.ndarray):
         # Convert to rgb
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        depth = self.depth_anything.infer_image(frame) / 10 # Mapped from 0 to 10
-
-        return depth.reshape((depth.shape[0], -1, 1)) # Depth map where 1 is near and 0 is far
+        depth = 1 - (self.depth_anything.infer_image(frame)) / 10 # Mapped from 0 to 10
+        min_depth = np.min(depth)
+        ratio = 24 / min_depth
+        return depth * ratio # Depth map where values are in cm
     
-    def _get_occupancy_map(self, depth: np.ndarray, threshold_distance: float = 0.3): # TODO: Adjust for base value
+    def _get_occupancy_map(self, depth: np.ndarray, threshold_distance: float = 50): # TODO: Adjust for base value
         """
         Get the occupancy map from the depth map
         depth: Depth map
@@ -104,7 +106,7 @@ class Object_Detector:
         depth: pixel depth value
         hfov: horizontal field of view
         '''
-        
+
         world_position = np.linalg.inv(R) @ (np.linalg.inv(self._get_intrinsic_matrix(hfov, frame)) @ pixel_index - T)
         return world_position * depth
     
@@ -128,7 +130,7 @@ class Object_Detector:
                     continue
                 d = int(value * width)
                 # Set the pixelated depth value to all pixels in the square
-                top_view[i:i+pixel_size, d:d+pixel_size] = 0
+                #top_view[i:i+pixel_size, d:d+pixel_size] = 0
 
                 pixel_index = np.array([i, j, 1]).reshape(3, 1)
                 pixel_coords = self._project_to_world(pixel_index, T, R, value, hfov, rgb)
