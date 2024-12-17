@@ -143,15 +143,15 @@ class Object_Detector:
     async def start_detection(self):
         self.must_detect = True
         
-        while True:
+        """ while True:
             cv2.waitKey(1)
             print('Updating preview')
             prev_img = self.ss8.capture_image('front')
             if(prev_img is not None):
                 cv2.imshow('frontcam', prev_img)
-            await asyncio.sleep(1/24)
+            await asyncio.sleep(1/24) """
             
-        #await self.detect_occupancy()
+        await self.detect_occupancy()
 
     async def detect_occupancy(self):
         print('Detecting occupancy')
@@ -161,6 +161,7 @@ class Object_Detector:
             depth = self._get_depth_map(frame)
             occupancy_map = self._get_occupancy_map(depth)
 
+            cv2.imshow('Occupanc<', occupancy_map)
             depth = cv2.multiply(depth, occupancy_map.astype(np.float32))
 
             top_view, pixelated_depth, pos_3d, colors = self._compute_perspective_views(
