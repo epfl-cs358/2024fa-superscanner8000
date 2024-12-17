@@ -14,7 +14,7 @@ if torch.cuda.get_device_properties(0).major >= 8:
 class ImageSegmenter:
     def __init__(self, model_cfg, checkpoint, expand_pixels=0):
         self.predictor = build_sam.build_sam2_camera_predictor(model_cfg, checkpoint)
-        self.if_init = False
+        self.is_init = False
         self.expand_pixels = expand_pixels
 
     def initialize(self, frame, points=None, bbox=None):
@@ -22,7 +22,7 @@ class ImageSegmenter:
         self.width, self.height = frame.shape[:2][::-1]
 
         self.predictor.load_first_frame(frame)
-        self.if_init = True
+        self.is_init = True
 
         ann_frame_idx = 0  # the frame index we interact with
         ann_obj_id = 1  # give a unique id to each object we interact with (it can be any integers)
@@ -99,7 +99,7 @@ if __name__ == "__main__":
         if not ret:
             break
 
-        if not scanner.if_init:
+        if not scanner.is_init:
             points = np.array([[608, 253]], dtype=np.float32)
             scanner.initialize(frame, points=points)
         else:
