@@ -8,7 +8,7 @@ def calculate_distance(start, end):
 def generate_line_points(N, start, end):
     points = []
     for i in range(N):
-        t = i / (N - 1)  # Normalize parameter t between 0 and 1
+        t = i / N  # Normalize parameter t between 0 and 1
         x = round(start[0] + t * (end[0] - start[0]), 1)
         y = round(start[1] + t * (end[1] - start[1]), 1)
         points.append([x, y])
@@ -33,7 +33,7 @@ def generate_path(N):
 
     # Calculate the number of points for each segment based on their relative lengths
     vertical_points = int(round((vertical_length / total_length) * (N - 1))) + 1
-    curve_points = (N - 1) - vertical_points
+    curve_points = (N - 1) - (vertical_points - 1)
 
     # 1. Generate vertical segment (-10, -10) to (-10, 20)
     vertical_segment = generate_line_points(vertical_points, vertical_start, vertical_end)
