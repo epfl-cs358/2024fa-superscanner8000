@@ -12,16 +12,19 @@ class SetupPage(tk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent)
         self.controller = controller
-
         # Setup variable to choose which object to scan
         self.object_selected = False
+        
+        # Create a container frame to center the content
+        self.container_left = tk.Frame(self)
+        self.container_left.place(relx=0.5, rely=0.5, anchor=tk.E)
 
         # Create a container frame to center the content
-        self.container = tk.Frame(self)
-        self.container.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        self.container_right = tk.Frame(self)
+        self.container_right.place(relx=0.5, rely=0.5, anchor=tk.W)
 
         # Add widget to the container
-        label = ttk.Label(self.container, text="Click on the object you want to scano in  the preview window")
+        label = ttk.Label(self.container_left, text="Click on the object you want to scano in the top preview window")
         label.pack(pady=0)
 
         self._display_preview()
@@ -31,7 +34,8 @@ class SetupPage(tk.Frame):
         self.controller.ss8.display_text("Connected")
         
     def _display_directionnal_buttons(self):
-        buttons_container = tk.Frame(self.container)
+        buttons_container = tk.Frame(self.container_left)
+        buttons_container.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
         buttons_container.pack(pady=5)
 
         # Camera buttons
@@ -67,7 +71,7 @@ class SetupPage(tk.Frame):
         self.backward_button.grid(row=1, column=1, padx=5, pady=5)
     
     def _display_cam_buttons(self):
-        buttons_container = tk.Frame(self.container)
+        buttons_container = tk.Frame(self.container_left)
         buttons_container.pack(side=tk.RIGHT, pady=5, padx=50)
         # Directional buttons   
 
@@ -83,15 +87,25 @@ class SetupPage(tk.Frame):
                 self.selection_buttons_frame.pack(anchor=tk.S, pady=20)
                 self.object_selected = True
 
-        self.img_preview = ImageWidget(self, 400, 300, img_click_callback)
-        
-        def update_preview():
+        self.img_preview_top = ImageWidget(self.container_right, 445, 300, img_click_callback)
+        self.img_preview_top.canvas.pack(expand=True)  # Center the canvas in the container
+
+        self.img_preview_front = ImageWidget(self.container_right, 445, 300, None)
+        self.img_preview_front.canvas.pack(expand=True)  # Center the canvas in the container
+
+        def update_preview_top():
             cv2.waitKey(1)
             prev_img = self.controller.ss8.capture_image()
             prev_img = self.controller.segmenter.mask_img(prev_img) if self.object_selected else prev_img
             return prev_img
         
-        self.img_preview.display(update_preview, 10)
+        def update_preview_front():
+            cv2.waitKey(1)
+            prev_img = self.controller.ss8.capture_image("front")
+            return prev_img
+        
+        self.img_preview_top.display(update_preview_top, 10)
+        self.img_preview_front.display(update_preview_front, 10)
 
     def _display_selection_buttons(self):
         
@@ -99,7 +113,7 @@ class SetupPage(tk.Frame):
             self.selection_buttons_frame.pack_forget()
             self.object_selected = False
 
-        self.selection_buttons_frame = tk.Frame(self.container)
+        self.selection_buttons_frame = tk.Frame(self.container_left)
 
         ttk.Label(self.selection_buttons_frame, text="Vertical precision").grid(row=0, column=0, padx=5, pady=5)
         self.vert_prec_entry = ttk.Entry(self.selection_buttons_frame)
@@ -125,5 +139,6 @@ class SetupPage(tk.Frame):
     def _start_scan(self):
         """Start the scanning process and destroy the preview window"""
         self.controller.nav.set_precision(int(self.vert_prec_entry.get()), int(self.hor_prec_entry.get()))
-        self.img_preview.destroy()
+        self.img_preview_top.destroy()
+        self.img_preview_front.destroy()
         self.controller.show_page("ScanningPage")
