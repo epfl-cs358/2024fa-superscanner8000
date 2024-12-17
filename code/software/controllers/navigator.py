@@ -247,3 +247,7 @@ class ForcePoint:
     
     def get_pos(self):
         return self.pos
+    
+
+if __init__() == '__main__':
+    print('Jte derange tonio ?')
