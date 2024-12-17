@@ -6,6 +6,8 @@ from urllib.parse import urlparse
 import tempfile
 import os
 
+from config.dev_config import DEBUG_CAM
+
 
 DEFAULT_UDP_IP = "0.0.0.0"  # Listen on all available interfaces
 DEFAULT_UDP_PORT = 12346    # Port used for receiving the stream
@@ -50,23 +52,28 @@ class UDPReceiver:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as tcp_sock:
             tcp_sock.connect((esp32_ip, esp32_port))
             tcp_sock.send(f"IP:{self.computer_ip}\n".encode())  # Send IP in format "IP:192.168.x.x"
-            print(f"Sent IP address {self.computer_ip} to ESP32")
+            if DEBUG_CAM:
+                print(f"Sent IP address {self.computer_ip} to ESP32")
                 
     def start_listening(self, esp32_cam_url):
-        print(esp32_cam_url)
+        if DEBUG_CAM:
+            print(esp32_cam_url)
         parsed_url = urlparse(esp32_cam_url)
 
         hostname = parsed_url.hostname
         esp32_port = parsed_url.port
-        print(f"ESP32 hostname: {hostname}")
-        print(f"ESP32 port: {esp32_port}")
+        if DEBUG_CAM:
+            print(f"ESP32 hostname: {hostname}")
+            print(f"ESP32 port: {esp32_port}")
 
         # Resolve ESP32 hostname
         try:
             esp32_ip = self.get_ip_of_hostname(hostname)
-            print(f"ESP32 resolved to IP: {esp32_ip}")
+            if DEBUG_CAM:
+                print(f"ESP32 resolved to IP: {esp32_ip}")
         except Exception as e:
-            print(f"Error resolving ESP32 hostname: {e}")
+            if DEBUG_CAM:
+                print(f"Error resolving ESP32 hostname: {e}")
             exit(1)
 
         self._send_ip_to_esp32(esp32_ip, esp32_port)
@@ -76,7 +83,8 @@ class UDPReceiver:
 
         # Start a background thread for continuous frame fetching
         threading.Thread(target=self._fetch_frames, daemon=True).start()
-        print(f"Listening for UDP packets on {self.udp_ip}:{self.udp_port}...")
+        if DEBUG_CAM:
+            print(f"Listening for UDP packets on {self.udp_ip}:{self.udp_port}...")
 
     def _fetch_frames(self):
         """
@@ -104,9 +112,12 @@ class UDPReceiver:
                     if frame is not None:
                         with self.lock:
                             self.current_frame = frame  # Update the latest frame
-                        #print("Frame received and updated.")
+                        
+                        if DEBUG_CAM:
+                            print("Frame received and updated.")
             except Exception as e:
-                #print(f"Error while fetching frames: {e}")
+                if DEBUG_CAM:
+                    print(f"Error while fetching frames: {e}")
                 pass
 
     def get_current_frame(self):
@@ -116,7 +127,8 @@ class UDPReceiver:
         if self.current_frame is not None:
             return self.current_frame
         else:
-            print("No frame available.")
+            if DEBUG_CAM:
+                print("No frame available.")
             return None
 
     def save_frame(self, frame):  # Save the current frame to a file
@@ -132,11 +144,13 @@ class UDPReceiver:
             temp_file_path = os.path.join(temp_dir, filename)
             # Save the frame to the temporary folder
             cv2.imwrite(temp_file_path, frame)
-            print(f"Saved frame {frame_counter} to {temp_file_path}")
+            if DEBUG_CAM:
+                print(f"Saved frame {frame_counter} to {temp_file_path}")
             # Increment the frame counter
             frame_counter += 1
         else:
-            print("No frame available to save.")
+            if DEBUG_CAM:
+                print("No frame available to save.")
 
     def stop(self):
         """
@@ -145,7 +159,8 @@ class UDPReceiver:
         self.running = False
         if self.udp_sock:
             self.udp_sock.close()
-        print("Stopped frame fetching.")
+        if DEBUG_CAM:
+            print("Stopped frame fetching.")
 
 
 if __name__ == "__main__":
@@ -171,7 +186,6 @@ if __name__ == "__main__":
 
     thread = threading.Thread(target=update_frame)
     thread.start()
-    print("fdgdfgfd")
     top_cam_udp_receiver.save_frame(top_cam_udp_receiver.current_frame)
 
 

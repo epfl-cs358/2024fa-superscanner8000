@@ -6,7 +6,7 @@ import asyncio
 
 from widgets.image import ImageWidget
 
-from config.dev_config import DEFAULT_VERTICAL_PRECISION, DEFAULT_HORIZONTAL_PRECISION
+from config.dev_config import DEFAULT_VERTICAL_PRECISION, DEFAULT_HORIZONTAL_PRECISION, CONNECT_TO_TOP_CAM
 
 class SetupPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -99,7 +99,6 @@ class SetupPage(tk.Frame):
             self.selection_buttons_frame.pack_forget()
             self.object_selected = False
 
-
         self.selection_buttons_frame = tk.Frame(self.container)
 
         ttk.Label(self.selection_buttons_frame, text="Vertical precision").grid(row=0, column=0, padx=5, pady=5)
@@ -120,9 +119,12 @@ class SetupPage(tk.Frame):
         start_button.grid(row=2, column=1, padx=5, pady=5)
         start_button.bind("<ButtonRelease-1>", lambda event: self._start_scan())
 
-    
+        if not CONNECT_TO_TOP_CAM:
+            self.selection_buttons_frame.pack(anchor=tk.S, pady=20)
+
     def _start_scan(self):
         """Start the scanning process and destroy the preview window"""
+        print(int(self.vert_prec_entry.get()), int(self.hor_prec_entry.get()))
         self.controller.nav.set_precision(int(self.vert_prec_entry.get()), int(self.hor_prec_entry.get()))
         self.img_preview.destroy()
         self.controller.show_page("ScanningPage")

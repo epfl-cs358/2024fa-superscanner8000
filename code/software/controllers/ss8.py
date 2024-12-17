@@ -99,12 +99,14 @@ class SS8:
             print(f"An error occurred: {e}")
             return False
         
+        print("Connected to API")
         return True
 
     def init_udp_connection(self) -> bool:
         if dconfig.CONNECT_TO_TOP_CAM :
             try:
                 self.top_cam_udp_receiver.start_listening(self.top_cam_url)
+                print("Connected to top cam")
             except Exception as e:
                 print(f"An error occurred for the top cam: {e}")
                 return False
@@ -112,6 +114,7 @@ class SS8:
         if dconfig.CONNECT_TO_FRONT_CAM:
             try:
                 self.front_cam_udp_receiver.start_listening(self.front_cam_url)
+                print("Connected to front cam")
             except Exception as e:
                 print(f"An error occurred for the front cam: {e}")
                 return False
@@ -183,7 +186,7 @@ class SS8:
         """
         ms = dist*BODY_DIST_TO_TIME
 
-        if not dconfig.SIMULATION_MODE:
+        if dconfig.CONNECT_TO_MOV_API:
             await self._send_req(lambda: requests.post(self.api_url + "/fwd", json={"ms": ms}))
         print(f"Moving forward of {dist} cm...")
         
@@ -198,7 +201,7 @@ class SS8:
         """
         ms=dist*BODY_DIST_TO_TIME
 
-        if not dconfig.SIMULATION_MODE:
+        if dconfig.CONNECT_TO_MOV_API:
             await self._send_req(lambda: requests.post(self.api_url + "/bwd", json={"ms": ms}))
         print(f"Moving backward of {dist} cm...")
 
@@ -215,7 +218,10 @@ class SS8:
         """
         ms=angle*BODY_ANGLE_TO_TIME
 
-        if not dconfig.SIMULATION_MODE:
+        if(angle < 0.000001):
+            return
+
+        if dconfig.CONNECT_TO_MOV_API:
             await self._send_req(lambda: requests.post(self.api_url + "/hlft", json={"ms": angle*BODY_ANGLE_TO_TIME}))
         
         print(f"Rotating left of {round(angle*180/np.pi)} degrees...")
@@ -234,7 +240,10 @@ class SS8:
         """
         ms=angle*BODY_ANGLE_TO_TIME
 
-        if not dconfig.SIMULATION_MODE:
+        if(angle < 0.000001):
+            return
+
+        if dconfig.CONNECT_TO_MOV_API:
             await self._send_req(lambda: requests.post(self.api_url + "/hrgt", json={"ms": angle*BODY_ANGLE_TO_TIME}))
         print(f"Rotating right of {round(angle*180/np.pi, 1)} degrees...")
 
@@ -248,7 +257,7 @@ class SS8:
         """
         Stop the device movement.
         """
-        if not dconfig.SIMULATION_MODE:
+        if dconfig.CONNECT_TO_MOV_API:
             print("Stopping movement...")
             await self._send_req(lambda: requests.post(self.api_url + "/stp"))
 
@@ -261,7 +270,7 @@ class SS8:
         y (int): The y coordinate to move to.
         """
             
-        if not dconfig.SIMULATION_MODE:
+        if dconfig.CONNECT_TO_MOV_API:
             if (x == 0 and y == 0):
                 await self._send_req(lambda: requests.post(self.api_url + "/arm/goto", json={"x": 0, "y": 0, "angles": True}))
             else:
@@ -275,7 +284,7 @@ class SS8:
         Stop the arm movement.
         """
         
-        if not dconfig.SIMULATION_MODE:
+        if dconfig.CONNECT_TO_MOV_API:
             await self._send_req(lambda: requests.post(self.api_url + "/arm/stp"))
         print("Stopping arm movement...")
 
@@ -287,7 +296,7 @@ class SS8:
         dist (int): The distance or duration to move. If positive, the camera moves for the given time.
         """
         
-        if not dconfig.SIMULATION_MODE:
+        if dconfig.CONNECT_TO_MOV_API:
             await self._send_req(lambda: requests.post(self.api_url + "/cam/goto", json={"alpha": alpha, "beta": beta}))
         print("Moving camera to position...")
         
@@ -298,7 +307,7 @@ class SS8:
         Stop the camera movement.
         """
         
-        if not dconfig.SIMULATION_MODE:
+        if dconfig.CONNECT_TO_MOV_API:
             await self._send_req(lambda: requests.post(self.api_url + "/cam/stp")) 
         print("Stopping camera movement...")
         
@@ -309,7 +318,7 @@ class SS8:
         Display text on the device screen.
         text (str): The text to display.
         """
-        if not dconfig.SIMULATION_MODE:
+        if dconfig.CONNECT_TO_MOV_API:
             requests.post(self.api_url + "/text", json={"text": text})
         print(f"Displaying text: {text}")
 

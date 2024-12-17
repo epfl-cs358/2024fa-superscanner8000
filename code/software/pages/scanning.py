@@ -3,6 +3,7 @@ from tkinter import ttk
 from tkinter.ttk import *
 from controllers.object_detector import Object_Detector
 import asyncio
+import config.dev_config as dconfig
 
 CALIBRATION_ITERATION = 4
 
@@ -33,12 +34,14 @@ class ScanningPage(tk.Frame):
         self.controller.ss8.turn_on_tracker()
 
         # Start the movement
-        mov_coroutine = asyncio.create_task(self.nav.start_moving(4))
+        mov_coroutine = asyncio.create_task(self.nav.start_moving())
 
-        detector_coroutine = asyncio.create_task(self.detector.start_detection())
+        # Start the detection of obstacles
+        if dconfig.CONNECT_TO_FRONT_CAM:
+            detector_coroutine = asyncio.create_task(self.detector.start_detection())
+            await detector_coroutine
         
         await mov_coroutine
-        await detector_coroutine
 
     def _interrupt_scan(self):
         self.controller.ss8.stop_mov()
