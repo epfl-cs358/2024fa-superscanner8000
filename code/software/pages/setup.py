@@ -90,7 +90,7 @@ class SetupPage(tk.Frame):
         self.img_preview_top = ImageWidget(self.container_right, 445, 300, img_click_callback)
         self.img_preview_top.canvas.pack(expand=True)  # Center the canvas in the container
 
-        self.img_preview_front = ImageWidget(self.container_right, 445, 300, None)
+        self.img_preview_front = ImageWidget(self.container_right, 445, 300, lambda:None)
         self.img_preview_front.canvas.pack(expand=True)  # Center the canvas in the container
 
         def update_preview_top():
