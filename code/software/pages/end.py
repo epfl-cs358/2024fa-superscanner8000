@@ -5,8 +5,6 @@ from tkinter import filedialog  # For save dialog
 
 from PIL import Image, ImageTk
 import trimesh
-from pythreejs import *
-from IPython.display import display
 import numpy as np
 import shutil
 import rerun as rr 
