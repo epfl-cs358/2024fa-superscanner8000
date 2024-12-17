@@ -18,7 +18,7 @@ class Object_Detector:
         self.navigator = navigator
         self.ss8 = ss8
         self.hfov = np.deg2rad(95) # Horizontal field of view set according to OV5640 datasheet
-
+        self.occupancy_map = None
         if visualize:
             # Initialize rerun
             rr.init("Occupancy Map", spawn=True)
@@ -89,14 +89,20 @@ class Object_Detector:
         ratio = 24 / min_depth
         return depth * ratio # Depth map where values are in cm
     
-    def _get_occupancy_map(self, depth: np.ndarray, threshold_distance: float = 50): # TODO: Adjust for base value
+    def _update_occupancy_map(self, depth: np.ndarray, threshold_distance: float = 50): # TODO: Adjust for base value
         """
         Get the occupancy map from the depth map
         depth: Depth map
         threshold_distance: Distance threshold to consider an object as an obstacle in cm
         """
-        occupancy_map = (depth > threshold_distance).astype(np.uint8) # 1 = occupied, 0 = free
-        return occupancy_map
+        print(np.max(depth), np.min(depth))
+        self.occupancy_map = (depth > threshold_distance).astype(np.uint8) # 1 = occupied, 0 = free
+
+    def get_occupancy_map(self):
+        return self.occupancy_map
+    
+    def get_frame(self):
+        return self.frame
     
     def _project_to_world(self, pixel_index, T, R, depth, hfov, frame):
         '''
@@ -110,11 +116,11 @@ class Object_Detector:
         world_position = np.linalg.inv(R) @ (np.linalg.inv(self._get_intrinsic_matrix(hfov, frame)) @ pixel_index - T)
         return world_position * depth
     
-    def _compute_perspective_views(self, depth, rgb, T, R, pixel_size = 16, hfov = np.pi/6):
+    def _compute_perspective_views(self, depth, frame, T, R, pixel_size = 16, hfov = np.pi/6):
         height, width = depth.shape
 
         pixelated_depth = self._pixelate(depth, pixel_size=pixel_size)
-        pixelated_rgb = self._pixelate(rgb, pixel_size=pixel_size)
+        pixelated_rgb = self._pixelate(frame, pixel_size=pixel_size)
         pixelated_rgb = cv2.cvtColor(pixelated_rgb, cv2.COLOR_BGR2RGB)
 
         # Square array of size of pixelated_depth width
@@ -128,12 +134,11 @@ class Object_Detector:
                 value = pixelated_depth[j, i]
                 if value == 0:
                     continue
-                d = int(value * width)
                 # Set the pixelated depth value to all pixels in the square
                 #top_view[i:i+pixel_size, d:d+pixel_size] = 0
 
                 pixel_index = np.array([i, j, 1]).reshape(3, 1)
-                pixel_coords = self._project_to_world(pixel_index, T, R, value, hfov, rgb)
+                pixel_coords = self._project_to_world(pixel_index, T, R, value, hfov, frame)
 
                 pos_3d.append(pixel_coords)
                 colors.append(pixelated_rgb[j, i])
@@ -153,16 +158,15 @@ class Object_Detector:
             
         await self.detect_occupancy()
 
-    async def detect_occupancy(self):
-        print('Detecting occupancy')
+    def detect_occupancy(self):
         frame = self.ss8.capture_image('front')
+        self.frame = frame
 
         if frame is not None:
             depth = self._get_depth_map(frame)
-            occupancy_map = self._get_occupancy_map(depth)
+            self._update_occupancy_map(depth)
 
-            cv2.imshow('Occupanc<', occupancy_map)
-            depth = cv2.multiply(depth, occupancy_map.astype(np.float32))
+            depth = cv2.multiply(depth, self.occupancy_map.astype(np.float32))
 
             top_view, pixelated_depth, pos_3d, colors = self._compute_perspective_views(
                                     depth, frame, self.navigator.ss8_pos, 
@@ -173,11 +177,10 @@ class Object_Detector:
             for pos in pos_3d:
                 self.navigator.add_obstacle(pos)
         
-        await asyncio.sleep(0.1)
-        
-        print(self.must_detect)
-        if self.must_detect:
-            await self.detect_occupancy()
+        # await asyncio.sleep(0.1)
+
+        # if self.must_detect:
+        #     await self.detect_occupancy()
         
 
 if __name__ == "__main__":

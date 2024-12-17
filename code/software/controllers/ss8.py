@@ -1,5 +1,5 @@
 import requests 
-import asyncio
+import time
 import cv2
 import os
 import numpy as np
@@ -158,7 +158,7 @@ class SS8:
 
     # Instrucitons methods
 
-    async def _send_req(self, req_func, on_error=lambda: None):
+    def _send_req(self, req_func, on_error=lambda: None):
         """
         Send a request to the connected device.
 
@@ -179,7 +179,7 @@ class SS8:
             print(f"An error occurred: {e}")
             self.connection_lost_callback()
     
-    async def move_forward(self, dist=DEFAULT_MOVING_DIST, wait_for_completion=True):
+    def move_forward(self, dist=DEFAULT_MOVING_DIST, wait_for_completion=True):
         """
         Move the device forward.
         dist (int): The distance or duration to move. If positive, the device moves for the given time.
@@ -187,14 +187,14 @@ class SS8:
         ms = dist*BODY_DIST_TO_TIME
 
         if dconfig.CONNECT_TO_MOV_API:
-            await self._send_req(lambda: requests.post(self.api_url + "/fwd", json={"ms": ms}))
+            self._send_req(lambda: requests.post(self.api_url + "/fwd", json={"ms": ms}))
         print(f"Moving forward of {dist} cm...")
         
         if wait_for_completion:
-            await asyncio.sleep(ms*0.001)
+            time.sleep(ms*0.001)
         return
 
-    async def move_backward(self, dist=DEFAULT_MOVING_DIST, wait_for_completion=True):
+    def move_backward(self, dist=DEFAULT_MOVING_DIST, wait_for_completion=True):
         """
         Move the device backward.
         dist (int): The distance or duration to move. If positive, the device moves for the given time.
@@ -202,15 +202,15 @@ class SS8:
         ms=dist*BODY_DIST_TO_TIME
 
         if dconfig.CONNECT_TO_MOV_API:
-            await self._send_req(lambda: requests.post(self.api_url + "/bwd", json={"ms": ms}))
+            self._send_req(lambda: requests.post(self.api_url + "/bwd", json={"ms": ms}))
         print(f"Moving backward of {dist} cm...")
 
         if wait_for_completion:
-            await asyncio.sleep(ms*0.001)
+            time.sleep(ms*0.001)
 
         return
         
-    async def rotate_left(self, angle=DEFAULT_ROTATING_ANGLE, wait_for_completion=True):
+    def rotate_left(self, angle=DEFAULT_ROTATING_ANGLE, wait_for_completion=True):
         """
         Rotate the device to the left.
         angle (int): The angleance or duration to rotate. If positive, the device rotates for the given time. 
@@ -222,16 +222,16 @@ class SS8:
             return
 
         if dconfig.CONNECT_TO_MOV_API:
-            await self._send_req(lambda: requests.post(self.api_url + "/hlft", json={"ms": angle*BODY_ANGLE_TO_TIME}))
+            self._send_req(lambda: requests.post(self.api_url + "/hlft", json={"ms": angle*BODY_ANGLE_TO_TIME}))
         
         print(f"Rotating left of {round(angle*180/np.pi)} degrees...")
 
         if wait_for_completion:
-            await asyncio.sleep(ms*0.001)
+            time.sleep(ms*0.001)
 
         return
         
-    async def rotate_right(self, angle=DEFAULT_ROTATING_ANGLE, wait_for_completion=True):
+    def rotate_right(self, angle=DEFAULT_ROTATING_ANGLE, wait_for_completion=True):
         """
         Rotate the device to the right.
         angle (int): The angleance or duration to rotate. If positive, the device rotates for the given time. 
@@ -244,26 +244,26 @@ class SS8:
             return
 
         if dconfig.CONNECT_TO_MOV_API:
-            await self._send_req(lambda: requests.post(self.api_url + "/hrgt", json={"ms": angle*BODY_ANGLE_TO_TIME}))
+            self._send_req(lambda: requests.post(self.api_url + "/hrgt", json={"ms": angle*BODY_ANGLE_TO_TIME}))
         print(f"Rotating right of {round(angle*180/np.pi, 1)} degrees...")
 
         
         if wait_for_completion:
-            await asyncio.sleep(ms*0.001)
+            time.sleep(ms*0.001)
 
         return
 
-    async def stop_mov(self):
+    def stop_mov(self):
         """
         Stop the device movement.
         """
         if dconfig.CONNECT_TO_MOV_API:
             print("Stopping movement...")
-            await self._send_req(lambda: requests.post(self.api_url + "/stp"))
+            self._send_req(lambda: requests.post(self.api_url + "/stp"))
 
         return
 
-    async def goto_arm(self, x=0, y=0):
+    def goto_arm(self, x=0, y=0):
         """
         Move the arm up.
         x (int): The x coordinate to move to.
@@ -272,43 +272,43 @@ class SS8:
             
         if dconfig.CONNECT_TO_MOV_API:
             if (x == 0 and y == 0):
-                await self._send_req(lambda: requests.post(self.api_url + "/arm/goto", json={"x": 0, "y": 0, "angles": True}))
+                self._send_req(lambda: requests.post(self.api_url + "/arm/goto", json={"x": 0, "y": 0, "angles": True}))
             else:
-                await self._send_req(lambda: requests.post(self.api_url + "/arm/goto", json={"x": x, "y": y}))
+                self._send_req(lambda: requests.post(self.api_url + "/arm/goto", json={"x": x, "y": y}))
         print("Moving arm to position...")
 
         return
 
-    async def stop_arm(self):
+    def stop_arm(self):
         """
         Stop the arm movement.
         """
         
         if dconfig.CONNECT_TO_MOV_API:
-            await self._send_req(lambda: requests.post(self.api_url + "/arm/stp"))
+            self._send_req(lambda: requests.post(self.api_url + "/arm/stp"))
         print("Stopping arm movement...")
 
         return
 
-    async def goto_camera(self, alpha=0, beta=0):
+    def goto_camera(self, alpha=0, beta=0):
         """
         Move the camera up.
         dist (int): The distance or duration to move. If positive, the camera moves for the given time.
         """
         
         if dconfig.CONNECT_TO_MOV_API:
-            await self._send_req(lambda: requests.post(self.api_url + "/cam/goto", json={"alpha": alpha, "beta": beta}))
+            self._send_req(lambda: requests.post(self.api_url + "/cam/goto", json={"alpha": alpha, "beta": beta}))
         print("Moving camera to position...")
         
         return 
 
-    async def stop_cam(self):
+    def stop_cam(self):
         """
         Stop the camera movement.
         """
         
         if dconfig.CONNECT_TO_MOV_API:
-            await self._send_req(lambda: requests.post(self.api_url + "/cam/stp")) 
+            self._send_req(lambda: requests.post(self.api_url + "/cam/stp")) 
         print("Stopping camera movement...")
         
         return
@@ -325,11 +325,12 @@ class SS8:
         return
     
     # Camera control methods
-    async def get_top_cam_angle(self):
+
+    def get_top_cam_angle(self):
         """
         Get the angle of the top camera.
         """
-        data = await self._send_req(lambda: requests.get(self.api_url + "/cam/status"))
+        data = self._send_req(lambda: requests.get(self.api_url + "/cam/status"))
         return data
     
     def turn_on_tracker(self):
@@ -374,6 +375,6 @@ class SS8:
             return self.front_cam_udp_receiver.get_current_frame()
         
         return None
-     
 
-            
+
+
