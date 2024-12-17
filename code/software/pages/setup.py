@@ -97,12 +97,18 @@ class SetupPage(tk.Frame):
             cv2.waitKey(1)
             prev_img = self.controller.ss8.capture_image()
             prev_img = self.controller.segmenter.mask_img(prev_img) if self.object_selected else prev_img
-            return prev_img
+            if prev_img is not None:
+                return cv2.cvtColor(prev_img, cv2.COLOR_BGR2RGB)
+            else:
+                return None
         
         def update_preview_front():
             cv2.waitKey(1)
             prev_img = self.controller.ss8.capture_image("front")
-            return prev_img
+            if prev_img is not None:
+                return cv2.cvtColor(prev_img, cv2.COLOR_BGR2RGB)
+            else:
+                return None
         
         self.img_preview_top.display(update_preview_top, 10)
         self.img_preview_front.display(update_preview_front, 10)
