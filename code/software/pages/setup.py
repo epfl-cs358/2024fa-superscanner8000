@@ -124,7 +124,6 @@ class SetupPage(tk.Frame):
 
     def _start_scan(self):
         """Start the scanning process and destroy the preview window"""
-        print(int(self.vert_prec_entry.get()), int(self.hor_prec_entry.get()))
         self.controller.nav.set_precision(int(self.vert_prec_entry.get()), int(self.hor_prec_entry.get()))
         self.img_preview.destroy()
         self.controller.show_page("ScanningPage")

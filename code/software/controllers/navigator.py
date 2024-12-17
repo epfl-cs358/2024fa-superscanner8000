@@ -1,8 +1,10 @@
 import math
 import numpy as np
 import asyncio
+
 import config.dev_config as dconfig
 from controllers.arm_positions import generate_path
+from controllers.ss8 import SS8
 
 STEP_DISTANCE = 5
 DEFAULT_CALLIBRATION_DISTANCE = 10000
@@ -10,7 +12,7 @@ DEFAULT_CALLIBRATION_ITERATION = 4
 CENTER_THRESHOLD = 25
 
 class Navigator:
-    def __init__(self, ss8):
+    def __init__(self, ss8: SS8):
         self.ss8 = ss8
 
         self.trajectory = []
@@ -23,6 +25,7 @@ class Navigator:
 
         self.vertical_precision = dconfig.DEFAULT_VERTICAL_PRECISION
         self.horizontal_precision = dconfig.DEFAULT_HORIZONTAL_PRECISION
+        self.taken_picture = 0
 
     def set_precision(self, vertical, horizontal):
         """
@@ -41,15 +44,12 @@ class Navigator:
 
         print('Callibrating...')
 
-        self._set_circle_trajectory(50, self.horizontal_precision)
-        self._set_arm_positions(self.vertical_precision)
-
         if dconfig.DEBUG_NAV:
+            self._set_circle_trajectory(50, self.horizontal_precision)
             print(f'{len(self.trajectory)} added to the trajectory reach point')
+            return
 
-        return 
-        if not dconfig.SIMULATION_MODE:
-            self._align_ss8_to_obj()
+        self._align_ss8_to_obj()
 
         iteration_dist = distance / iteration
         measures = np.array([])
@@ -67,7 +67,8 @@ class Navigator:
 
         await self.ss8.move_backward(int(-iteration/2*iteration_dist))
 
-        return np.mean(np.tan(measures[:, 0]) * measures[:, 1])
+        mean_radius = np.mean(np.tan(measures[:, 0]) * measures[:, 1])
+        self._set_circle_trajectory(mean_radius, self.vertical_precision)
 
     def add_obstacle(self, relative_position, size=1):
         """
@@ -76,12 +77,21 @@ class Navigator:
         """
         self.obstacles = np.append(self.obstacles, ForcePoint(self.ss8_pos+relative_position, size, 3))
         
-    async def start_moving(self, on_finish, callibrate=True):
-        self.moving = True
+    async def start_moving(self, on_finish):
+        self._set_arm_positions(self.vertical_precision)
 
-        if(callibrate):
+        for arm_pos in self.arm_positions:
             await self.callibrate(DEFAULT_CALLIBRATION_ITERATION)
+            await self.ss8.goto_arm(arm_pos[0], arm_pos[1])
+            self.moving = True
+            await self._move_one_turn()
 
+
+        self.ss8.goto_arm(0, 0)
+        on_finish()
+        return
+    
+    async def _move_one_turn(self):
         next_dep = None
         while self.moving:
             if next_dep is not None:
@@ -96,9 +106,6 @@ class Navigator:
 
             if must_take_break:
                 await self._on_reach_point()
-
-        on_finish()
-        return
     
     def stop_moving(self):
         self.moving = False
@@ -214,7 +221,14 @@ class Navigator:
         """
         Pause the movement and restart it.
         """
-        print('Take picture')
+        
+        await asyncio.sleep(dconfig.ARM_MOV_WAITING_TIME)
+        self.taken_picture += 1
+        self.ss8.top_cam_udp_receiver.save_frame()
+
+        if dconfig.DEBUG_NAV:
+            print(f'{self.taken_picture}/{self.horizontal_precision*self.vertical_precision} pictures taken')
+
         return
 
 DEFAULT_FORCE_NORM = 1000

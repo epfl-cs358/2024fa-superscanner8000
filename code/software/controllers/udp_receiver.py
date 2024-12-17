@@ -12,7 +12,6 @@ from config.dev_config import DEBUG_CAM
 DEFAULT_UDP_IP = "0.0.0.0"  # Listen on all available interfaces
 DEFAULT_UDP_PORT = 12346    # Port used for receiving the stream
 DEFAULT_UDP_PORT = 12349   # Port used for receiving the stream
-frame_counter = 0
 
 
 class UDPReceiver:
@@ -25,7 +24,7 @@ class UDPReceiver:
         self.computer_ip = self._get_local_ip()
         self.running = False
         self.lock = threading.Lock()  # Lock to ensure thread-safe access to current_frame
-
+        self.frame_counter = 0
     def _get_local_ip(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.settimeout(0)
@@ -131,23 +130,23 @@ class UDPReceiver:
                 print("No frame available.")
             return None
 
-    def save_frame(self, frame):  # Save the current frame to a file
+    def save_frame(self):  # Save the current frame to a file
         """
         Save the given frame to a temporary folder with a unique filename.
         """
-        global frame_counter
-        if frame is not None:
+
+        if self.current_frame is not None:
             # Get the system's temporary directory
             temp_dir = tempfile.gettempdir()
             # Construct the full path for the file with a numbered filename
-            filename = f"frame_{frame_counter}.jpg"
+            filename = f"frame_{self.frame_counter}.jpg"
             temp_file_path = os.path.join(temp_dir, filename)
-            # Save the frame to the temporary folder
-            cv2.imwrite(temp_file_path, frame)
+            # Save theself.current_frame to the temporary folder
+            cv2.imwrite(temp_file_path, self.current_frame)
             if DEBUG_CAM:
-                print(f"Saved frame {frame_counter} to {temp_file_path}")
-            # Increment the frame counter
-            frame_counter += 1
+                print(f"Savedself.current_frame {self.frame_counter} to {temp_file_path}")
+            # Increment theself.current_frame counter
+            self.frame_counter += 1
         else:
             if DEBUG_CAM:
                 print("No frame available to save.")
@@ -186,7 +185,7 @@ if __name__ == "__main__":
 
     thread = threading.Thread(target=update_frame)
     thread.start()
-    top_cam_udp_receiver.save_frame(top_cam_udp_receiver.current_frame)
+    top_cam_udp_receiver.save_frame()
 
 
 
