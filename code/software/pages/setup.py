@@ -18,7 +18,7 @@ class SetupPage(tk.Frame):
         # Create a container frame to center the content
         self.container_left = tk.Frame(self)
         self.container_left.place(relx=0.5, rely=0.5, anchor=tk.E)
-        
+
         # Create a container frame to center the content
         self.container_right = tk.Frame(self)
         self.container_right.place(relx=0.5, rely=0.5, anchor=tk.W)
@@ -140,5 +140,6 @@ class SetupPage(tk.Frame):
         """Start the scanning process and destroy the preview window"""
         print(int(self.vert_prec_entry.get()), int(self.hor_prec_entry.get()))
         self.controller.nav.set_precision(int(self.vert_prec_entry.get()), int(self.hor_prec_entry.get()))
-        self.img_preview.destroy()
+        self.img_preview_top.destroy()
+        self.img_preview_front.destroy()
         self.controller.show_page("ScanningPage")
