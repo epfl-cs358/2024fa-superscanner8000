@@ -9,11 +9,11 @@ DEFAULT_CALLIBRATION_ITERATION = 4
 CENTER_THRESHOLD = 25
 
 class Navigator:
-    def __init__(self, ss8, on_finish):
+    def __init__(self, ss8):
         self.ss8 = ss8
-        self.on_finish = on_finish
 
         self.trajectory = []
+        self.arm_positions = []
         self.ss8_pos = np.array([0., 0.])
         self.ss8_angle = math.pi / 2
         self.obj_pos = np.array([0., 0.])
@@ -40,7 +40,8 @@ class Navigator:
 
         print('Callibrating...')
 
-        self._set_circle_trajectory(50)
+        self._set_circle_trajectory(50, self.horizontal_precision)
+        self._set_arm_positions(self.vertical_precision)
 
         if dconfig.DEBUG_NAV:
             print(f'{len(self.trajectory)} added to the trajectory reach point')
@@ -74,7 +75,7 @@ class Navigator:
         """
         self.obstacles = np.append(self.obstacles, ForcePoint(self.ss8_pos+relative_position, size, 3))
         
-    async def start_moving(self, callibrate=True):
+    async def start_moving(self, on_finish, callibrate=True):
         self.moving = True
 
         if(callibrate):
@@ -85,7 +86,7 @@ class Navigator:
             next_dep, must_take_break = self._compute_next_deplacement()
 
             if must_take_break:
-                await self._pause_and_capture_image()
+                await self._on_reach_point()
 
             if self.moving:
                 abs_angle = math.atan2(next_dep[1], next_dep[0])
@@ -95,6 +96,7 @@ class Navigator:
                 #await asyncio.sleep(1)
                 await self._move_of(diff_angle, norm)
 
+        on_finish()
         return
     
     def stop_moving(self):
@@ -129,7 +131,7 @@ class Navigator:
 
             self.ss8.forward()
         
-    def _set_circle_trajectory(self, radius):
+    def _set_circle_trajectory(self, radius, step_nbr):
         """
         Compute the trajectory of a circle.
         radius (int): The radius of the circle.
@@ -137,12 +139,14 @@ class Navigator:
         """
         self.obj_pos = self.ss8_pos - np.array([radius, 0])
         self.trajectory = []
-        step_angle = 360//self.horizontal_precision
+        step_angle = 360//step_nbr
         for a in range(step_angle, 360, step_angle):
             x = radius * (math.cos(math.radians(a))-1)
             y = radius * math.sin(math.radians(a))
             self.trajectory.append((ForcePoint(np.array([x, y])), math.radians(a)))
-    
+    def _set_arm_positions(self, step_nbr):
+        pass
+
     def _compute_next_deplacement(self):
         """
         Get the next deplacement to reach the next point in the trajectory while avoiding the obstacles.
@@ -203,13 +207,12 @@ class Navigator:
         self.ss8_pos += np.array([distance * math.cos(self.ss8_angle), distance * math.sin(self.ss8_angle)])
         return
     
-    async def _pause_and_capture_image(self):
+    async def _on_reach_point(self):
         """
         Pause the movement and restart it.
         """
         self.moving = False
         print('Take picture')
-        await asyncio.sleep(2)
         self.moving = True
         return
 

@@ -34,7 +34,7 @@ class ScanningPage(tk.Frame):
         self.controller.ss8.turn_on_tracker()
 
         # Start the movement
-        mov_coroutine = asyncio.create_task(self.nav.start_moving())
+        mov_coroutine = asyncio.create_task(self.nav.start_moving(self.on_finish))
 
         # Start the detection of obstacles
         if dconfig.CONNECT_TO_FRONT_CAM:
@@ -46,3 +46,6 @@ class ScanningPage(tk.Frame):
     def _interrupt_scan(self):
         self.controller.ss8.stop_mov()
         self.controller.show_page('SetupPage')
+
+    def _on_finish(self):
+        self.controller.show_page('EndPage')

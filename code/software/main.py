@@ -34,7 +34,7 @@ class App(tk.Tk):
         # Init the image segmenter
         self.segmenter = ImageSegmenter(model_cfg="sam2_hiera_s.yaml", checkpoint="config/sam2_checkpoints/sam2_hiera_small.pt", expand_pixels=10)
 
-        self.nav = Navigator(self.ss8, lambda: print('Finish first round'))
+        self.nav = Navigator(self.ss8)
 
         # Init pages
         self.pages = {}
