@@ -10,6 +10,8 @@ private:
     LiquidCrystal lcd;
     float ms;
     int scrollIndex;
+    int contrast;
+    int backlight;
     String text1;
     String text2;
 public:
@@ -21,4 +23,4 @@ public:
     void update();
 };
 
-
+#endif

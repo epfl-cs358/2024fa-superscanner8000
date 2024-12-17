@@ -1,6 +1,9 @@
+#include "HardwareSerial.h"
 #include "arm.h"
 #include <AccelStepper.h>
 #include <Arduino.h>
+
+#define INIT_ANGLE 5 / 180 * PI
 
 Arm::Arm(int m1Step, int m1Dir, int m2Step, int m2Dir, int _enablePin):   
     enablePin(_enablePin), 
@@ -10,8 +13,8 @@ Arm::Arm(int m1Step, int m1Dir, int m2Step, int m2Dir, int _enablePin):
     y(0), 
     a1(40), 
     a2(40),
-    gearFactor(28),
-    pulleyFactor(200. / 18.),
+    gearFactor(30), // 28
+    pulleyFactor(200. / 20.),
     fullRevolution(200), 
     q1(0), 
     q2(0) 
@@ -47,8 +50,6 @@ int Arm::setPos(int _x, int _y, bool angles) {
         // q1 and q2 are in radians
         q1 = _x * PI / 180;
         q2 = _y * PI / 180;
-        angleToPos();
-        return 0;
     } else {
         if (sqrt(pow(x, 2) + pow(y, 2)) > (a1 + a2) || sqrt(pow(x, 2) + pow(y, 2)) < abs(a1 - a2)) {
             Serial.println("Error: Coordinates out of range.");
@@ -57,12 +58,11 @@ int Arm::setPos(int _x, int _y, bool angles) {
         x = _x;
         y = _y;
         posToAngles();
-        return 0;
     }
 
     // Move the steppers
     stepper1.moveTo(gearFactor * fullRevolution * q1 / (2 * PI));
-    stepper2.moveTo(pulleyFactor * fullRevolution * q2 / (2 * PI));
+    stepper2.moveTo(pulleyFactor * fullRevolution * (q2 - INIT_ANGLE) / (2 * PI));
 
     Serial.println("Moving to : " + String(fullRevolution * q1 / (2 * PI)) + ", " + String(fullRevolution * q2 / (2 * PI)));
     return 0;
@@ -102,10 +102,11 @@ void Arm::posToAngles() {
     q2 = acos((pow(x, 2) + pow(y, 2) - pow(a1, 2) - pow(a2, 2)) / (2 * a1 * a2)); 
     if (q2 < 0) {
         q2 = -q2;
-    } else if (q2 > 180) {
-        q2 = 360 - q2;
+    } else if (q2 > PI) {
+        q2 = 2 * PI - q2;
     }
-    q1 = atan2(y, x) - atan2(a2 * sin(q2), (a1 + a2 * cos(q2))); 
+    q1 = atan2(y, x) - atan2(a2 * sin(q2), (a1 + a2 * cos(q2)));
+    q2 = PI - q2; 
 }
 
 // Convert angles to position
