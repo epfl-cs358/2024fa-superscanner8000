@@ -223,11 +223,14 @@ class Navigator:
         """
         
         await asyncio.sleep(dconfig.ARM_MOV_WAITING_TIME)
-        self.taken_picture += 1
         self.ss8.top_cam_udp_receiver.save_frame()
+        self.taken_picture += 1
+
+        picture_status_text = f'{self.taken_picture}/{self.horizontal_precision*self.vertical_precision} pictures taken'
+        self.ss8.display_text(picture_status_text)
 
         if dconfig.DEBUG_NAV:
-            print(f'{self.taken_picture}/{self.horizontal_precision*self.vertical_precision} pictures taken')
+            print(picture_status_text)
 
         return
 
