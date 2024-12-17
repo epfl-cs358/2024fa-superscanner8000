@@ -6,15 +6,18 @@ import time
 import config.dev_config as dconfig
 from controllers.arm_positions import generate_path
 from controllers.ss8 import SS8
+from controllers.image_segmenter import ImageSegmenter
 
 STEP_DISTANCE = 5
 DEFAULT_CALLIBRATION_DISTANCE = 10000
 DEFAULT_CALLIBRATION_ITERATION = 4
 CENTER_THRESHOLD = 25
+ANGLE_TOLERANCE = 0.05
 
 class Navigator:
-    def __init__(self, ss8: SS8):
+    def __init__(self, ss8: SS8, segmenter: ImageSegmenter):
         self.ss8 = ss8
+        self.segmenter = segmenter
 
         self.trajectory = []
         self.arm_positions = []
@@ -45,9 +48,15 @@ class Navigator:
 
         print('Callibrating...')
 
-        if dconfig.DEBUG_NAV:
+        if not dconfig.CONNECT_TO_TOP_CAM or not dconfig.CONNECT_TO_MOV_API:
             self._set_circle_trajectory(50, self.horizontal_precision)
-            print(f'{len(self.trajectory)} added to the trajectory reach point')
+            if dconfig.DEBUG_NAV:
+                print(f'{len(self.trajectory)} added to the trajectory reach points :')
+            
+            if dconfig.DEBUG_NAV:
+                for point in self.trajectory:
+                    print(point[0].get_pos())
+                    
             return
 
         self._align_ss8_to_obj()
@@ -107,13 +116,17 @@ class Navigator:
 
             if must_take_break:
                 self._on_reach_point()
+                
         return
     
     def stop_moving(self):
         self.moving = False
 
     def _align_ss8_to_obj(self):
-        frame = self.capture_image()
+        # TODO: center the angle of the body
+        self.ss8.goto_cam(90, 0)
+        self.ss8.goto_arm(0, 0)
+        frame = self.ss8.capture_image()
         obj_coords = self.segmenter.get_object_coords(frame)
         frame_center = frame.shape[:2]/2
         pos_diff = obj_coords - frame_center
@@ -127,7 +140,7 @@ class Navigator:
             moving_state = 'none'
 
         def check_if_stop():
-            frame = self.capture_image()
+            frame = self.ss8.capture_image()
             obj_coords = self.segmenter.get_object_coords(frame)
             frame_center = frame.shape[:2]/2
             pos_diff = obj_coords - frame_center
@@ -150,10 +163,10 @@ class Navigator:
         self.obj_pos = self.ss8_pos - np.array([radius, 0])
         self.trajectory = []
         step_angle = 360//step_nbr
-        for a in range(step_angle, 360, step_angle):
+        for a in range(0, 360, step_angle):
             x = radius * (math.cos(math.radians(a))-1)
             y = radius * math.sin(math.radians(a))
-            self.trajectory.append((ForcePoint(np.array([x, y])), math.radians(a)))
+            self.trajectory.append((ForcePoint(np.array([x, y]), 100, 0), math.radians(a)))
     
     def _set_arm_positions(self, step_nbr):
         self.arm_positions = generate_path(step_nbr)
@@ -176,24 +189,25 @@ class Navigator:
         while reach_point is None:
             if(len(self.trajectory) == 0):
                 self.moving = False
-                return None, False
+                return None, True
             
-            if(self.trajectory[0][1] < angle):
+            if(np.linalg.norm(self.trajectory[0][0].get_pos() - self.ss8_pos) < STEP_DISTANCE/2):
                 self.trajectory.pop(0)
                 new_reach_point = True
             else:
                 reach_point = self.trajectory[0][0]
 
         if dconfig.DEBUG_NAV:
-            print(f'\n\nCurrent position : {self.ss8_pos} ||    Current angle : {angle} \nReach point : {reach_point.get_pos()}        || Reach angle : {self.trajectory[0][1]} \n')
+            print(f'\n\nCurrent position : {self.ss8_pos} || Current angle : {angle} \nReach point : {reach_point.get_pos()} || Reach angle : {self.trajectory[0][1]} \n')
 
 
         # Compute the next deplacement with the contribution of the obstacles and the reach point
         next_dep = reach_point.get_contribution(self.ss8_pos)
         """ for obs in self.obstacles:
             next_dep += obs.get_contribution(self.ss8_pos) """
-        
-        next_dep = (next_dep / np.linalg.norm(next_dep)) * STEP_DISTANCE
+
+        if np.linalg.norm(next_dep) > STEP_DISTANCE:
+            next_dep = (next_dep / np.linalg.norm(next_dep)) * STEP_DISTANCE
 
         return next_dep, new_reach_point
     
@@ -230,9 +244,6 @@ class Navigator:
 
         picture_status_text = f'{self.taken_picture}/{self.horizontal_precision*self.vertical_precision} pictures taken'
         self.ss8.display_text(picture_status_text)
-
-        if dconfig.DEBUG_NAV:
-            print(picture_status_text)
 
         return
 

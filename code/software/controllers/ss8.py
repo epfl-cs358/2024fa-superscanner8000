@@ -188,7 +188,9 @@ class SS8:
 
         if dconfig.CONNECT_TO_MOV_API:
             self._send_req(lambda: requests.post(self.api_url + "/fwd", json={"ms": ms}))
-        print(f"Moving forward of {dist} cm...")
+        
+        if dconfig.DEBUG_SS8:
+            print(f"Moving forward of {dist} cm")
         
         if wait_for_completion:
             time.sleep(ms*0.001)
@@ -203,7 +205,10 @@ class SS8:
 
         if dconfig.CONNECT_TO_MOV_API:
             self._send_req(lambda: requests.post(self.api_url + "/bwd", json={"ms": ms}))
-        print(f"Moving backward of {dist} cm...")
+        
+        
+        if dconfig.DEBUG_SS8:
+            print(f"Moving backward of {dist} cm...")
 
         if wait_for_completion:
             time.sleep(ms*0.001)
@@ -224,7 +229,8 @@ class SS8:
         if dconfig.CONNECT_TO_MOV_API:
             self._send_req(lambda: requests.post(self.api_url + "/hlft", json={"ms": angle*BODY_ANGLE_TO_TIME}))
         
-        print(f"Rotating left of {round(angle*180/np.pi)} degrees...")
+        if dconfig.DEBUG_SS8:
+            print(f"Rotating left of {round(angle*180/np.pi)} degrees...")
 
         if wait_for_completion:
             time.sleep(ms*0.001)
@@ -245,7 +251,10 @@ class SS8:
 
         if dconfig.CONNECT_TO_MOV_API:
             self._send_req(lambda: requests.post(self.api_url + "/hrgt", json={"ms": angle*BODY_ANGLE_TO_TIME}))
-        print(f"Rotating right of {round(angle*180/np.pi, 1)} degrees...")
+        
+        
+        if dconfig.DEBUG_SS8:
+            print(f"Rotating right of {round(angle*180/np.pi, 1)} degrees...")
 
         
         if wait_for_completion:
@@ -258,7 +267,8 @@ class SS8:
         Stop the device movement.
         """
         if dconfig.CONNECT_TO_MOV_API:
-            print("Stopping movement...")
+            if dconfig.DEBUG_SS8:
+                print("Stopping movement...")
             self._send_req(lambda: requests.post(self.api_url + "/stp"))
 
         return
@@ -275,7 +285,9 @@ class SS8:
                 self._send_req(lambda: requests.post(self.api_url + "/arm/goto", json={"x": 0, "y": 0, "angles": True}))
             else:
                 self._send_req(lambda: requests.post(self.api_url + "/arm/goto", json={"x": x, "y": y}))
-        print("Moving arm to position...")
+        
+        if dconfig.DEBUG_SS8:
+            print(f"Moving arm to position {x},{y}")
 
         return
 
@@ -286,11 +298,13 @@ class SS8:
         
         if dconfig.CONNECT_TO_MOV_API:
             self._send_req(lambda: requests.post(self.api_url + "/arm/stp"))
-        print("Stopping arm movement...")
+
+        if dconfig.DEBUG_SS8:
+            print("Stopping arm movement...")
 
         return
 
-    def goto_camera(self, alpha=0, beta=0):
+    def goto_cam(self, alpha=0, beta=0):
         """
         Move the camera up.
         dist (int): The distance or duration to move. If positive, the camera moves for the given time.
@@ -298,7 +312,9 @@ class SS8:
         
         if dconfig.CONNECT_TO_MOV_API:
             self._send_req(lambda: requests.post(self.api_url + "/cam/goto", json={"alpha": alpha, "beta": beta}))
-        print("Moving camera to position...")
+        
+        if dconfig.DEBUG_SS8:
+            print(f"Moving camera to position {alpha}, {beta}")
         
         return 
 

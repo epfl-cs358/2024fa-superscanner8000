@@ -5,9 +5,10 @@ CONNECT_TO_FRONT_CAM = False
 
 # Debug config
 TEST_SEG_WITH_VID = False
-DEBUG_NAV = True
+DEBUG_NAV = False
 DEBUG_CAM = False
-DEBUG_ARM = True
+DEBUG_ARM = False
+DEBUG_SS8 = False
 
 # Default scanning config
 DEFAULT_VERTICAL_PRECISION = 4
