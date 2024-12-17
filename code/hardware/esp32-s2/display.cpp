@@ -1,21 +1,28 @@
+#include "HardwareSerial.h"
 #include "display.h"
+#include <LiquidCrystal.h>
 
 Display::Display(int rs, int en, int d4, int d5, int d6, int d7, int contrast, int backlight)
-{
-    lcd = LiquidCrystal(rs, en, d4, d5, d6, d7);
-}
+    :   lcd(rs, en, d4, d5, d6, d7),
+        ms(0),
+        scrollIndex(0),
+        text1(""),
+        text2(""),
+        contrast(contrast),
+        backlight(backlight)
+  {}
 
-Display::setup()
+void Display::setup()
 {
     //set some defaults
-    analogWrite(LCD_BACKLIGHT_PIN, 255); //set backlight on
-    analogWrite(LCD_CONTRAST_PIN, 100); //set some contrast
+    analogWrite(contrast, 40);
+    analogWrite(backlight, 255);
 
     lcd.begin(16, 2);
     lcd.clear();
 }
 
-Display::print(String text)
+void Display::print(String text)
 {
     text1 = "";
     text2 = "";
@@ -35,7 +42,7 @@ Display::print(String text)
     }
 }
 
-Display::scroll(String txt1, String txt2)
+void Display::scroll(String txt1, String txt2)
 {
     lcd.clear();
     text1 = txt1;
@@ -49,24 +56,26 @@ Display::scroll(String txt1, String txt2)
     ms = millis();
 }
 
-Display::clear()
+void Display::clear()
 {
     text1 = "";
     text2 = "";
     lcd.clear();
 }
 
-Display::update()
+void Display::update()
 {
-    if (millis() - ms > 250 && text1 != "" && text2 != "")
+    if (millis() - ms > 500 && (text1 != "" || text2 != ""))
     {
         lcd.clear();
+        lcd.setCursor(0, 0);
         lcd.print(text1.substring(scrollIndex, scrollIndex + 16));
         lcd.setCursor(0, 1);
         lcd.print(text2.substring(scrollIndex, scrollIndex + 16));
         scrollIndex++;
-        if (scrollIndex >= text1.length() && scrollIndex >= text2.length() && scrollIndex % 16 == 0)
+        if (scrollIndex >= (text1.length()) && scrollIndex >= (text2.length()))
         {
+            Serial.println("loop back");
             scrollIndex = 0;
         }
         ms = millis();

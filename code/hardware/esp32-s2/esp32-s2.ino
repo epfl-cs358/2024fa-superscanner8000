@@ -12,8 +12,8 @@
 WebServer server(80);
 Arm arm(8, 9, 10, 11, 7);
 Wheels wheels(2, 3, 1, 5, 4, 6);
-CamAngles camera(12, 13, 14, 15, 39, 40, 41, 42, 200); 
-Display display(36, 35, 34, 33, 20, 21, 38, 37);
+CamAngles camera(12, 13, 14, 15, 39, 40, 41, 42, 200);
+Display display(36, 35, 34, 33, 20, 21, 37, 38); // rs, en, d4, d5, d6, d7, contrast, backlight
 
 StaticJsonDocument<250> jsonDocument; 
 char buffer[250];
@@ -28,6 +28,7 @@ void setup_routing() {
   server.on("/hrgt", HTTP_POST, hrgt);
   server.on("/hlft", HTTP_POST, hlft);
   server.on("/stp", HTTP_POST, stp);
+  server.on("/speed", HTTP_POST, set_speed);
 
   server.on("/arm/status", arm_status);
   server.on("/arm/goto", HTTP_POST, arm_goto);
@@ -38,7 +39,7 @@ void setup_routing() {
   server.on("/cam/stp", HTTP_POST, cam_stop);
 
   server.on("/text", HTTP_POST, text);
-  server.on("scroll", HTTP_POST, scroll);
+  server.on("/scroll", HTTP_POST, scroll);
           
   server.begin();    
 }
@@ -58,6 +59,18 @@ void get_status() {
   jsonDocument["direction"] = directionMap(wheels.direction);
   serializeJson(jsonDocument, buffer);
   server.send(200, "application/json", buffer);
+}
+
+void set_speed() {
+  handlePost();
+
+  int speed = jsonDocument["speed"];
+  if (speed < 0 || speed > 255) {
+    server.send(422, "application/json", "{}");
+    return;
+  }
+  wheels.setDutyCycle(speed);
+  server.send(200, "application/json", "{}");
 }
 
 void fwd() {
@@ -134,23 +147,27 @@ void arm_goto() {
   int x = jsonDocument["x"];
   int y = jsonDocument["y"];
 
-  float currentSum = arm.q1 + arm.q2;
-
   bool angles = false;
   if (jsonDocument.containsKey("angles")) {
     angles = jsonDocument["angles"];
   }
+  Serial.println(x);
+  Serial.println(y);
+  Serial.println(angles);
 
   if (arm.setPos(x, y, angles) == -1) {
     server.send(422, "application/json", "{}");
     return;
   }
 
-  float newSum = arm.q1 + arm.q2;
-  float cameraCompensation = currentSum - newSum;
-  camera.moveToAngles(cameraCompensation, 0); 
-
-  server.send(200, "application/json", "{}");
+  StaticJsonDocument<200> doc;
+  doc["x"] = arm.x;
+  doc["y"] = arm.y;
+  doc["q1"] = arm.q1;
+  doc["q2"] = arm.q2;
+  String resp;
+  serializeJson(doc, resp);
+  server.send(200, "application/json", resp);
 }
 
 void arm_stop() {
@@ -198,6 +215,9 @@ void text() {
   String text = jsonDocument["text"];
   
   display.print(text);
+
+  Serial.print("Text is: ");
+  Serial.println(text);
 
   server.send(200, "application/json", "{}");
 }
