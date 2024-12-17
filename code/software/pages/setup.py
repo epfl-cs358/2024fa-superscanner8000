@@ -40,34 +40,34 @@ class SetupPage(tk.Frame):
 
         # Camera buttons
         self.cam_up_button = ttk.Button(buttons_container, text="Camera Up")
-        self.cam_up_button.bind("<ButtonPress-1>", lambda event: asyncio.run(self.controller.ss8.up_camera()))
-        self.cam_up_button.bind("<ButtonRelease-1>", lambda event: asyncio.run(self.controller.ss8.stop_cam()))
+        self.cam_up_button.bind("<ButtonPress-1>", lambda _: self.controller.ss8.goto_cam(0, 4, relative=True))
+        #self.cam_up_button.bind("<ButtonRelease-1>", lambda _: self.controller.ss8.stop_cam())
         self.cam_up_button.grid(row=1, column=0, padx=5, pady=5)
 
         self.cam_down_button = ttk.Button(buttons_container, text="Camera Down")
-        self.cam_down_button.bind("<ButtonPress-1>", lambda event: asyncio.run(self.controller.ss8.down_camera()))
-        self.cam_down_button.bind("<ButtonRelease-1>", lambda event: asyncio.run(self.controller.ss8.stop_cam()))
+        self.cam_down_button.bind("<ButtonPress-1>", lambda _: self.controller.ss8.goto_cam(0, -4, relative=True))
+        #self.cam_down_button.bind("<ButtonRelease-1>", lambda _: self.controller.ss8.stop_cam())
         self.cam_down_button.grid(row=1, column=2, padx=5, pady=5)
 
         # Directional buttons
         self.forward_button = ttk.Button(buttons_container, text="Forward")
-        self.forward_button.bind("<ButtonPress-1>", lambda event: asyncio.run(self.controller.ss8.move_forward(wait_for_completion=False)))
-        self.forward_button.bind("<ButtonRelease-1>", lambda event: asyncio.run(self.controller.ss8.stop_mov()))
+        self.forward_button.bind("<ButtonPress-1>", lambda _: self.controller.ss8.move_forward(wait_for_completion=False))
+        self.forward_button.bind("<ButtonRelease-1>", lambda _: self.controller.ss8.stop_mov())
         self.forward_button.grid(row=0, column=1, padx=5, pady=5)
 
         self.left_button = ttk.Button(buttons_container, text="Rotate Left")
-        self.left_button.bind("<ButtonPress-1>", lambda event: asyncio.run(self.controller.ss8.rotate_left(wait_for_completion=False)))
-        self.left_button.bind("<ButtonRelease-1>", lambda event: asyncio.run(self.controller.ss8.stop_mov()))
+        self.left_button.bind("<ButtonPress-1>", lambda _: self.controller.ss8.rotate_left(wait_for_completion=False))
+        self.left_button.bind("<ButtonRelease-1>", lambda _: self.controller.ss8.stop_mov())
         self.left_button.grid(row=0, column=0, padx=5, pady=5)
 
         self.right_button = ttk.Button(buttons_container, text="Rotate Right")
-        self.right_button.bind("<ButtonPress-1>", lambda event: asyncio.run(self.controller.ss8.rotate_right(wait_for_completion=False)))
-        self.right_button.bind("<ButtonRelease-1>", lambda event: asyncio.run(self.controller.ss8.stop_mov()))
+        self.right_button.bind("<ButtonPress-1>", lambda _: self.controller.ss8.rotate_right(wait_for_completion=False))
+        self.right_button.bind("<ButtonRelease-1>", lambda _: self.controller.ss8.stop_mov())
         self.right_button.grid(row=0, column=2, padx=5, pady=5)
 
         self.backward_button = ttk.Button(buttons_container, text="Backward")
-        self.backward_button.bind("<ButtonPress-1>", lambda event: asyncio.run(self.controller.ss8.move_backward(wait_for_completion=False)))
-        self.backward_button.bind("<ButtonRelease-1>", lambda event: asyncio.run(self.controller.ss8.stop_mov()))
+        self.backward_button.bind("<ButtonPress-1>", lambda _: self.controller.ss8.move_backward(wait_for_completion=False))
+        self.backward_button.bind("<ButtonRelease-1>", lambda _: self.controller.ss8.stop_mov())
         self.backward_button.grid(row=1, column=1, padx=5, pady=5)
     
     def _display_cam_buttons(self):

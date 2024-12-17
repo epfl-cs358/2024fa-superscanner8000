@@ -14,7 +14,7 @@ DEFAULT_FRONT_CAM_URL = "http://superscanner8009:80"
 TEST_CONNECTION_TIMEOUT = 3
 
 # SS8 movement constants
-DEFAULT_MOVING_DIST = 10
+DEFAULT_MOVING_DIST = 1000
 DEFAULT_ROTATING_ANGLE = 2*np.pi
 BODY_ANGLE_TO_TIME = 280 # Time to rotate the body by 1 radian            TODO: Update this value
 BODY_DIST_TO_TIME = 28 # Time to move the body by 1 cm                   TODO: Update this value
@@ -33,6 +33,8 @@ class SS8:
         """
         self.controller = controller
         self.connection_lost_callback = disconnected_callback
+
+        self.top_cam_angles = np.array([0,0])
 
         self.top_cam_udp_receiver = UDPReceiver(12346, "0.0.0.0")
         self.front_cam_udp_receiver = UDPReceiver(12349, "0.0.0.0")
@@ -267,9 +269,10 @@ class SS8:
         Stop the device movement.
         """
         if dconfig.CONNECT_TO_MOV_API:
-            if dconfig.DEBUG_SS8:
-                print("Stopping movement...")
             self._send_req(lambda: requests.post(self.api_url + "/stp"))
+
+        if dconfig.DEBUG_SS8:
+            print("Stopping movement...")
 
         return
 
@@ -304,18 +307,24 @@ class SS8:
 
         return
 
-    def goto_cam(self, alpha=0, beta=0):
+    def goto_cam(self, alpha=0, beta=0, relative=False):
         """
         Move the camera up.
-        dist (int): The distance or duration to move. If positive, the camera moves for the given time.
+        alpha (int): The angle to move to from the first motor.
+        beta (int): The angle to move to from the second motor.
+        relative (boolean):_ If the given angle is relative or absolute
         """
+
+        if(relative):
+            [alpha, beta] = [alpha, beta] + self.top_cam_angles
         
         if dconfig.CONNECT_TO_MOV_API:
             self._send_req(lambda: requests.post(self.api_url + "/cam/goto", json={"alpha": alpha, "beta": beta}))
-        
+
         if dconfig.DEBUG_SS8:
             print(f"Moving camera to position {alpha}, {beta}")
         
+        self.top_cam_angles = np.array([alpha, beta])
         return 
 
     def stop_cam(self):
@@ -324,7 +333,7 @@ class SS8:
         """
         
         if dconfig.CONNECT_TO_MOV_API:
-            self._send_req(lambda: requests.post(self.api_url + "/cam/stp")) 
+            self._send_req(lambda: requests.post(self.api_url + "/cam/stp"))
         print("Stopping camera movement...")
         
         return
@@ -336,7 +345,9 @@ class SS8:
         """
         if dconfig.CONNECT_TO_MOV_API:
             requests.post(self.api_url + "/text", json={"text": text})
-        print(f"Displaying text: {text}")
+        
+        if(dconfig.DEBUG_SS8):
+            print(f"Displaying text: {text}")
 
         return
     
