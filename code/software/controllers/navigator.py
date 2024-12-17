@@ -82,20 +82,20 @@ class Navigator:
         if(callibrate):
             await self.callibrate(DEFAULT_CALLIBRATION_ITERATION)
 
+        next_dep = None
         while self.moving:
+            if next_dep is not None:
+                abs_angle = math.atan2(next_dep[1], next_dep[0])
+                diff_angle = abs_angle - self.ss8_angle
+                norm = np.linalg.norm(next_dep)
+                # print('Next deplacement : ', next_dep)
+                # await asyncio.sleep(0.5)
+                await self._move_of(diff_angle, norm)
 
             next_dep, must_take_break = self._compute_next_deplacement()
 
             if must_take_break:
                 await self._on_reach_point()
-
-            if self.moving:
-                abs_angle = math.atan2(next_dep[1], next_dep[0])
-                diff_angle = abs_angle - self.ss8_angle
-                norm = np.linalg.norm(next_dep)
-                # print('Next deplacement : ', next_dep)
-                #await asyncio.sleep(1)
-                await self._move_of(diff_angle, norm)
 
         on_finish()
         return
@@ -167,8 +167,7 @@ class Navigator:
         while reach_point is None:
             if(len(self.trajectory) == 0):
                 self.moving = False
-                self.on_finish()
-                return np.array([0, 0]), False
+                return None, False
             
             if(self.trajectory[0][1] < angle):
                 self.trajectory.pop(0)
@@ -177,16 +176,15 @@ class Navigator:
                 reach_point = self.trajectory[0][0]
 
         if dconfig.DEBUG_NAV:
-            print(f'\n\nCurrent position : {self.ss8_pos} ||    Current angle : {angle} \nReach point : {reach_point.get_pos()}        || Reach angle : {self.trajectory[0][1]} \n\n')
+            print(f'\n\nCurrent position : {self.ss8_pos} ||    Current angle : {angle} \nReach point : {reach_point.get_pos()}        || Reach angle : {self.trajectory[0][1]} \n')
 
 
         # Compute the next deplacement with the contribution of the obstacles and the reach point
         next_dep = reach_point.get_contribution(self.ss8_pos)
         """ for obs in self.obstacles:
             next_dep += obs.get_contribution(self.ss8_pos) """
-
-        next_dep = (next_dep / np.linalg.norm(next_dep)) * STEP_DISTANCE
         
+        next_dep = (next_dep / np.linalg.norm(next_dep)) * STEP_DISTANCE
 
         return next_dep, new_reach_point
     
@@ -216,9 +214,7 @@ class Navigator:
         """
         Pause the movement and restart it.
         """
-        self.moving = False
         print('Take picture')
-        self.moving = True
         return
 
 DEFAULT_FORCE_NORM = 1000
@@ -244,9 +240,6 @@ class ForcePoint:
 
         dist =  self.pos - np.array(pos)
         dist_norm = np.linalg.norm(dist, ord=self.dist_order)
-
-        if dist_norm < 0.1:
-            return np.array([0, 0])
 
         return (self.force / (dist_norm ** self.dist_order)) * (dist / dist_norm)
     

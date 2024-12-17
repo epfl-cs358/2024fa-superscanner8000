@@ -5,7 +5,7 @@ CONNECT_TO_FRONT_CAM = False
 
 # Debug config
 TEST_SEG_WITH_VID = False
-DEBUG_NAV = False
+DEBUG_NAV = True
 DEBUG_CAM = False
 DEBUG_ARM = True
 
