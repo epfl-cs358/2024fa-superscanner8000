@@ -9,7 +9,10 @@ import numpy as np
 import shutil
 import rerun as rr 
 import tkinter.messagebox as messagebox
-import os
+import os, pathlib
+from controllers.reconstruct_3d import Reconstruct
+import threading
+
 
 
 
@@ -19,40 +22,111 @@ class EndPage(tk.Frame):
         super().__init__(parent)
         self.controller = controller
 
+        self.reconstruction_finished = False
+        self.model_path = "/tmp/superscanner8000/model.obj"  # Replace with your actual 3D model file path
+
         # Create a container frame to center the content
         self.container = tk.Frame(self)
         self.container.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        self.reconstructor = Reconstruct(pathlib.Path("/tmp/superscanner8000"))
 
+        movement_thread = threading.Thread(target=self._reconstruct_3d)
+        movement_thread.start()
+
+        self._display_progress_bar()
+
+    def _reconstruct_3d(self):
+        self.reconstructor.pre_process_images(scale_factor=1)
+        self.reconstructor.reconstruction_open_mvs(pathlib.Path("packages/openMVS/make/bin"))
+        self.reconstruction_finished = True
+
+    def _display_progress_bar(self):
+        # enum of reconstruction states
+        class ReconstructionState:
+            PRE_PROCESS_IMAGES = 0
+            EXTRACT_FEATURES = 1
+            MATCH_FEATURES = 2
+            MAPPING = 3
+            CONVERTING_OPENMVS = 4
+            INTERFACE_COLMAP = 5
+            DENSIFY_POINT_CLOUD = 6
+            RECONSTRUCT_MESH = 7
+            REFINE_MESH = 8
+            TEXTURE_MESH = 9
+            DONE = 10
+
+            def str_to_state(state_str):
+                return {
+                    "Pre-processing images": ReconstructionState.PRE_PROCESS_IMAGES,
+                    "Extracting features": ReconstructionState.EXTRACT_FEATURES,
+                    "Matching features": ReconstructionState.MATCH_FEATURES,
+                    "Mapping": ReconstructionState.MAPPING,
+                    "Converting openMVS": ReconstructionState.CONVERTING_OPENMVS,
+                    "Interface COLMAP": ReconstructionState.INTERFACE_COLMAP,
+                    "Densifying Point Cloud": ReconstructionState.DENSIFY_POINT_CLOUD,
+                    "Reconstructing Mesh": ReconstructionState.RECONSTRUCT_MESH,
+                    "Refining Mesh": ReconstructionState.REFINE_MESH,
+                    "Texturing Mesh": ReconstructionState.TEXTURE_MESH,
+                    "Done": ReconstructionState.DONE
+                }[state_str]
+
+            def __str__(self):
+                return self.name
+
+        def update_progress_bar():
+            # Update the progress bar value
+            state = ReconstructionState.str_to_state(self.reconstructor.status)
+            self.progress_bar.config(value=state)
+            label.config(text=self.reconstructor.status)
+
+            # Check if the reconstruction is done
+            if state == ReconstructionState.DONE:
+                self.progress_bar.stop()
+                self._display_preview_button()
+            else:
+                # Call this function again after 100ms to update the progress bar
+                self.after(100, update_progress_bar)
+
+        state = ReconstructionState()
+
+        # Add a label to display "Reconstructing 3D model..."
+        label = ttk.Label(self.container, text="Reconstructing 3D model...", font=("Arial", 20))
+        label.pack(pady=10)
+
+        # Add a progress bar
+        self.progress_bar = ttk.Progressbar(self.container, orient="horizontal", 
+                                            length=400, mode="determinate", 
+                                            value=0, maximum=state.DONE)
+        self.progress_bar.pack(pady=10)
+
+        self.after(10, update_progress_bar)
+        
+
+    def _display_preview_button(self):
         # Add a label to display "Scan is finished"
         label = ttk.Label(self.container, text="Scan is Done YUPI", font=("Arial", 20))
         label.pack(pady=10)
 
         
-         # Download button
+        # Download button
         self.download_button = ttk.Button(self.container, text="Download Model", command=self.download_model)
         self.download_button.pack(pady=10)
 
 
-          # Load the animated GIF
+        # Load the animated GIF
         self.gif_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'assets', 'mission-accomplished-penguins.gif')
         self.gif = Image.open(self.gif_path)
-
-       
-        self.model_path = "/tmp/model.obj"  # Replace with your actual 3D model file path
-        
 
         # Create a label to display the GIF
         self.gif_label = tk.Label(self.container)
         self.gif_label.pack(pady=20)
 
-        self.preview_button = ttk.Button(self.container, text="Preview Model", command=self.open_preview_window)
-        self.preview_button.pack(pady=10)
-
-        
-
         # Start the GIF animation
         self.update_gif()
 
+        # Add a button to preview the 3D model
+        self.preview_button = ttk.Button(self.container, text="Preview 3D Model", command=self.open_preview_window)
+        self.preview_button.pack(pady=10)
 
 
     def update_gif(self):
