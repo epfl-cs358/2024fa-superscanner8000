@@ -323,8 +323,8 @@ class SS8:
         print(f"Displaying text: {text}")
 
         return
+    
     # Camera control methods
-
     async def get_top_cam_angle(self):
         """
         Get the angle of the top camera.
@@ -337,7 +337,7 @@ class SS8:
         Start the object tracking. The camera will try to keep the object in the center of its view.
         """
         print("Start tracking the object...")
-        # TODO: Implement the recentering logic
+        center_threshold = dconfig.CENTER_THRESHOLD
         
         def check_center():
             frame = self.capture_image()
@@ -345,16 +345,16 @@ class SS8:
             frame_center = frame.shape[:2]/2
             pos_diff = obj_coords - frame_center
 
-            if(pos_diff[0] > 10):
+            if(pos_diff[0] > center_threshold):
                 self.rotate_right()
-            elif(pos_diff[0] < -10):
+            elif(pos_diff[0] < -center_threshold):
                 self.rotate_left()
             else:
                 self.stop_mov()
             
-            if(pos_diff[1] > 10):
+            if(pos_diff[1] > center_threshold):
                 self.down_camera()
-            elif(pos_diff[1] < -10):
+            elif(pos_diff[1] < -center_threshold):
                 self.up_camera()
 
     def capture_image(self, src='arm'):
