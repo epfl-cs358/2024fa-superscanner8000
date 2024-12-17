@@ -2,6 +2,7 @@ import math
 import numpy as np
 import asyncio
 import config.dev_config as dconfig
+from controllers.arm_positions import generate_path
 
 STEP_DISTANCE = 5
 DEFAULT_CALLIBRATION_DISTANCE = 10000
@@ -144,8 +145,12 @@ class Navigator:
             x = radius * (math.cos(math.radians(a))-1)
             y = radius * math.sin(math.radians(a))
             self.trajectory.append((ForcePoint(np.array([x, y])), math.radians(a)))
+    
     def _set_arm_positions(self, step_nbr):
-        pass
+        self.arm_positions = generate_path(step_nbr)
+
+        if dconfig.DEBUG_ARM:
+            print(f'Arm positions : \n{self.arm_positions}')
 
     def _compute_next_deplacement(self):
         """
@@ -247,7 +252,3 @@ class ForcePoint:
     
     def get_pos(self):
         return self.pos
-    
-
-if __init__() == '__main__':
-    print('Jte derange tonio ?')

@@ -50,7 +50,8 @@ def generate_path(N):
 
     return all_points
 
-# Print all points
-path = generate_path(11)
-for point in path:
-    print(f"x: {point[0]}, y: {point[1]}")
+if __name__ == "__main__":
+    # Print all points
+    path = generate_path(11)
+    for point in path:
+        print(f"x: {point[0]}, y: {point[1]}")

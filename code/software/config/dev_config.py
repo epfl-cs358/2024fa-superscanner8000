@@ -6,7 +6,8 @@ CONNECT_TO_FRONT_CAM = False
 # Debug config
 TEST_SEG_WITH_VID = False
 DEBUG_NAV = False
-DEBUG_CAM= False
+DEBUG_CAM = False
+DEBUG_ARM = True
 
 # Default values config
 DEFAULT_VERTICAL_PRECISION = 4
