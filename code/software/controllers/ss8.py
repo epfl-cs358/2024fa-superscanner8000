@@ -191,7 +191,7 @@ class SS8:
         """
         ms = dist*BODY_DIST_TO_TIME
 
-        if dconfig.CONNECT_TO_MOV_API:
+        if dconfig.CAN_MOVE:
             self._send_req(lambda: requests.post(self.api_url + "/fwd", json={"ms": ms}))
         
         if dconfig.DEBUG_SS8:
@@ -208,7 +208,7 @@ class SS8:
         """
         ms=dist*BODY_DIST_TO_TIME
 
-        if dconfig.CONNECT_TO_MOV_API:
+        if dconfig.CAN_MOVE:
             self._send_req(lambda: requests.post(self.api_url + "/bwd", json={"ms": ms}))
         
         
@@ -231,7 +231,7 @@ class SS8:
         if(angle < 0.000001):
             return
 
-        if dconfig.CONNECT_TO_MOV_API:
+        if dconfig.CAN_MOVE:
             self._send_req(lambda: requests.post(self.api_url + "/hlft", json={"ms": angle*BODY_ANGLE_TO_TIME}))
         
         if dconfig.DEBUG_SS8:
@@ -254,14 +254,12 @@ class SS8:
         if(angle < 0.000001):
             return
 
-        if dconfig.CONNECT_TO_MOV_API:
+        if dconfig.CAN_MOVE:
             self._send_req(lambda: requests.post(self.api_url + "/hrgt", json={"ms": angle*BODY_ANGLE_TO_TIME}))
-        
         
         if dconfig.DEBUG_SS8:
             print(f"Rotating right of {round(angle*180/np.pi, 1)} degrees...")
 
-        
         if wait_for_completion:
             time.sleep(ms*0.001)
 
@@ -409,7 +407,7 @@ class SS8:
         data = self._send_req(lambda: requests.get(self.api_url + "/cam/status"))
         return data
     
-    def turn_on_tracker(self):
+    def turn_on_tracker(self, mode='alignment'):
         """
         Start the object tracking. The camera will try to keep the object in the center of its view.
         """
@@ -418,20 +416,32 @@ class SS8:
             obj_coords = self.controller.segmenter.get_object_coords(frame)
             if obj_coords is None:
                 return np.array([0, 0])
-            [width, height] = frame.shape[:2]
+            [height, width] = frame.shape[:2]
             return obj_coords - np.array([width, height])/2
 
-        def update_tracking():
+        def update_angle():
             init_diff = get_diff()
             if(init_diff[0] > center_threshold):
                 self.stop_cam()
-                self.goto_cam(0, 5, relative=True)
+                self.goto_cam(0, np.sqrt(np.abs(init_diff[0])), relative=True)
             elif(init_diff[0] < -center_threshold):
                 self.stop_cam()
-                self.goto_cam(0, -5, relative=True)
+                self.goto_cam(0, -np.sqrt(np.abs(init_diff[0])), relative=True)
 
             if self.tracker_on:
-                self.controller.after(10, update_tracking)
+                self.controller.after(1000, update_angle)
+        
+        def update_alignment():
+            init_diff = get_diff()
+            if(init_diff[0] > center_threshold):
+                self.stop_mov()
+                self.move_backward(dist=np.sqrt(np.abs(init_diff[0]))*3, wait_for_completion=False)
+            elif(init_diff[0] < -center_threshold):
+                self.stop_mov()
+                self.move_forward(dist=np.sqrt(np.abs(init_diff[0]))*3, wait_for_completion=False)
+
+            if self.tracker_on:
+                self.controller.after(2000, update_alignment)
 
             
         print("Start tracking the object")
@@ -442,7 +452,7 @@ class SS8:
 
         self.tracker_on = True
         
-        self.controller.after(2000, update_tracking)
+        self.controller.after(2000, update_alignment if mode=='alignment' else update_angle )
     
     def turn_off_tracker(self):
         self.tracker_on = False
