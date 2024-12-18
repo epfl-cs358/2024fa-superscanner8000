@@ -407,13 +407,14 @@ class SS8:
         data = self._send_req(lambda: requests.get(self.api_url + "/cam/status"))
         return data
     
-    def turn_on_tracker(self, mode='alignment'):
+    def align_to(self, mode='alignment'):
         """
         Start the object tracking. The camera will try to keep the object in the center of its view.
         """
         def get_diff():
             frame = self.capture_image()
-            obj_coords = self.controller.segmenter.get_object_coords(frame)
+            obj_coords = self.controller.segmenter.get_object_coords(frame, True)
+            print(obj_coords)
             if obj_coords is None:
                 return np.array([0, 0])
             [height, width] = frame.shape[:2]
@@ -427,23 +428,27 @@ class SS8:
             elif(init_diff[0] < -center_threshold):
                 self.stop_cam()
                 self.goto_cam(0, -np.sqrt(np.abs(init_diff[0])), relative=True)
-
-            if self.tracker_on:
-                self.controller.after(1000, update_angle)
+            else:
+                self.tracker_on=False
+                return self.top_cam_angles[1]
         
         def update_alignment():
             init_diff = get_diff()
+            if(dconfig.DEBUG_SS8):
+                print(init_diff[0])
             if(init_diff[0] > center_threshold):
                 self.stop_mov()
-                self.move_backward(dist=np.sqrt(np.abs(init_diff[0]))*3, wait_for_completion=False)
+                self.move_backward(dist=np.sqrt(np.abs(init_diff[0]))*dconfig.ALIGNMENT_SPEED, wait_for_completion=False)
             elif(init_diff[0] < -center_threshold):
                 self.stop_mov()
-                self.move_forward(dist=np.sqrt(np.abs(init_diff[0]))*3, wait_for_completion=False)
+                self.move_forward(dist=np.sqrt(np.abs(init_diff[0]))*dconfig.ALIGNMENT_SPEED, wait_for_completion=False)
+            else:
 
-            if self.tracker_on:
-                self.controller.after(2000, update_alignment)
+                if(dconfig.DEBUG_SS8):
+                    print(f'Alignment finished with angle : {self.top_cam_angles[1]}')
+                self.tracker_on=False
+                return self.top_cam_angles[1]
 
-            
         print("Start tracking the object")
         center_threshold = dconfig.CENTER_THRESHOLD
         
@@ -451,9 +456,20 @@ class SS8:
         self.goto_cam(0, 90)
 
         self.tracker_on = True
+        while self.tracker_on:
+            if mode=='alignment':
+                res = update_alignment()
+            else:
+                res = update_angle()
+
+            print(self.tracker_on)
+            time.sleep(dconfig.ALIGNMENT_WAIT)
+
+        if(dconfig.DEBUG_NAV):
+            print(res)
         
-        self.controller.after(2000, update_alignment if mode=='alignment' else update_angle )
-    
+        return res
+        
     def turn_off_tracker(self):
         self.tracker_on = False
         
