@@ -414,13 +414,12 @@ class SS8:
         def get_diff():
             frame = self.capture_image()
             obj_coords = self.controller.segmenter.get_object_coords(frame, False)
-            print(obj_coords)
             if obj_coords is None:
                 return np.array([0, 0])
             [height, width] = frame.shape[:2]
             return obj_coords - np.array([width, height])/2
 
-        def update_angle():
+        def update_angle(): 
             init_diff = get_diff()
             if(init_diff[0] > center_threshold):
                 self.stop_cam()
@@ -462,7 +461,6 @@ class SS8:
             else:
                 res = update_angle()
 
-            print(self.tracker_on)
             time.sleep(dconfig.ALIGNMENT_WAIT)
 
         if(dconfig.DEBUG_NAV):
