@@ -40,8 +40,9 @@ class ScanningPage(tk.Frame):
         self.controller.ss8.turn_on_tracker()
 
         # Start the movement
-        movement_thread = threading.Thread(target=self.nav.start_moving, args=(self._on_finish,))
-        movement_thread.start()
+        mov_coroutine = asyncio.create_task(self.nav.start_moving(self._on_finish))
+        # movement_thread = threading.Thread(target=self.nav.start_moving, args=(self._on_finish,))
+        # movement_thread.start()
 
         def update_plot():
             self.fig.clear()
@@ -99,6 +100,7 @@ class ScanningPage(tk.Frame):
             self.occupancy_plot.get_tk_widget().pack() 
             
             update_plot()
+        await mov_coroutine
 
 
     def _interrupt_scan(self):
