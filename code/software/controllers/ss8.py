@@ -386,7 +386,7 @@ class SS8:
         
         return
     
-    def display_text(self, text):
+    async def display_text(self, text):
         """
         Display text on the device screen.
         text (str): The text to display.
@@ -405,7 +405,7 @@ class SS8:
         """
         Get the angle of the top camera.
         """
-        await data = self._send_req(lambda: requests.get(self.api_url + "/cam/status"))
+        data = await self._send_req(lambda: requests.get(self.api_url + "/cam/status"))
         return data
     
     async def align_to(self, mode='alignment'):
@@ -421,7 +421,7 @@ class SS8:
             [height, width] = frame.shape[:2]
             return obj_coords - np.array([width, height])/2
 
-        def update_angle():
+        async def update_angle():
             init_diff = get_diff()
             if(init_diff[0] > center_threshold):
                 self.stop_cam()
@@ -433,16 +433,16 @@ class SS8:
                 self.tracker_on=False
                 return self.top_cam_angles[1]
         
-        def update_alignment():
+        async def update_alignment():
             init_diff = get_diff()
             if(dconfig.DEBUG_SS8):
                 print(init_diff[0])
             if(init_diff[0] > center_threshold):
-                self.stop_mov()
-                self.move_backward(dist=np.sqrt(np.abs(init_diff[0]))*dconfig.ALIGNMENT_SPEED, wait_for_completion=False)
+                await self.stop_mov()
+                await self.move_backward(dist=np.sqrt(np.abs(init_diff[0]))*dconfig.ALIGNMENT_SPEED, wait_for_completion=False)
             elif(init_diff[0] < -center_threshold):
-                self.stop_mov()
-                self.move_forward(dist=np.sqrt(np.abs(init_diff[0]))*dconfig.ALIGNMENT_SPEED, wait_for_completion=False)
+                await self.stop_mov()
+                await self.move_forward(dist=np.sqrt(np.abs(init_diff[0]))*dconfig.ALIGNMENT_SPEED, wait_for_completion=False)
             else:
 
                 if(dconfig.DEBUG_SS8):
@@ -459,7 +459,7 @@ class SS8:
         self.tracker_on = True
         while self.tracker_on:
             if mode=='alignment':
-                res = update_alignment()
+                res = await update_alignment()
             else:
                 res = update_angle()
 

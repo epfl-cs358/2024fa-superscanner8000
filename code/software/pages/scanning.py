@@ -36,9 +36,6 @@ class ScanningPage(tk.Frame):
         asyncio.run(self._start_scanning())
 
     async def _start_scanning(self):
-        # Start centering the camera all the time
-        self.controller.ss8.turn_on_tracker()
-
         # Start the movement
         mov_coroutine = asyncio.create_task(self.nav.start_moving(self._on_finish))
         # movement_thread = threading.Thread(target=self.nav.start_moving, args=(self._on_finish,))

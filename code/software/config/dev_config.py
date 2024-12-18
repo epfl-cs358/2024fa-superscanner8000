@@ -1,7 +1,7 @@
 # Connection config
-CONNECT_TO_MOV_API = False
-CONNECT_TO_TOP_CAM = False
-CONNECT_TO_FRONT_CAM = False
+CONNECT_TO_MOV_API = True
+CONNECT_TO_TOP_CAM = True
+CONNECT_TO_FRONT_CAM = True
 CAN_MOVE = CONNECT_TO_MOV_API and False 
 
 # Debug config
