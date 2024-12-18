@@ -8,6 +8,7 @@ from controllers.arm_positions import generate_path
 from controllers.ss8 import SS8
 from controllers.image_segmenter import ImageSegmenter
 
+
 STEP_DISTANCE = 5
 DEFAULT_CALLIBRATION_DISTANCE = 120
 DEFAULT_CALLIBRATION_ITERATION = 4
@@ -90,13 +91,34 @@ class Navigator:
 
         self._set_circle_trajectory(mean_radius, self.vertical_precision)
 
-    def add_obstacle(self, relative_position, size=1):
+    def add_obstacle(self, absolute_position, size=1):
         """
         Add an obstacle to the navigator.
         relative_position (NDArray[Any]): The relative position in sheeric coords of the obstacle to the ss8 (in cm).
         """
-        self.obstacles = np.append(self.obstacles, ForcePoint(self.ss8_pos+relative_position, size, 3))
+        print(f'SS8 rotation : {self.ss8_angle}')
+        if self._assert_no_obstacle(absolute_position, 5):
+            #print(f'Obstacle added at position {absolute_position}')
+            self.obstacles = np.append(self.obstacles, ForcePoint(absolute_position, size, 3))
+    
+    def _assert_no_obstacle(self, pos, radius = 25):
+        """
+        Check if there is no obstacle in the sphere of radius around the position.
+        pos (NDArray[Any]): The position to check.
+        radius (int): The radius of the circle.
+        """
+        for obs in self.obstacles:
+            if np.linalg.norm(obs.get_pos() - pos) < radius:
+                return False
         
+        return True
+    
+    def get_obstacle_plot_data(self):
+        return self.ss8_pos, self._get_obstacles_pos()
+
+    def _get_obstacles_pos(self):
+        return np.array([obs.get_pos() for obs in self.obstacles])
+
     def start_moving(self, on_finish):
         self._set_arm_positions(self.vertical_precision)
 
