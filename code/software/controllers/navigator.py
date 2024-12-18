@@ -9,7 +9,7 @@ from controllers.ss8 import SS8
 from controllers.image_segmenter import ImageSegmenter
 
 STEP_DISTANCE = 5
-DEFAULT_CALLIBRATION_DISTANCE = 10000
+DEFAULT_CALLIBRATION_DISTANCE = 120
 DEFAULT_CALLIBRATION_ITERATION = 4
 CENTER_THRESHOLD = 25
 ANGLE_TOLERANCE = 0.05
@@ -40,13 +40,19 @@ class Navigator:
         self.vertical_precision = vertical
         self.horizontal_precision = horizontal
 
-    def callibrate(self, iteration, distance=DEFAULT_CALLIBRATION_DISTANCE):
+    def callibrate(self, iteration=DEFAULT_CALLIBRATION_ITERATION, distance=DEFAULT_CALLIBRATION_DISTANCE):
         """
         Start the callibration of the device.
         iteration (int): The number of iteration to do.
         """
 
         print('Callibrating...')
+
+        iteration_dist = distance / iteration
+        measures = np.array([])
+
+        start_point = -iteration/2*iteration_dist
+        print(f'Iteration dist : {iteration_dist}')
 
         if not dconfig.CONNECT_TO_TOP_CAM or not dconfig.CONNECT_TO_MOV_API:
             self._set_circle_trajectory(50, self.horizontal_precision)
@@ -58,26 +64,30 @@ class Navigator:
                     print(point[0].get_pos())
                     
             return
-
-        self._align_ss8_to_obj()
-
-        iteration_dist = distance / iteration
-        measures = np.array([])
-
-        start_point = -iteration/2*iteration_dist
-        self.ss8.move_backward(int(start_point))
-        measures.append(np.array([np.abs(start_point), self.ss8.get_arm_cam_angle()]))
+        
+        self.ss8.align_to(mode='alignment')
+        self.ss8.move_backward(int(np.abs(start_point)))
+        time.sleep(2000)
+        measures.append(np.array([np.abs(start_point), self.ss8.get_arm_cam_angle() - 90]))
 
         for i in range(1, iteration):
             self.ss8.move_forward(iteration_dist)
 
-            if not dconfig.SIMULATION_MODE:
-                measure = [np.abs(start_point+i*iteration_dist), self.ss8.get_arm_cam_angle()]
-                measures.append(np.array(measure))
+            #The angle between the begining and the actual angle
+            theta = self.ss8.align_to(mode='angle')
+            
+            measure = [np.abs(start_point+i*iteration_dist), self.ss8.get_arm_cam_angle()-90]
+            measures.append(np.array(measure))
 
-        self.ss8.move_backward(int(-iteration/2*iteration_dist))
+        if dconfig.DEBUG_NAV:
+            print(f'Measures : {measures}')
+            
+        self.ss8.move_backward(int(np.abs(iteration/2*iteration_dist)))
 
         mean_radius = np.mean(np.tan(measures[:, 0]) * measures[:, 1])
+        if(dconfig.DEBUG_NAV):
+            print(mean_radius)
+
         self._set_circle_trajectory(mean_radius, self.vertical_precision)
 
     def add_obstacle(self, relative_position, size=1):
@@ -91,7 +101,9 @@ class Navigator:
         self._set_arm_positions(self.vertical_precision)
 
         for arm_pos in self.arm_positions:
-            self.callibrate(DEFAULT_CALLIBRATION_ITERATION)
+            self.callibrate()
+            time.sleep(60000)
+            break
             self.ss8.goto_arm(arm_pos[0], arm_pos[1])
             self.moving = True
             self._move_one_turn()
@@ -121,38 +133,6 @@ class Navigator:
     
     def stop_moving(self):
         self.moving = False
-
-    def _align_ss8_to_obj(self):
-        # TODO: center the angle of the body
-        self.ss8.goto_cam(90, 0)
-        self.ss8.goto_arm(0, 0)
-        frame = self.ss8.capture_image()
-        obj_coords = self.segmenter.get_object_coords(frame)
-        frame_center = frame.shape[:2]/2
-        pos_diff = obj_coords - frame_center
-        if(pos_diff[0] > CENTER_THRESHOLD):
-            self.ss8.move_forward(10000)
-            moving_state = 'forward'
-        elif(pos_diff[0] < -CENTER_THRESHOLD):
-            self.ss8.move_backward(10000)
-            moving_state = 'backward'
-        else:
-            moving_state = 'none'
-
-        def check_if_stop():
-            frame = self.ss8.capture_image()
-            obj_coords = self.segmenter.get_object_coords(frame)
-            frame_center = frame.shape[:2]/2
-            pos_diff = obj_coords - frame_center
-
-            if(moving_state == 'forward' and pos_diff[0] < CENTER_THRESHOLD):
-                self.ss8.stop_mov()
-            elif(moving_state == 'backward' and pos_diff[0] > -CENTER_THRESHOLD):
-                self.ss8.stop_mov()
-            else:
-                self.after(100, check_if_stop)
-
-            self.ss8.forward()
         
     def _set_circle_trajectory(self, radius, step_nbr):
         """
@@ -160,6 +140,7 @@ class Navigator:
         radius (int): The radius of the circle.
         step_nbr (int): The number of steps in the circle.
         """
+        
         self.obj_pos = self.ss8_pos - np.array([radius, 0])
         self.trajectory = []
         step_angle = 360//step_nbr
