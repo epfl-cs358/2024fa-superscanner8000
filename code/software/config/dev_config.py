@@ -9,7 +9,7 @@ TEST_SEG_WITH_VID = False
 DEBUG_NAV = False
 DEBUG_CAM = False
 DEBUG_ARM = False
-DEBUG_SS8 = False
+DEBUG_SS8 = True
 
 # Default scanning config
 DEFAULT_VERTICAL_PRECISION = 4
