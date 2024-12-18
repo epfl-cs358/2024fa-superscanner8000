@@ -3,6 +3,9 @@ import time
 import cv2
 import os
 import numpy as np
+from scipy.spatial.transform import Rotation as Rot
+import scipy.optimize as opt
+
 import config.dev_config as dconfig
 
 from controllers.udp_receiver import UDPReceiver
@@ -75,7 +78,6 @@ class SS8:
                 return False
         elif not self.init_udp_connection():
             return False
-
         return True
     
     def init_api_connection(self) -> bool:
@@ -101,7 +103,7 @@ class SS8:
             print(f"An error occurred: {e}")
             return False
         
-        print("Connected to API")
+        self.stop_cam()
         return True
 
     def init_udp_connection(self) -> bool:
@@ -178,7 +180,7 @@ class SS8:
         except requests.ConnectionError:
             self.connection_lost_callback()
         except Exception as e:
-            print(f"An error occurred: {e}")
+            print(f"An error occurred when sending req : {e}")
             self.connection_lost_callback()
     
     def move_forward(self, dist=DEFAULT_MOVING_DIST, wait_for_completion=True):
@@ -306,23 +308,65 @@ class SS8:
             print("Stopping arm movement...")
 
         return
+        
+    def _get_reverse_kin_angle(self, x_angle, y_angle):
+        # Given final rotation matrix
+        R_final = Rot.from_euler('xyz', [x_angle, 0, y_angle], degrees=True).as_matrix()
 
-    def goto_cam(self, alpha=0, beta=0, relative=False):
+        # Fixed angle alpha: defines the axis of R1 on the XY plane
+        gamma = np.radians(self.top_cam_angles[1])
+        u1 = np.array([np.cos(gamma), np.sin(gamma), 0])  # Rotation axis for R1
+        print(u1)
+        # Function to compute the error between R_final and R2 @ R1
+        def error_function(params):
+            alpha, beta = params  # Rotation angles for R1 and R2
+
+            # R1: Rotation around custom axis u1
+            R1 = Rot.from_rotvec(alpha * u1).as_matrix()
+            
+            # R2: Rotation around Z-axis
+            R2 = Rot.from_euler('z', beta).as_matrix()
+
+            # Combined rotation
+            R_combined = R2 @ R1
+
+            # Compute error as Frobenius norm
+            error = np.linalg.norm(R_final - R_combined, ord='fro')
+
+            print(f'RC :\n{np.round(R_combined, 3)}')
+            return error
+
+        initial_guess = [0.1, 0.1]
+
+        result = opt.minimize(error_function, initial_guess, method='Nelder-Mead')
+        opt_alpha, opt_beta = result.x % (2*np.pi)
+
+        print(f'RF :\n{np.round(R_final, 3)}')
+
+        return np.array([opt_alpha, opt_beta])
+    
+    def goto_cam(self, x_angle, y_angle, relative=False):
         """
         Move the camera up.
-        alpha (int): The angle to move to from the first motor.
-        beta (int): The angle to move to from the second motor.
+        x_angle (int): The angle to move to from the first motor. Positive -> right
+        y_angle (int): The angle to move to from the second motor. Positive -> up
         relative (boolean):_ If the given angle is relative or absolute
         """
 
         if(relative):
-            [alpha, beta] = [alpha, beta] + self.top_cam_angles
-        
-        if dconfig.CONNECT_TO_MOV_API:
-            self._send_req(lambda: requests.post(self.api_url + "/cam/goto", json={"alpha": alpha, "beta": beta}))
+            if(x_angle==0 or True):
+                angles = np.array([x_angle, y_angle]) + self.top_cam_angles
+            else:
+                angles = np.degrees(self._get_reverse_kin_angle(x_angle, y_angle)) + self.top_cam_angles
+                
+            [alpha, beta] =  (angles + 180) % 360 -180
+
 
         if dconfig.DEBUG_SS8:
-            print(f"Moving camera to position {alpha}, {beta}")
+            print(f"Moving camera to position {int(alpha)}, {int(beta)}")
+        
+        if dconfig.CONNECT_TO_MOV_API:
+            self._send_req(lambda: requests.post(self.api_url + "/cam/goto", json={"alpha": int(alpha), "beta": int(beta)}))
         
         self.top_cam_angles = np.array([alpha, beta])
         return 
@@ -333,8 +377,9 @@ class SS8:
         """
         
         if dconfig.CONNECT_TO_MOV_API:
-            self._send_req(lambda: requests.post(self.api_url + "/cam/stp"))
-        print("Stopping camera movement...")
+            data = self._send_req(lambda: requests.post(self.api_url + "/cam/stp"))
+            self.top_cam_angles = np.array([data['alpha'], data['beta']])
+        print("Stopped  camera movement at ", np.round(self.top_cam_angles))
         
         return
     
