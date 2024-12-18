@@ -41,7 +41,7 @@ class Navigator:
         self.vertical_precision = vertical
         self.horizontal_precision = horizontal
 
-    def callibrate(self, iteration=DEFAULT_CALLIBRATION_ITERATION, distance=DEFAULT_CALLIBRATION_DISTANCE):
+    async def callibrate(self, iteration=DEFAULT_CALLIBRATION_ITERATION, distance=DEFAULT_CALLIBRATION_DISTANCE):
         """
         Start the callibration of the device.
         iteration (int): The number of iteration to do.
@@ -66,24 +66,24 @@ class Navigator:
                     
             return
         
-        self.ss8.align_to(mode='alignment')
-        self.ss8.move_backward(int(np.abs(start_point)))
-        time.sleep(2000)
-        measures.append(np.array([np.abs(start_point), self.ss8.get_arm_cam_angle() - 90]))
+        await self.ss8.align_to(mode='alignment')
+        await self.ss8.move_backward(int(np.abs(start_point)))
+        await asyncio.sleep(dconfig.ALIGNMENT_WAIT)
+        measures.append(np.array([np.abs(start_point), await self.ss8.align_to(mode='angle') - 90]))
 
         for i in range(1, iteration):
-            self.ss8.move_forward(iteration_dist)
+            await self.ss8.move_forward(iteration_dist)
 
             #The angle between the begining and the actual angle
-            theta = self.ss8.align_to(mode='angle')
+            theta = await self.ss8.align_to(mode='angle')
             
-            measure = [np.abs(start_point+i*iteration_dist), self.ss8.get_arm_cam_angle()-90]
+            measure = [np.abs(start_point+i*iteration_dist), theta-90]
             measures.append(np.array(measure))
 
         if dconfig.DEBUG_NAV:
             print(f'Measures : {measures}')
             
-        self.ss8.move_backward(int(np.abs(iteration/2*iteration_dist)))
+        await self.ss8.move_backward(int(np.abs(iteration/2*iteration_dist)))
 
         mean_radius = np.mean(np.tan(measures[:, 0]) * measures[:, 1])
         if(dconfig.DEBUG_NAV):
@@ -119,12 +119,12 @@ class Navigator:
     def _get_obstacles_pos(self):
         return np.array([obs.get_pos() for obs in self.obstacles])
 
-    def start_moving(self, on_finish):
+    async def start_moving(self, on_finish):
         self._set_arm_positions(self.vertical_precision)
 
         for arm_pos in self.arm_positions:
-            self.callibrate()
-            time.sleep(60000)
+            await self.callibrate()
+            asyncio.sleep(60)
             break
             self.ss8.goto_arm(arm_pos[0], arm_pos[1])
             self.moving = True
@@ -135,7 +135,7 @@ class Navigator:
         on_finish()
         return
     
-    def _move_one_turn(self):
+    async def _move_one_turn(self):
         next_dep = None
         while self.moving:
             if next_dep is not None:
@@ -144,9 +144,9 @@ class Navigator:
                 norm = np.linalg.norm(next_dep)
                 # print('Next deplacement : ', next_dep)
                 # await asyncio.sleep(0.5)
-                self._move_of(diff_angle, norm)
+                await self._move_of(diff_angle, norm)
 
-            next_dep, must_take_break = self._compute_next_deplacement()
+            next_dep, must_take_break = await self._compute_next_deplacement()
 
             if must_take_break:
                 self._on_reach_point()
@@ -177,7 +177,7 @@ class Navigator:
         if dconfig.DEBUG_ARM:
             print(f'Arm positions : \n{self.arm_positions}')
 
-    def _compute_next_deplacement(self):
+    async def _compute_next_deplacement(self):
         """
         Get the next deplacement to reach the next point in the trajectory while avoiding the obstacles.
         """
@@ -214,7 +214,7 @@ class Navigator:
 
         return next_dep, new_reach_point
     
-    def _move_of(self, angle, distance):
+    async def _move_of(self, angle, distance):
         """
         Move the device of a given angle and distance.
         angle (float): The angle to move.
@@ -225,28 +225,28 @@ class Navigator:
         angle = angle % (2*np.pi)
         
         if angle < np.pi:
-            self.ss8.rotate_left(angle)
+            await self.ss8.rotate_left(angle)
         else:
-            self.ss8.rotate_right(2*np.pi - angle)
+            await self.ss8.rotate_right(2*np.pi - angle)
         
         self.ss8_angle = (self.ss8_angle + angle) % (2*np.pi)
         
         # Move the ss8 forward
-        self.ss8.move_forward(distance)
+        await self.ss8.move_forward(distance)
         self.ss8_pos += np.array([distance * math.cos(self.ss8_angle), distance * math.sin(self.ss8_angle)])
         return
     
-    def _on_reach_point(self):
+    async def _on_reach_point(self):
         """
         Pause the movement and restart it.
         """
         
-        time.sleep(dconfig.ARM_MOV_WAITING_TIME)
+        asyncio.sleep(dconfig.ARM_MOV_WAITING_TIME)
         self.ss8.top_cam_udp_receiver.save_frame()
         self.taken_picture += 1
 
         picture_status_text = f'{self.taken_picture}/{self.horizontal_precision*self.vertical_precision} pictures taken'
-        self.ss8.display_text(picture_status_text)
+        await self.ss8.display_text(picture_status_text)
 
         return
 
