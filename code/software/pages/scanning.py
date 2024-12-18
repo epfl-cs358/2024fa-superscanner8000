@@ -33,15 +33,26 @@ class ScanningPage(tk.Frame):
         self.detector = Object_Detector(self.nav, self.controller.ss8, visualize=False)
         
 
-        asyncio.run(self._start_scanning())
+        self._start_scanning()
 
-    async def _start_scanning(self):
-        # Start centering the camera all the time
-        self.controller.ss8.turn_on_tracker()
-
+    def _start_scanning(self):
         # Start the movement
+
+        print("Will update mask loop")
+
+        def update_mask():
+            cv2.waitKey(1)
+            self.controller.segmenter.propagate(self.controller.ss8.capture_image())
+            self.after(1000//24, update_mask())
+
+        print("Will start thread")
+
+        self.after(100, update_mask)
+
         movement_thread = threading.Thread(target=self.nav.start_moving, args=(self._on_finish,))
         movement_thread.start()
+
+        return 
 
         def update_plot():
             self.fig.clear()

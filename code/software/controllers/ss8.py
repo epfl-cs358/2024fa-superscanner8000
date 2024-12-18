@@ -413,7 +413,7 @@ class SS8:
         """
         def get_diff():
             frame = self.capture_image()
-            obj_coords = self.controller.segmenter.get_object_coords(frame, True)
+            obj_coords = self.controller.segmenter.get_object_coords(frame, False)
             print(obj_coords)
             if obj_coords is None:
                 return np.array([0, 0])
