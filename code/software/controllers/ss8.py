@@ -38,6 +38,7 @@ class SS8:
         self.connection_lost_callback = disconnected_callback
 
         self.top_cam_angles = np.array([0,0])
+        self.tracker_on = False
 
         self.top_cam_udp_receiver = UDPReceiver(12346, "0.0.0.0")
         self.front_cam_udp_receiver = UDPReceiver(12349, "0.0.0.0")
@@ -353,13 +354,16 @@ class SS8:
         relative (boolean):_ If the given angle is relative or absolute
         """
 
+        angles = np.array([x_angle, y_angle])
+
         if(relative):
             if(x_angle==0 or True):
-                angles = np.array([x_angle, y_angle]) + self.top_cam_angles
+                angles = angles + self.top_cam_angles
             else:
                 angles = np.degrees(self._get_reverse_kin_angle(x_angle, y_angle)) + self.top_cam_angles
-                
-            [alpha, beta] =  (angles + 180) % 360 -180
+
+        [alpha, beta] =  (angles + 180) % 360 -180
+            
 
 
         if dconfig.DEBUG_SS8:
@@ -409,27 +413,40 @@ class SS8:
         """
         Start the object tracking. The camera will try to keep the object in the center of its view.
         """
-        print("Start tracking the object...")
-        center_threshold = dconfig.CENTER_THRESHOLD
-        
-        def check_center():
+        def get_diff():
             frame = self.capture_image()
             obj_coords = self.controller.segmenter.get_object_coords(frame)
-            frame_center = frame.shape[:2]/2
-            pos_diff = obj_coords - frame_center
+            if obj_coords is None:
+                return np.array([0, 0])
+            [width, height] = frame.shape[:2]
+            return obj_coords - np.array([width, height])/2
 
-            if(pos_diff[0] > center_threshold):
-                self.rotate_right()
-            elif(pos_diff[0] < -center_threshold):
-                self.rotate_left()
-            else:
-                self.stop_mov()
+        def update_tracking():
+            init_diff = get_diff()
+            if(init_diff[0] > center_threshold):
+                self.stop_cam()
+                self.goto_cam(0, 5, relative=True)
+            elif(init_diff[0] < -center_threshold):
+                self.stop_cam()
+                self.goto_cam(0, -5, relative=True)
+
+            if self.tracker_on:
+                self.controller.after(10, update_tracking)
+
             
-            if(pos_diff[1] > center_threshold):
-                self.down_camera()
-            elif(pos_diff[1] < -center_threshold):
-                self.up_camera()
+        print("Start tracking the object")
+        center_threshold = dconfig.CENTER_THRESHOLD
+        
+        self.goto_arm(0, 0)
+        self.goto_cam(0, 90)
 
+        self.tracker_on = True
+        
+        self.controller.after(2000, update_tracking)
+    
+    def turn_off_tracker(self):
+        self.tracker_on = False
+        
     def capture_image(self, src='arm'):
         """
         Captures an image from the ESP32.
@@ -447,6 +464,3 @@ class SS8:
             return self.front_cam_udp_receiver.get_current_frame()
         
         return None
-
-
-

@@ -59,6 +59,10 @@ class SetupPage(tk.Frame):
             self.cam_down_button.bind("<ButtonRelease-1>", lambda _: self.controller.ss8.stop_cam())
             self.cam_down_button.grid(row=2, column=2, padx=5, pady=5)
 
+            self.cam_tracker_button = ttk.Button(buttons_container, text="Turn on traker")
+            self.cam_tracker_button.bind("<ButtonPress-1>", lambda _: self.controller.ss8.turn_on_tracker())
+            self.cam_tracker_button.grid(row=2, column=1, padx=5, pady=5)
+
         # Directional buttons
         self.forward_button = ttk.Button(buttons_container, text="Forward")
         self.forward_button.bind("<ButtonPress-1>", lambda _: self.controller.ss8.move_forward(wait_for_completion=False))
@@ -86,6 +90,7 @@ class SetupPage(tk.Frame):
         # Directional buttons   
 
     def _display_preview(self):
+        self.controller.ss8.goto_cam(0, 90)
         def img_click_callback(x, y):
             points = np.array([[x, y]], dtype=np.float32)
     
