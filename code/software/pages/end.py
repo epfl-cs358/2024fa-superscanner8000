@@ -9,7 +9,7 @@ import numpy as np
 import shutil
 import rerun as rr 
 import tkinter.messagebox as messagebox
-import os, pathlib
+import os, pathlib, tempfile
 from controllers.reconstruct_3d import Reconstruct
 import threading
 
@@ -28,7 +28,7 @@ class EndPage(tk.Frame):
         # Create a container frame to center the content
         self.container = tk.Frame(self)
         self.container.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
-        self.reconstructor = Reconstruct(pathlib.Path("/tmp/superscanner8000"))
+        self.reconstructor = Reconstruct(tempfile.gettempdir() / pathlib.Path("superscanner8000"))
 
         movement_thread = threading.Thread(target=self._reconstruct_3d)
         movement_thread.start()

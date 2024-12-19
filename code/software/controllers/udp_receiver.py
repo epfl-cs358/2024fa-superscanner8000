@@ -137,7 +137,7 @@ class UDPReceiver:
 
         if self.current_frame is not None:
             # Get the system's temporary directory
-            temp_dir = os.path.join(tempfile.gettempdir(), "superscanner8000")
+            temp_dir = os.path.join(tempfile.gettempdir(), "superscanner8000/images")
             # Create the temporary directory if it doesn't exist or delete if it does
             
             if not os.path.exists(temp_dir):
