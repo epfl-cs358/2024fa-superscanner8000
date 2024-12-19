@@ -142,19 +142,21 @@ class UDPReceiver:
             
             if not os.path.exists(temp_dir):
                 os.makedirs(temp_dir)
-            else:
+            elif self.frame_counter == 0:
                 shutil.rmtree(temp_dir)
                 os.makedirs(temp_dir)
-
+            else:
+                pass
             # Construct the full path for the file with a numbered filename
             filename = f"{self.frame_counter}.jpg"
             temp_file_path = os.path.join(temp_dir, filename)
             # Save theself.current_frame to the temporary folder
             cv2.imwrite(temp_file_path, self.current_frame)
+            self.frame_counter += 1
+
             if DEBUG_CAM:
                 print(f"Savedself.current_frame {self.frame_counter} to {temp_file_path}")
             # Increment theself.current_frame counter
-            self.frame_counter += 1
         else:
             if DEBUG_CAM:
                 print("No frame available to save.")
