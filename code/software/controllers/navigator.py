@@ -123,7 +123,7 @@ class Navigator:
         if self._assert_no_obstacle(absolute_position, 20):
             #print(f'Obstacle added at position {absolute_position}')
             self.obstacles = np.append(self.obstacles, ForcePoint(absolute_position, size, 3))
-            self.ss8.flash_led(1 * dconfig.LED_BRIGHTNESS, 0, 0)
+            self.ss8.flash_led(1 * dconfig.LED_BRIGHTNESS, 0, 0, 500)
     
     def _assert_no_obstacle(self, pos, radius = 25):
         """
