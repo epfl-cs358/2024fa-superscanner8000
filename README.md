@@ -8,7 +8,44 @@
    - [Antoine Baptiste Gauthier](https://github.com/gautierantoine195)
    - [Mateo Tiedra](https://github.com/mateotiedra)
    - [Ugo Novello](https://github.com/Laggrif)
-      
+
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li>
+      <a href="#about-the-project">About The Project</a>
+      <ul>
+        <li><a href="#authors">Authors</a></li>
+        <li><a href="#project-description">Project Description</a></li>
+        <li><a href="#project-structure">Project Structure</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#make-your-own-superscanner8000">Make Your Own SuperScanner8000</a>
+      <ul>
+        <li><a href="#built-with">Built With</a></li>
+        <li><a href="#prerequisites">Prerequisites</a></li>
+        <li><a href="#hardware-assembly">Hardware Assembly</a></li>
+        <ul>
+          <li><a href="#main-body">Main Body</a></li>
+          <li><a href="#arm">Arm</a></li>
+          <li><a href="#gearbox">Gearbox</a></li>
+          <li><a href="#motor-housings">Motor Housings</a></li>
+          <li><a href="#assembly-of-the-arm">Assembly Of The Arm</a></li>
+        </ul>
+        <li><a href="#electronic">Electronic</a></li>
+        <ul>
+          <li><a href="#diagram">Diagram</a></li>
+        </ul>
+        <li><a href="#software">Software</a></li>
+      </ul>
+    </li>
+    <li><a href="#gratitude-and-appreciation">Gratitude and Appreciation</a></li>
+  </ol>
+</details>
+
+
+
 ## Project Description 
 
 The core of this project idea is to make a mobile robot capable of identifying the object of interest and taking pictures of it from all (possible) angles. This would be paired with a desktop application that would receive the images and apply the user-selected 3D reconstruction algorithm.
@@ -45,7 +82,7 @@ Below is a brief explanation of this repository's structure to provide context a
 
 This section is dedicated to explaining how to build this project yourself! (All the printing/cutting part are available)
 
-#Built with
+### Built with
 
    * [![Python][Python.org]][Python-url]
    * [![Cpp][Cpp.org]][Cpp-url]
