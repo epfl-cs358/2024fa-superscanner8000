@@ -183,7 +183,7 @@ Here, drill your own hole to make your own wire management.
    - [Top Axle Folder](design/prints/top_axle)
 
 3d print this part to hold the belt together :
-   - [Belt Holder](design/prints/ber_holder.stl)
+   - [Belt Holder](design/prints/belt_holder.stl)
 
 You should print 2 times esp_case2 for the cam in the box that we use for object detection. You yill need the 6mm stainless steel bar for the elbow connection of the arm.
 
