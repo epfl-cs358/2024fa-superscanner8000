@@ -43,6 +43,7 @@ void setup_routing() {
   server.on("/text", HTTP_POST, text);
   server.on("/progress", HTTP_POST, progress);
   server.on("/scroll", HTTP_POST, scroll);
+  
   server.on("/led/set", HTTP_POST, led_set);
   server.on("/led/rainbow", HTTP_POST, led_rainbow);
           

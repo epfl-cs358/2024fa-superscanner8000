@@ -413,6 +413,62 @@ class SS8:
 
         return
     
+    def display_text_2lines(self, line1, line2):
+        """
+        Display text on two lines on the device screen.
+        line1 (str): The text to display on the first line.
+        line2 (str): The text to display on the second line.
+        """
+        if dconfig.CONNECT_TO_MOV_API:
+            requests.post(self.api_url + "/scroll", json={"text1": line1, "text2": line2})
+        
+        if(dconfig.DEBUG_SS8):
+            print(f"Displaying text: {line1}, {line2}")
+
+        return
+    
+    # Leds control methods
+
+    def set_led(self, r, g, b):
+        """
+        Set the color of the LED.
+        r (int): The red value. range [0, 255]
+        g (int): The green value. range [0, 255]
+        b (int): The blue value. range [0, 255]
+        """
+        if dconfig.CONNECT_TO_MOV_API:
+            requests.post(self.api_url + "/led/set", json={"r": r, "g": g, "b": b})
+        
+        if(dconfig.DEBUG_SS8):
+            print(f"Set LED color to {r}, {g}, {b}")
+
+        return
+    
+    def set_led_rainbow(self):
+        """
+        Set the LED to rainbow mode.
+        """
+        if dconfig.CONNECT_TO_MOV_API:
+            requests.post(self.api_url + "/led/rainbow", json={"rainbow": True})
+        
+        if(dconfig.DEBUG_SS8):
+            print("Set LED to rainbow mode")
+
+        return
+    
+    def flash_led(self, r, g, b, duration):
+        """
+        Flash the LED with a given color.
+        r (int): The red value. range [0, 255]
+        g (int): The green value. range [0, 255]
+        b (int): The blue value. range [0, 255]
+        duration (int): The duration of the flash in milliseconds.
+        """
+        if dconfig.CONNECT_TO_MOV_API:
+            requests.post(self.api_url + "/led/flash", json={"r": r, "g": g, "b": b, "duration": duration})
+        if dconfig.DEBUG_SS8:
+            print(f"Flashing LED with color {r}, {g}, {b} for {duration} ms")
+    
     # Camera control methods
 
     def get_top_cam_angle(self):

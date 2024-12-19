@@ -48,10 +48,13 @@ class Navigator:
         """
 
         print('Callibrating...')
+        self.ss8.display_text('Callibrating...')
+        self.ss8.set_led(0, 0, 1 * dconfig.BRIGHTNESS)
 
         iteration_dist = distance / iteration
 
         print(f'Iteration dist : {iteration_dist}')
+        self.ss8.display_text_2lines('Callibrating...', f'Iteration :{iteration_dist}')
 
         if not dconfig.CONNECT_TO_TOP_CAM or not dconfig.CONNECT_TO_MOV_API:
             self._set_circle_trajectory(50, self.horizontal_precision)
@@ -120,6 +123,7 @@ class Navigator:
         if self._assert_no_obstacle(absolute_position, 20):
             #print(f'Obstacle added at position {absolute_position}')
             self.obstacles = np.append(self.obstacles, ForcePoint(absolute_position, size, 3))
+            self.ss8.flash_led(1 * dconfig.LED_BRIGHTNESS, 0, 0, 500)
     
     def _assert_no_obstacle(self, pos, radius = 25):
         """
@@ -135,7 +139,13 @@ class Navigator:
         return True
     
     def get_obstacle_plot_data(self):
-        return self.ss8_pos, self.ss8_angle, self._get_obstacles_pos()
+        obstacle_contributions = np.array([obs.get_contribution(self.ss8_pos) for obs in self.obstacles])
+        return self.ss8_pos, self.ss8_angle, self._get_obstacles_pos(), obstacle_contributions
+
+    def get_trajectory_plot_data(self):
+        trajectory_positions = np.array([point[0].get_pos() for point in self.trajectory])
+        trajectory_contributions = np.array([point[0].get_contribution(self.ss8_pos) for point in self.trajectory])
+        return trajectory_positions, trajectory_contributions
 
     def _get_obstacles_pos(self):
         return np.array([obs.get_pos() for obs in self.obstacles])
@@ -180,6 +190,7 @@ class Navigator:
                 self._move_of(diff_angle, norm)
 
             next_dep, must_take_break = self._compute_next_deplacement()
+            print(f"Next dep : {next_dep}")
 
             time.sleep(0.5)
 
@@ -205,7 +216,7 @@ class Navigator:
         for a in range(0, 360, step_angle):
             x = radius * (math.cos(math.radians(a))-1)
             y = radius * math.sin(math.radians(a))
-            self.trajectory.append((ForcePoint(np.array([x, y]), 100, 0), math.radians(a)))
+            self.trajectory.append((ForcePoint(np.array([x, y]), 50, 0), math.radians(a)))
     
     def _set_arm_positions(self, step_nbr):
         self.arm_positions = generate_path(step_nbr)
@@ -224,10 +235,6 @@ class Navigator:
         Get the next deplacement to reach the next point in the trajectory while avoiding the obstacles.
         """
         new_reach_point = False
-        
-        # Get the angle to reach the next point
-        tracking_vec = self.ss8_pos - self.obj_pos
-        angle = math.atan2(tracking_vec[1], tracking_vec[0]) % (2*np.pi)
 
         # Get the next point in the trajectory (the one with the closest angle above the current angle)
         reach_point = None
@@ -236,7 +243,7 @@ class Navigator:
                 self.moving = False
                 return None, True
             
-            if(np.linalg.norm(self.trajectory[0][0].get_pos() - self.ss8_pos) < STEP_DISTANCE/2):
+            if(np.linalg.norm(self.trajectory[0][0].get_pos() - self.ss8_pos) < STEP_DISTANCE/2) or self._get_trajectory_angle() > self.trajectory[0][1]:
                 self.trajectory.pop(0)
                 new_reach_point = True
             else:
@@ -247,8 +254,8 @@ class Navigator:
 
         # Compute the next deplacement with the contribution of the obstacles and the reach point
         next_dep = reach_point.get_contribution(self.ss8_pos)
-        """ for obs in self.obstacles:
-            next_dep += obs.get_contribution(self.ss8_pos) """
+        for obs in self.obstacles:
+            next_dep += obs.get_contribution(self.ss8_pos)
 
         if np.linalg.norm(next_dep) > STEP_DISTANCE:
             next_dep = (next_dep / np.linalg.norm(next_dep)) * STEP_DISTANCE
@@ -296,8 +303,8 @@ class Navigator:
         self.ss8.top_cam_udp_receiver.save_frame()
         self.taken_picture += 1
 
-        picture_status_text = f'{self.taken_picture}/{self.horizontal_precision*self.vertical_precision} pictures taken'
-        self.ss8.display_text(picture_status_text)
+        tot_pics = self.horizontal_precision*self.vertical_precision
+        self.ss8.display_progress_bar(f"Picture :{self.taken_picture}/{tot_pics}", self.taken_picture/tot_pics)
 
         return
 
