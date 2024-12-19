@@ -74,6 +74,30 @@ class Navigator:
             print('Aligned with object and ready to measure')
 
         distances = np.array([])
+        angles = np.array([])
+        
+        for i in range(0, iteration):
+            # y_pos = start_point+i*iteration_dist
+
+            # if(y_pos==0):
+            #     if(dconfig.DEBUG_NAV):
+            #         print('Align during middle point')
+                
+            #     self.ss8.align_to('body')
+            #     continue
+
+            self.ss8.move_backward(iteration_dist)
+            y_pos = -(i+1)*iteration_dist
+
+            #The angle measure angle
+            time.sleep(dconfig.ALIGNMENT_WAIT/2)
+            theta = self.ss8.align_to(mode='cam')
+            
+            distances = np.append(distances, np.abs(y_pos))
+            angles = np.append(angles, theta)
+            if dconfig.DEBUG_NAV:
+                print(f'Measure : {[y_pos, theta]}')
+            
 
         # Could be replaced by the line below if movement is precise enough
         # self.ss8.move_backward(int(np.abs(iteration/2*iteration_dist)))
