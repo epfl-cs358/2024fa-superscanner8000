@@ -75,7 +75,6 @@ void Display::update()
         scrollIndex++;
         if (scrollIndex >= (text1.length()) && scrollIndex >= (text2.length()))
         {
-            Serial.println("loop back");
             scrollIndex = 0;
         }
         ms = millis();

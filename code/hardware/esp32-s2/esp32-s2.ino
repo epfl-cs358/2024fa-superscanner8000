@@ -8,12 +8,14 @@
 #include "cam_angles.h"
 #include <ArduinoJson.h>
 #include "display.h"
+#include "led.h"
 
 WebServer server(80);
-Arm arm(8, 9, 10, 11, 7);
+Arm arm(21, 20, 33, 34, 7); 
 Wheels wheels(2, 3, 1, 5, 4, 6);
-CamAngles camera(12, 13, 14, 15, 39, 40, 41, 42, 200);
-Display display(36, 35, 34, 33, 20, 21, 37, 38); // rs, en, d4, d5, d6, d7, contrast, backlight
+CamAngles camera(8, 9, 10, 11, 12, 13, 14, 15, 4096);
+Display display(36, 37, 38, 39, 40, 41, 35, 42); // rs, en, d4, d5, d6, d7, contrast, backlight
+Led led(21);
 
 StaticJsonDocument<250> jsonDocument; 
 char buffer[250];
@@ -40,6 +42,8 @@ void setup_routing() {
 
   server.on("/text", HTTP_POST, text);
   server.on("/scroll", HTTP_POST, scroll);
+  server.on("/led/set", HTTP_POST, led_set);
+  server.on("/led/rainbow", HTTP_POST, led_rainbow);
           
   server.begin();    
 }
@@ -160,14 +164,13 @@ void arm_goto() {
     return;
   }
 
-  StaticJsonDocument<200> doc;
-  doc["x"] = arm.x;
-  doc["y"] = arm.y;
-  doc["q1"] = arm.q1;
-  doc["q2"] = arm.q2;
-  String resp;
-  serializeJson(doc, resp);
-  server.send(200, "application/json", resp);
+  jsonDocument.clear();
+  jsonDocument["x"] = arm.x;
+  jsonDocument["y"] = arm.y;
+  jsonDocument["q1"] = arm.q1 / PI * 180;
+  jsonDocument["q2"] = arm.q2 / PI * 180;
+  serializeJson(jsonDocument, buffer);
+  server.send(200, "application/json", buffer);
 }
 
 void arm_stop() {
@@ -189,15 +192,21 @@ void cam_status() {
 
 void cam_goto() {
   handlePost();
-  
+
   float angle1 = jsonDocument["alpha"];
   float angle2 = jsonDocument["beta"];
+
   if (camera.moveToAngles(angle1, angle2) == -1){
     server.send(422, "application/json", "{}");
     return;
   }
 
-  server.send(200, "application/json", "{}");
+  jsonDocument.clear();
+  jsonDocument["angle1"] = angle1;
+  jsonDocument["angle2"] = angle2;
+  serializeJson(jsonDocument, buffer);
+
+  server.send(200, "application/json", buffer);
 }
 
 void cam_stop() {
@@ -205,7 +214,12 @@ void cam_stop() {
   Serial.println("cam stop");
   camera.stop();
 
-  server.send(200, "application/json", "{}");
+  jsonDocument.clear();
+  jsonDocument["alpha"] = camera.stepsToAngle(1);
+  jsonDocument["beta"] = camera.stepsToAngle(2);
+  serializeJson(jsonDocument, buffer);
+
+  server.send(200, "application/json", buffer);
 }
 
 //---- Display ----
@@ -233,6 +247,32 @@ void scroll() {
   server.send(200, "application/json", "{}");
 }
 
+//---- Led ----
+void led_set() {
+  handlePost();
+  
+  int r = jsonDocument["r"];
+  int g = jsonDocument["g"];
+  int b = jsonDocument["b"];
+  
+  led.setAll(r, g, b);
+  led.show();
+
+  Serial.println("leds set");
+
+  server.send(200, "application/json", "{}");
+}
+
+void led_rainbow() {
+  handlePost();
+  
+  led.rainbowMode = (bool) jsonDocument["rainbow"];
+  Serial.println(led.rainbowMode);
+  Serial.println("rainbow leds");
+
+  server.send(200, "application/json", "{}");
+}
+
 
 void setup() {
   Serial.begin(115200); 
@@ -241,8 +281,11 @@ void setup() {
   wheels.setup();
   camera.setup();
   display.setup();
+  led.setup();
 
-  display.scroll("Connecting to Wi-Fi", "Please wait");
+  led.setAll(255, 0, 0);
+  led.show();
+  display.scroll("Connecting to Wi-Fi", "Please wait"); 
 
   Serial.print("Connecting to Wi-Fi with password ");
   Serial.println(PWD);
@@ -255,10 +298,12 @@ void setup() {
   }
   
   display.scroll("Connected to Wi-Fi with hostname superscanner8000", "");
+  led.setAll(255, 10, 0);
+  led.show();
   Serial.print("Connected! IP Address: ");
   Serial.println(WiFi.localIP()); 
   setup_routing();
-}    
+}
        
 void loop() {    
   server.handleClient();     
@@ -266,4 +311,5 @@ void loop() {
   wheels.update();
   camera.update();
   display.update();
+  led.update();
 }

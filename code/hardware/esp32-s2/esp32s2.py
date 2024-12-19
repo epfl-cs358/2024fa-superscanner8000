@@ -6,12 +6,14 @@ class Cam:
 
     def goto(self, x_coord, y_coord):
         r = requests.post(self.__url + "/cam/goto", json={"alpha": x_coord, "beta": y_coord})
+        print(r.status_code,  r.content)
         if r.status_code != 200:
             return -1
         return 0
 
     def stop(self):
-        r = requests.post(self.__url + "/cam/stop", json={"stop": True})
+        r = requests.post(self.__url + "/cam/stp", json={"stop": True})
+        print(r.status_code,  r.content)
         if r.status_code != 200:
             return -1
         return 0
@@ -36,8 +38,8 @@ class Arm:
         self.__url = url
 
     def goto(self, x_coord, y_coord):
-        r = requests.post(self.__url + "/arm/goto", json={"x": x_coord, "y": y_coord, "angles": True})
-        print(r.status_code)
+        r = requests.post(self.__url + "/arm/goto", json={"x": x_coord, "y": y_coord, "angles": False})
+        print(r.status_code,  r.content)
         if r.status_code != 200:
             return -1
         return 0
@@ -118,10 +120,12 @@ class ESP32S2:
 if __name__ == "__main__":
     from tkinter import Tk, Button, Entry
 
+    print(requests.get("http://superscanner8000:80/cam/status").json())
+
     root = Tk()
     car = ESP32S2()
     root.title("Car Control")
-    root.geometry("300x300")
+    root.geometry("400x300")
 
     time_entry = Entry(root)
     time_entry.insert(0, "-1")
@@ -147,7 +151,7 @@ if __name__ == "__main__":
     txt = Entry(root)
     txt.insert(0, "0")
     txt.grid(row=6, column=1)
-    Button(root, text="send", command=lambda: requests.post("http://superscanner8000:80/display", json={"text": txt.get()})).grid(row=6, column=0)
+    Button(root, text="send", command=lambda: requests.post("http://superscanner8000:80/text", json={"text": txt.get()})).grid(row=6, column=0)
  
     cposx = Entry(root)
     cposx.insert(0, "0")
@@ -157,5 +161,19 @@ if __name__ == "__main__":
     cposy.grid(row=8, column=2)
     Button(root, text="Goto", command=lambda: car.cam.goto(int(cposx.get()), int(cposy.get()))).grid(row=8, column=0)
     Button(root, text="Stop Cam", command=car.cam.stop).grid(row=7, column=0)
+
+
+    # r, g, b fields and send button
+    r = Entry(root)
+    r.insert(0, "0")
+    r.grid(row=9, column=0)
+    g = Entry(root)
+    g.insert(0, "0")
+    g.grid(row=9, column=1)
+    b = Entry(root)
+    b.insert(0, "0")
+    b.grid(row=9, column=2)
+    Button(root, text="Set LED", command=lambda: requests.post("http://superscanner8000:80/led/set", json={"r": int(r.get()), "g": int(g.get()), "b": int(b.get())})).grid(row=10, column=0)
+    Button(root, text="rainbow", command=lambda: requests.post("http://superscanner8000:80/led/rainbow", json={"rainbow": True})).grid(row=10, column=1)
 
     root.mainloop()

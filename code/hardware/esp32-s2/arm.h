@@ -14,7 +14,7 @@ private:
     const long gearFactor;
     const float pulleyFactor;
     const long fullRevolution;
-    void posToAngles();
+    int posToAngles();
     void angleToPos();
 public:
     float q1;

@@ -6,16 +6,15 @@
 
 class CamAngles {
 private:
-    AccelStepper stepper1; // First stepper motor
-    AccelStepper stepper2; // Second stepper motor
-    MultiStepper multiStepper; // Synchronize both steppers
-
     const int stepsPerRevolution; // Steps per revolution for the steppers
 
     // Convert angle to steps
     long angleToSteps(float angle);
 
 public:
+    AccelStepper stepper1; // First stepper motor
+    AccelStepper stepper2; // Second stepper motor
+
     // Constructor
     CamAngles(int s1Pin1, int s1Pin2, int s1Pin3, int s1Pin4, 
               int s2Pin1, int s2Pin2, int s2Pin3, int s2Pin4, 
