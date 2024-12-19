@@ -9,6 +9,7 @@ import asyncio, threading
 import config.dev_config as dconfig
 from widgets.image import ImageWidget
 import cv2
+import numpy as np
 
 CALIBRATION_ITERATION = 4
 
@@ -49,17 +50,20 @@ class ScanningPage(tk.Frame):
         movement_thread = threading.Thread(target=self.nav.start_moving, args=(self._on_finish,))
         movement_thread.start()
 
-        return 
+        #return 
 
         def update_plot():
             self.fig.clear()
             plot = self.fig.add_subplot(111)
-            ss8_pos, obstacles = self.controller.nav.get_obstacle_plot_data()
+            ss8_pos, ss8_rot, obstacles = self.controller.nav.get_obstacle_plot_data()
+            
+            plot.quiver(ss8_pos[0], ss8_pos[1], 10 * np.cos(ss8_rot), 10 * np.sin(ss8_rot), angles='xy', scale_units='xy', scale=1)
+
             plot.scatter(ss8_pos[0], ss8_pos[1], c='r', marker='o', label='SS8')
             if obstacles.shape[0] > 0:
                 plot.scatter(obstacles[:][:,0], obstacles[:][:,1], c='b', marker='x', label='Obstacle')
 
-            plot.set_xlim(-110, 100)
+            plot.set_xlim(-110, 10)
             plot.set_ylim(-60, 60)
 
             self.occupancy_plot.draw_idle()
