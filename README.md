@@ -43,6 +43,9 @@ Below is a brief explanation of this repository's structure to provide context a
 
 ## Make your own SuperScanner8000
 
+* [![Python][Python.org]][Python-url]
+* [![Cpp][Cpp.org]][Cpp-url]
+
 This section is dedicated to explaining how to build this project yourself! (All the printing/cutting part are available)
 
 ### Prerequisites
