@@ -2,7 +2,9 @@ import torch
 import numpy as np
 import cv2
 from sam2 import build_sam
+import os, tempfile, shutil
 import base64
+from config.dev_config import DEBUG_CAM
 
 # use bfloat16 for the entire notebook
 torch.autocast(device_type="cuda", dtype=torch.bfloat16).__enter__()
@@ -17,6 +19,7 @@ class ImageSegmenter:
         self.is_init = False
         self.expand_pixels = expand_pixels  
         self.all_mask = None
+        self.frame_counter = 0
 
     def initialize(self, frame, points=None, bbox=None):
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -67,6 +70,31 @@ class ImageSegmenter:
         # Only keep pixels from frame that are selected in all_mask
         mask = cv2.cvtColor(self.propagate(img), cv2.COLOR_RGB2GRAY)
         return cv2.bitwise_and(img, img, mask=mask)
+    
+    def save_mask(self):
+        if self.all_mask is not None:
+            # Get the system's temporary directory
+            temp_dir = os.path.join(tempfile.gettempdir(), "superscanner8000/masks")
+            # Create the temporary directory if it doesn't exist or delete if it does
+            
+            if not os.path.exists(temp_dir):
+                os.makedirs(temp_dir)
+            else:
+                shutil.rmtree(temp_dir)
+                os.makedirs(temp_dir)
+
+            # Construct the full path for the file with a numbered filename
+            filename = f"{self.frame_counter}.mask.png"
+            temp_file_path = os.path.join(temp_dir, filename)
+            # Save theself.current_frame to the temporary folder
+            cv2.imwrite(temp_file_path, self.current_frame)
+            if DEBUG_CAM:
+                print(f"Saved self.all_mask {self.frame_counter} to {temp_file_path}")
+            # Increment theself.current_frame counter
+            self.frame_counter += 1
+        else:
+            if DEBUG_CAM:
+                print("No frame available to save.")
         
     def get_object_coords(self, img, update_mask=False):
         """
