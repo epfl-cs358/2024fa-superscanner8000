@@ -118,4 +118,6 @@ class ScanningPage(tk.Frame):
         self.controller.show_page('SetupPage')
 
     def _on_finish(self):
+        self.controller.ss8.display_text("Scan finished")
+        self.controller.ss8.set_led_rainbow()
         self.controller.show_page('EndPage')

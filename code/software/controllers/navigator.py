@@ -48,10 +48,13 @@ class Navigator:
         """
 
         print('Callibrating...')
+        self.ss8.display_text('Callibrating...')
+        self.ss8.set_led(0, 0, 1 * dconfig.BRIGHTNESS)
 
         iteration_dist = distance / iteration
 
         print(f'Iteration dist : {iteration_dist}')
+        self.ss8.display_text_2lines('Callibrating...', f'Iteration :{iteration_dist}')
 
         if not dconfig.CONNECT_TO_TOP_CAM or not dconfig.CONNECT_TO_MOV_API:
             self._set_circle_trajectory(50, self.horizontal_precision)
@@ -120,6 +123,7 @@ class Navigator:
         if self._assert_no_obstacle(absolute_position, 20):
             #print(f'Obstacle added at position {absolute_position}')
             self.obstacles = np.append(self.obstacles, ForcePoint(absolute_position, size, 3))
+            self.ss8.flash_led(1 * dconfig.LED_BRIGHTNESS, 0, 0)
     
     def _assert_no_obstacle(self, pos, radius = 25):
         """
@@ -296,8 +300,8 @@ class Navigator:
         self.ss8.top_cam_udp_receiver.save_frame()
         self.taken_picture += 1
 
-        picture_status_text = f'{self.taken_picture}/{self.horizontal_precision*self.vertical_precision} pictures taken'
-        self.ss8.display_text(picture_status_text)
+        tot_pics = self.horizontal_precision*self.vertical_precision
+        self.ss8.display_progress_bar(f"Picture :{self.taken_picture}/{tot_pics}", self.taken_picture/tot_pics)
 
         return
 
