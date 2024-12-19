@@ -158,8 +158,8 @@ void Wheels::right(int ms) {
     t = millis();
     targetTime = ms;
     direction = RIGHT;
-    digitalWrite(motor2Pin1, HIGH);
-    digitalWrite(motor2Pin2, LOW);
+    digitalWrite(motor1Pin1, LOW);
+    digitalWrite(motor1Pin2, HIGH);
 }
 
 /** turn both wheels left (turn on itself) for ms milliseconds. Moves indefinitely if ms is smaller than 0
