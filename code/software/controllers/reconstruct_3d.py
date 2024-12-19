@@ -3,64 +3,76 @@ import os
 import cv2
 import pathlib
 import pycolmap
-from open_mvs import open_mvs
+from controllers.open_mvs import open_mvs
 
+class Reconstruct:
 
-# Open images in folder as array with cv2
-def open_images_in_folder(folder_path):
-    images = []
-    for filename in os.listdir(folder_path):
-        img = cv2.imread(os.path.join(folder_path, filename))
-        if img is not None:
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            images.append(img)
+    def __init__(self, folder_path: pathlib.Path):
+        self.folder_path = folder_path
+        self.status = "Not started"
 
-    return images
+    # Open images in folder as array with cv2
+    def open_images_in_folder(self):
+        images = []
+        for filename in os.listdir(self.folder_path):
+            img = cv2.imread(os.path.join(self.folder_path, filename))
+            if img is not None:
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                images.append(img)
 
-def save_images_to_folder(images, folder_path: pathlib.Path):
-    # save images to disk
-    for i, img in enumerate(images):
-        #print(f"Saving image {i}")
-        path = folder_path / f"image_{i}.png"
-        cv2.imwrite(path, cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
+        return images
 
-def pre_process_images(project_path: pathlib.Path, scale_factor=1):
-    images_path = project_path / "images"
-    database_path = project_path / "database.db"
+    def save_images_to_folder(self, images):
+        # save images to disk
+        for i, img in enumerate(images):
+            #print(f"Saving image {i}")
+            path = self.folder_path / f"image_{i}.png"
+            cv2.imwrite(path, cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
 
-    if scale_factor != 1:
+    def pre_process_images(self, scale_factor=1):
+        images_path = self.folder_path / "images"
+        database_path = self.folder_path / "database.db"
+        
+        if scale_factor != 1:
+            self.status = "Resizing images"
+            # Reduce image size by half
+            images = self.open_images_in_folder()
 
-        # Reduce image size by half
-        images = open_images_in_folder(images_path)
+            images = [cv2.resize(img, (0,0), fx=scale_factor, fy=scale_factor) for img in images]
+            # Delete images folder
+            os.system(f"rm -r {images_path}")
+            os.mkdir(images_path)
+            self.save_images_to_folder(images)
 
-        images = [cv2.resize(img, (0,0), fx=scale_factor, fy=scale_factor) for img in images]
-        # Delete images folder
-        os.system(f"rm -r {images_path}")
-        os.mkdir(images_path)
-        save_images_to_folder(images, images_path)
+        self.status = "Extracting features"
+        pycolmap.extract_features(database_path=database_path, image_path=images_path, camera_model="PINHOLE")
+        self.status = "Matching features"
+        pycolmap.match_exhaustive(database_path=database_path)
 
+        if not os.path.exists(self.folder_path / "sparse"):
+            os.mkdir(self.folder_path / "sparse")
+        self.status = "Mapping"
+        subprocess.call(["colmap", "mapper", "--database_path", database_path, "--image_path", images_path, "--output_path", self.folder_path / "sparse"])
+        self.status = "Converting openMVS"
+        subprocess.call(["colmap", "model_converter", "--input_path", self.folder_path / "sparse/0", "--output_path", self.folder_path / "sparse", "--output_type", "TXT"])
 
-    pycolmap.extract_features(database_path=database_path, image_path=images_path, camera_model="PINHOLE")
-
-    pycolmap.match_exhaustive(database_path=database_path)
-
-    os.mkdir(project_path / "sparse")
-    subprocess.call(["colmap", "mapper", "--database_path", database_path, "--image_path", images_path, "--output_path", project_path / "sparse"])
-
-    subprocess.call(["colmap", "model_converter", "--input_path", project_path / "sparse/0", "--output_path", project_path / "sparse", "--output_type", "TXT"])
-
-def reconstruction_open_mvs(mvs_path: pathlib.Path, folder_path: pathlib.Path, low_poly=False): 
-    open_mvs_obj = open_mvs(mvs_path, folder_path)
-    open_mvs_obj.run_all(low_poly)
-
-def reconstruction_3dgs(project_path: pathlib.Path):
-    images_path = project_path / "images" 
-    #Todo fix paths
-    subprocess.run(["ns-process-data", "images", "--data", images_path, "--output-dir", project_path])
-    subprocess.run(["ns-train", "splatfacto", "--data", project_path])
+    def reconstruction_open_mvs(self, mvs_path: pathlib.Path, low_poly=False): 
+        open_mvs_obj = open_mvs(mvs_path, self.folder_path)
+        self.status="Interface COLMAP"
+        open_mvs_obj.interface_colmap()
+        self.status="Densifying Point Cloud"
+        open_mvs_obj.densify_point_cloud()
+        self.status="Reconstructing Mesh"
+        open_mvs_obj.reconstruct_mesh()
+        if low_poly:
+            self.status="Refining Mesh"
+            open_mvs_obj.refine_mesh()
+        self.status="Texturing Mesh"
+        open_mvs_obj.texture_mesh()
+        self.status="Done"
 
 
 if __name__ == "__main__":
-
-    pre_process_images(pathlib.Path("temp/broom"), scale_factor=0.5)
-    reconstruction_open_mvs(pathlib.Path("../packages/openMVS/make/bin"), pathlib.Path("temp/broom"), low_poly=True)
+    reconstructor = Reconstruct(pathlib.Path("temp/broom"))
+    reconstructor.pre_process_images(scale_factor=0.5)
+    reconstructor.reconstruction_open_mvs(pathlib.Path("../packages/openMVS/make/bin"), low_poly=True)

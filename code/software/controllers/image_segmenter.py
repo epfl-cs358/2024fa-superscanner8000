@@ -15,7 +15,8 @@ class ImageSegmenter:
     def __init__(self, model_cfg, checkpoint, expand_pixels=0):
         self.predictor = build_sam.build_sam2_camera_predictor(model_cfg, checkpoint)
         self.is_init = False
-        self.expand_pixels = expand_pixels
+        self.expand_pixels = expand_pixels  
+        self.all_mask = None
 
     def initialize(self, frame, points=None, bbox=None):
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -73,6 +74,9 @@ class ImageSegmenter:
         """
         if update_mask:
             self.propagate(img)
+        
+        if self.all_mask is None: #TODO: Check with Mateo
+            return None
         
         contours, _ = cv2.findContours(self.all_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         if len(contours) > 0:

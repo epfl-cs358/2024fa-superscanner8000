@@ -12,6 +12,7 @@ from packages.depth_anything_v2.depth_anything_v2.dpt import DepthAnythingV2
 
 import time
 
+
 class Object_Detector:
     def __init__(self, navigator: Navigator, ss8: SS8, visualize=False):
         self.segmenter = ImageSegmenter(model_cfg="sam2_hiera_s.yaml", checkpoint="config/sam2_checkpoints/sam2_hiera_small.pt", expand_pixels=10)
@@ -19,6 +20,8 @@ class Object_Detector:
         self.ss8 = ss8
         self.hfov = np.deg2rad(95) # Horizontal field of view set according to OV5640 datasheet
         self.occupancy_map = None
+        self.frame = None
+        self.depth = None
         if visualize:
             # Initialize rerun
             rr.init("Occupancy Map", spawn=True)
@@ -51,9 +54,13 @@ class Object_Detector:
         
         cx = frame.shape[1] / 2
         cy = frame.shape[0] / 2 
+        focal_length = 0.25
+        sensor_pixel_size = 1.4e-4
+        fx = focal_length / sensor_pixel_size #frame.shape[0] / (2 * np.tan(hfov / 2.)) #
+        fy = focal_length / sensor_pixel_size #frame.shape[1] / (2 * np.tan(70 / 2.)) #
         return np.array([
-            [1 / np.tan(hfov / 2.), 0., cx],
-            [0., 1 / np.tan(hfov / 2.), cy],
+            [fx, 0., cx],
+            [0., fy, cy],
             [0., 0., 1]])
     
     def _get_rotation_matrix(self, angle: float):
@@ -61,11 +68,14 @@ class Object_Detector:
         angle: Angle in radians
         '''
         return np.array([
-            [np.cos(angle), -np.sin(angle), 0],
-            [np.sin(angle), np.cos(angle), 0],
-            [0, 0, 1]
+            [np.cos(angle), -np.sin(angle)],
+            [np.sin(angle), np.cos(angle)]
         ])
     
+    def _pixel_max_resize(self, img, h, w):
+        source_h, source_w = img.shape[:2]
+        return img.reshape(h,source_h // h,-1,source_w // w).swapaxes(1,2).reshape(h,w,-1).max(axis=2)
+
     def _pixelate(self, image: np.ndarray, pixel_size: int = 16):
         '''
         image: Image to pixelate
@@ -74,32 +84,36 @@ class Object_Detector:
         height, width = image.shape[:2]
 
         w, h = (width//pixel_size, height//pixel_size)
-        pixelated_image_small = cv2.resize(image, (w, h), interpolation=cv2.INTER_LINEAR)
+        pixelated_image_small = self._pixel_max_resize(image, h, w)
+        #pixelated_image_small = cv2.resize(image, (w, h), interpolation=cv2.INTER_LINEAR)
         pixelated_image = cv2.resize(pixelated_image_small, (width, height), interpolation=cv2.INTER_NEAREST)
 
         return pixelated_image
 
         # TODO: Nearest ground point is at 24 cm, so we can use this as a base value
+    
     def _get_depth_map(self, frame: np.ndarray):
         # Convert to rgb
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        depth = 1 - (self.depth_anything.infer_image(frame)) / 10 # Mapped from 0 to 10
+        depth = 1 / (self.depth_anything.infer_image(frame))# / 10 # Mapped from 0 to 10
         min_depth = np.min(depth)
-        ratio = 24 / min_depth
+        ratio = 25 / min_depth
         return depth * ratio # Depth map where values are in cm
     
-    def _update_occupancy_map(self, depth: np.ndarray, threshold_distance: float = 50): # TODO: Adjust for base value
+    def _update_occupancy_map(self, depth: np.ndarray, threshold_distance: float = 100): # TODO: Adjust for base value
         """
         Get the occupancy map from the depth map
         depth: Depth map
         threshold_distance: Distance threshold to consider an object as an obstacle in cm
         """
-        print(np.max(depth), np.min(depth))
-        self.occupancy_map = (depth > threshold_distance).astype(np.uint8) # 1 = occupied, 0 = free
+        self.occupancy_map = (depth < threshold_distance).astype(np.uint8)# 1 = occupied, 0 = free
 
     def get_occupancy_map(self):
-        return self.occupancy_map
+        return self.occupancy_map * 255
+    
+    def get_depth_map(self):
+        return self.depth
     
     def get_frame(self):
         return self.frame
@@ -112,10 +126,41 @@ class Object_Detector:
         depth: pixel depth value
         hfov: horizontal field of view
         '''
+        #camera_position = (np.linalg.inv(self._get_intrinsic_matrix(hfov, frame)) @ pixel_index) * depth
+        cx = frame.shape[1] / 2
+        cy = frame.shape[0] / 2 
+        sensor_pixel_size = 1.4e-4
+        focal_length = 0.25
 
-        world_position = np.linalg.inv(R) @ (np.linalg.inv(self._get_intrinsic_matrix(hfov, frame)) @ pixel_index - T)
-        return world_position * depth
+        # TODO: Check if this is correct
+        Xc = depth
+        Yc = (pixel_index[0] - cy) * depth / (focal_length/sensor_pixel_size)
+        camera_position = np.array([Xc, Yc[0]])
+        
+
+        world_position = R @ camera_position + T #np.linalg.inv(R) @
+        #print(f"Camera position: {camera_position} World position: {world_position} T position: {T.T}")
+
+        # get 2d camera position norm
+        camera_position_norm = np.linalg.norm(camera_position)
+
+        return world_position
     
+    def _segment_ground(self, frame):
+        '''
+        Returns a mask with the ground segmented where 0 is the ground and 1 is the rest
+        '''
+
+        if not self.segmenter.is_init:
+            points = np.array([[0, frame.shape[0] - 1]], dtype=np.float32)#np.linspace([0, frame.shape[0] - 1], [frame.shape[1] - 1, frame.shape[0] - 1], 10, dtype=np.uint8) #
+            self.segmenter.initialize(frame, points=points)
+            ground_mask = self.segmenter.propagate(frame)
+
+        else:   
+            ground_mask = self.segmenter.propagate(frame)
+
+        return (cv2.cvtColor(ground_mask, cv2.COLOR_RGB2GRAY) == 0).astype(np.uint8)
+
     def _compute_perspective_views(self, depth, frame, T, R, pixel_size = 16, hfov = np.pi/6):
         height, width = depth.shape
 
@@ -140,39 +185,69 @@ class Object_Detector:
                 pixel_index = np.array([i, j, 1]).reshape(3, 1)
                 pixel_coords = self._project_to_world(pixel_index, T, R, value, hfov, frame)
 
-                pos_3d.append(pixel_coords)
-                colors.append(pixelated_rgb[j, i])
+                # Check if values are not nan
+                if not np.isnan(pixel_coords).any():
+                    pos_3d.append(pixel_coords)
+                    colors.append(pixelated_rgb[j, i])
         
         return top_view, pixelated_depth, np.array(pos_3d), np.array(colors)
 
-    async def start_detection(self):
-        self.must_detect = True
+    def _request_frame(self):
         
-        """ while True:
-            cv2.waitKey(1)
-            print('Updating preview')
-            prev_img = self.ss8.capture_image('front')
-            if(prev_img is not None):
-                cv2.imshow('frontcam', prev_img)
-            await asyncio.sleep(1/24) """
+        frame = self.ss8.capture_image('front')
+        if frame is not None:
+            # rotate 90 degrees
+            frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        return frame
+
+    def start_detection(self):
+        frame = self._request_frame()
+        if frame is not None:
+            ground_mask = self._segment_ground(frame)
+            self.depth = self._get_depth_map(frame)
+            self._update_occupancy_map(self.depth, 70)
+
+            # substract occupancy map by ground mask
+            self.occupancy_map = cv2.multiply(self.occupancy_map, ground_mask)
+            self.depth = cv2.multiply(self.depth, self.occupancy_map.astype(np.float32))
+
+            # Convert ss8 position to 3d position
+            T = self.navigator.ss8_pos
+            R = self._get_rotation_matrix(self.navigator.ss8_angle) 
+
+            top_view, pixelated_depth, pos_3d, colors = self._compute_perspective_views(
+                                    self.depth, frame, T, R, pixel_size=20, hfov=self.hfov)
+            self.depth = pixelated_depth
             
-        await self.detect_occupancy()
+            #print(pos_3d.shape)
+            
+
+            for pos in pos_3d:
+                self.navigator.add_obstacle(pos)
+                if np.linalg.norm(pos - T) < 70 and np.linalg.norm(pos - T) > 15:
+                    pass
+                    #print(T, pos, np.linalg.norm(pos - T))
+                    
 
     def detect_occupancy(self):
-        frame = self.ss8.capture_image('front')
-        self.frame = frame
+        frame = self._request_frame()
+
 
         if frame is not None:
             depth = self._get_depth_map(frame)
             self._update_occupancy_map(depth)
+            
+            #self.occupancy_map = self._segment_ground(frame, self.occupancy_map)
 
             depth = cv2.multiply(depth, self.occupancy_map.astype(np.float32))
-
+            self.depth = depth
+            # Convert ss8 position to 3d position
+            T = np.array([self.navigator.ss8_pos[0], self.navigator.ss8_pos[1], 0]).reshape(3, 1)
             top_view, pixelated_depth, pos_3d, colors = self._compute_perspective_views(
-                                    depth, frame, self.navigator.ss8_pos, 
+                                    depth, frame, T, 
                                     self._get_rotation_matrix(self.navigator.ss8_angle) , pixel_size=16, hfov=self.hfov)
             # TODO: Display top view
-
 
             for pos in pos_3d:
                 self.navigator.add_obstacle(pos)
@@ -182,6 +257,8 @@ class Object_Detector:
         # if self.must_detect:
         #     await self.detect_occupancy()
         
+
+
 
 if __name__ == "__main__":
     # Load webcam
@@ -193,6 +270,7 @@ if __name__ == "__main__":
     i = 0
     # Play webcam
     while True:
+        import rerun as rr
         ret, frame = cap.read()
         frame = cv2.resize(frame, (256, 128))
 
@@ -202,7 +280,7 @@ if __name__ == "__main__":
 
         # Remove ground from occupancy map
         if not object_detector.segmenter.is_init:
-            points = np.array([[0, frame.shape[0] - 1]], dtype=np.float32)
+            points = np.array([[0, frame.shape[0] - 1], [frame.shape[1] - 1, frame.shape[0] - 1]], dtype=np.float32)
             object_detector.segmenter.initialize(frame, points=points)
         else:   
             ground_mask = object_detector.segmenter.propagate(frame)

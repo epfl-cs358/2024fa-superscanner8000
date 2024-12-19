@@ -4,7 +4,7 @@ import numpy as np
 import threading
 from urllib.parse import urlparse
 import tempfile
-import os
+import os, shutil
 
 from config.dev_config import DEBUG_CAM
 
@@ -137,7 +137,15 @@ class UDPReceiver:
 
         if self.current_frame is not None:
             # Get the system's temporary directory
-            temp_dir = tempfile.gettempdir()
+            temp_dir = os.path.join(tempfile.gettempdir(), "superscanner8000/images")
+            # Create the temporary directory if it doesn't exist or delete if it does
+            
+            if not os.path.exists(temp_dir):
+                os.makedirs(temp_dir)
+            else:
+                shutil.rmtree(temp_dir)
+                os.makedirs(temp_dir)
+
             # Construct the full path for the file with a numbered filename
             filename = f"frame_{self.frame_counter}.jpg"
             temp_file_path = os.path.join(temp_dir, filename)

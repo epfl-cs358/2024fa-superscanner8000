@@ -48,3 +48,5 @@ urllib3==2.2.3
 wheel==0.44.0
 trimesh==4.5.3
 rerun-sdk==0.20.3
+pycolmap==3.11.1
+scipy==1.14.1

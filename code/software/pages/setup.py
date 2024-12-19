@@ -2,11 +2,10 @@ import tkinter as tk
 from tkinter import ttk
 import cv2
 import numpy as np
-import asyncio
 
 from widgets.image import ImageWidget
 
-from config.dev_config import DEFAULT_VERTICAL_PRECISION, DEFAULT_HORIZONTAL_PRECISION, CONNECT_TO_TOP_CAM
+import config.dev_config as dconfig
 
 class SetupPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -38,36 +37,63 @@ class SetupPage(tk.Frame):
         buttons_container.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
         buttons_container.pack(pady=5)
 
-        # Camera buttons
-        self.cam_up_button = ttk.Button(buttons_container, text="Camera Up")
-        self.cam_up_button.bind("<ButtonPress-1>", lambda event: asyncio.run(self.controller.ss8.up_camera()))
-        self.cam_up_button.bind("<ButtonRelease-1>", lambda event: asyncio.run(self.controller.ss8.stop_cam()))
-        self.cam_up_button.grid(row=1, column=0, padx=5, pady=5)
+        if dconfig.DEBUG_SS8:
+            # Camera buttons
+            self.cam_up_button = ttk.Button(buttons_container, text="Camera Up")
+            self.cam_up_button.bind("<ButtonPress-1>", lambda _: self.controller.ss8.goto_cam(0, 90, relative=True))
+            self.cam_up_button.bind("<ButtonRelease-1>", lambda _: self.controller.ss8.stop_cam())
+            self.cam_up_button.grid(row=1, column=0, padx=5, pady=5)
 
-        self.cam_down_button = ttk.Button(buttons_container, text="Camera Down")
-        self.cam_down_button.bind("<ButtonPress-1>", lambda event: asyncio.run(self.controller.ss8.down_camera()))
-        self.cam_down_button.bind("<ButtonRelease-1>", lambda event: asyncio.run(self.controller.ss8.stop_cam()))
-        self.cam_down_button.grid(row=1, column=2, padx=5, pady=5)
+            self.cam_down_button = ttk.Button(buttons_container, text="Camera Down")
+            self.cam_down_button.bind("<ButtonPress-1>", lambda _: self.controller.ss8.goto_cam(0, -90, relative=True))
+            self.cam_down_button.bind("<ButtonRelease-1>", lambda _: self.controller.ss8.stop_cam())
+            self.cam_down_button.grid(row=1, column=2, padx=5, pady=5)
+
+            self.cam_left_button = ttk.Button(buttons_container, text="Camera Left")
+            self.cam_left_button.bind("<ButtonPress-1>", lambda _: self.controller.ss8.goto_cam(-90, 0, relative=True))
+            self.cam_left_button.bind("<ButtonRelease-1>", lambda _: self.controller.ss8.stop_cam())
+            self.cam_left_button.grid(row=2, column=0, padx=5, pady=5)
+
+            self.cam_down_button = ttk.Button(buttons_container, text="Camera Right")
+            self.cam_down_button.bind("<ButtonPress-1>", lambda _: self.controller.ss8.goto_cam(90, 0, relative=True))
+            self.cam_down_button.bind("<ButtonRelease-1>", lambda _: self.controller.ss8.stop_cam())
+            self.cam_down_button.grid(row=2, column=2, padx=5, pady=5)
+
+            self.reset_button = ttk.Button(buttons_container, text="Reset")
+            self.reset_button.bind("<ButtonPress-1>", lambda _: self.controller.ss8.goto_cam(0, 0))
+            self.reset_button.grid(row=2, column=1, padx=5, pady=5)
+
+            self.cam_align_button = ttk.Button(buttons_container, text="Track alignment")
+            self.cam_align_button.bind("<ButtonPress-1>", lambda _: self.controller.ss8.align_to(mode='alignment'))
+            self.cam_align_button.grid(row=3, column=0, padx=5, pady=5)
+
+            self.cam_angle_button = ttk.Button(buttons_container, text="Track angle")
+            self.cam_angle_button.bind("<ButtonPress-1>", lambda _: self.controller.ss8.align_to(mode='angle'))
+            self.cam_angle_button.grid(row=3, column=1, padx=5, pady=5)
+
+            self.cam_angle_button = ttk.Button(buttons_container, text="Track body angle")
+            self.cam_angle_button.bind("<ButtonPress-1>", lambda _: self.controller.ss8.align_to(mode='body'))
+            self.cam_angle_button.grid(row=3, column=2, padx=5, pady=5)
 
         # Directional buttons
         self.forward_button = ttk.Button(buttons_container, text="Forward")
-        self.forward_button.bind("<ButtonPress-1>", lambda event: asyncio.run(self.controller.ss8.move_forward(wait_for_completion=False)))
-        self.forward_button.bind("<ButtonRelease-1>", lambda event: asyncio.run(self.controller.ss8.stop_mov()))
+        self.forward_button.bind("<ButtonPress-1>", lambda _: self.controller.ss8.move_forward(wait_for_completion=False))
+        self.forward_button.bind("<ButtonRelease-1>", lambda _: self.controller.ss8.stop_mov())
         self.forward_button.grid(row=0, column=1, padx=5, pady=5)
 
         self.left_button = ttk.Button(buttons_container, text="Rotate Left")
-        self.left_button.bind("<ButtonPress-1>", lambda event: asyncio.run(self.controller.ss8.rotate_left(wait_for_completion=False)))
-        self.left_button.bind("<ButtonRelease-1>", lambda event: asyncio.run(self.controller.ss8.stop_mov()))
+        self.left_button.bind("<ButtonPress-1>", lambda _: self.controller.ss8.rotate_left(wait_for_completion=False))
+        self.left_button.bind("<ButtonRelease-1>", lambda _: self.controller.ss8.stop_mov())
         self.left_button.grid(row=0, column=0, padx=5, pady=5)
 
         self.right_button = ttk.Button(buttons_container, text="Rotate Right")
-        self.right_button.bind("<ButtonPress-1>", lambda event: asyncio.run(self.controller.ss8.rotate_right(wait_for_completion=False)))
-        self.right_button.bind("<ButtonRelease-1>", lambda event: asyncio.run(self.controller.ss8.stop_mov()))
+        self.right_button.bind("<ButtonPress-1>", lambda _: self.controller.ss8.rotate_right(wait_for_completion=False))
+        self.right_button.bind("<ButtonRelease-1>", lambda _: self.controller.ss8.stop_mov())
         self.right_button.grid(row=0, column=2, padx=5, pady=5)
 
         self.backward_button = ttk.Button(buttons_container, text="Backward")
-        self.backward_button.bind("<ButtonPress-1>", lambda event: asyncio.run(self.controller.ss8.move_backward(wait_for_completion=False)))
-        self.backward_button.bind("<ButtonRelease-1>", lambda event: asyncio.run(self.controller.ss8.stop_mov()))
+        self.backward_button.bind("<ButtonPress-1>", lambda _: self.controller.ss8.move_backward(wait_for_completion=False))
+        self.backward_button.bind("<ButtonRelease-1>", lambda _: self.controller.ss8.stop_mov())
         self.backward_button.grid(row=1, column=1, padx=5, pady=5)
     
     def _display_cam_buttons(self):
@@ -76,6 +102,7 @@ class SetupPage(tk.Frame):
         # Directional buttons   
 
     def _display_preview(self):
+        self.controller.ss8.goto_cam(0, 90)
         def img_click_callback(x, y):
             points = np.array([[x, y]], dtype=np.float32)
     
@@ -90,7 +117,7 @@ class SetupPage(tk.Frame):
         self.img_preview_top = ImageWidget(self.container_right, 445, 300, img_click_callback)
         self.img_preview_top.canvas.pack(expand=True)  # Center the canvas in the container
 
-        self.img_preview_front = ImageWidget(self.container_right, 445, 300, None)
+        self.img_preview_front = ImageWidget(self.container_right, 445, 300, lambda:None)
         self.img_preview_front.canvas.pack(expand=True)  # Center the canvas in the container
 
         def update_preview_top():
@@ -105,6 +132,7 @@ class SetupPage(tk.Frame):
         def update_preview_front():
             cv2.waitKey(1)
             prev_img = self.controller.ss8.capture_image("front")
+            prev_img = cv2.rotate(prev_img, cv2.ROTATE_90_CLOCKWISE)
             if prev_img is not None:
                 return cv2.cvtColor(prev_img, cv2.COLOR_BGR2RGB)
             else:
@@ -123,12 +151,12 @@ class SetupPage(tk.Frame):
 
         ttk.Label(self.selection_buttons_frame, text="Vertical precision").grid(row=0, column=0, padx=5, pady=5)
         self.vert_prec_entry = ttk.Entry(self.selection_buttons_frame)
-        self.vert_prec_entry.insert(tk.END, DEFAULT_VERTICAL_PRECISION)
+        self.vert_prec_entry.insert(tk.END, dconfig.DEFAULT_VERTICAL_PRECISION)
         self.vert_prec_entry.grid(row=1, column=0, padx=5, pady=5)
 
         ttk.Label(self.selection_buttons_frame, text="Horizontal precision").grid(row=0, column=1, padx=5, pady=5)
         self.hor_prec_entry = ttk.Entry(self.selection_buttons_frame)
-        self.hor_prec_entry.insert(tk.END, DEFAULT_HORIZONTAL_PRECISION)
+        self.hor_prec_entry.insert(tk.END, dconfig.DEFAULT_HORIZONTAL_PRECISION)
         self.hor_prec_entry.grid(row=1, column=1, padx=5, pady=5)
 
         cancel_button = ttk.Button(self.selection_buttons_frame, text="Cancel selection")
@@ -139,7 +167,7 @@ class SetupPage(tk.Frame):
         start_button.grid(row=2, column=1, padx=5, pady=5)
         start_button.bind("<ButtonRelease-1>", lambda event: self._start_scan())
 
-        if not CONNECT_TO_TOP_CAM:
+        if not dconfig.CONNECT_TO_TOP_CAM:
             self.selection_buttons_frame.pack(anchor=tk.S, pady=20)
 
     def _start_scan(self):

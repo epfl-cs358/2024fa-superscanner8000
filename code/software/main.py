@@ -13,7 +13,7 @@ from pages.setup import SetupPage
 from pages.scanning import ScanningPage
 from pages.end import EndPage
 
-STARTING_PAGE = "EndPage"
+STARTING_PAGE = "ConnectionPage"
 
 class App(tk.Tk):
     def __init__(self):
@@ -35,7 +35,8 @@ class App(tk.Tk):
         # Init the image segmenter
         self.segmenter = ImageSegmenter(model_cfg="sam2_hiera_s.yaml", checkpoint="config/sam2_checkpoints/sam2_hiera_small.pt", expand_pixels=10)
 
-        self.nav = Navigator(self.ss8)
+        # Init the navigator
+        self.nav = Navigator(self.ss8, self.segmenter)
 
         # Init pages
         self.pages = {}
