@@ -95,6 +95,9 @@ Laser cut the following MDF (4mm) files :
    - 3 * [Calibrate 1](design/dxf/calibrate1)
    - 3 * [Calibrate 2](design/dxf/calibrate2)
 
+3d Print the following folder :
+   - [Components Support](design/prints/components_supports)
+
 The side is made to be foldable to give our SuperScanner8000 round corners. Be careful with these specific parts as they could break. 
 You can assemble the bottom and side by glueing them but we recommend glueing the top parts once you have all the electronics setup inside.
 
@@ -127,10 +130,14 @@ Here, drill your own hole to make your own wire management.
 
 ###### Arm
 
-3D print the parts in this folder :
+3D print the parts in these folders :
    - [Arm Folder](design/prints/long_arm)
+   - [Top Axle Folder](design/prints/top_axle)
 
-You should print 2 times esp_case2 for the cam in the box that we use for object detection.
+3d print this part to hold the belt together :
+   - [Belt Holder](design/prints/ber_holder.stl)
+
+You should print 2 times esp_case2 for the cam in the box that we use for object detection. You yill need the 6mm stainless steel bar for the elbow connection of the arm.
 
 ###### Gearbox
 
@@ -160,6 +167,7 @@ Once you have printed all these components you will firstly you'll want to screw
 ### Electronic
 #### Diagram
 ![elctronic diagram](Proposal/images/WiringDiagram.png)
+
 ### Software
 The structure of the software as well as an installation guide can be found in the [software directory](code/software).
 ## Gratitude and Appreciation
