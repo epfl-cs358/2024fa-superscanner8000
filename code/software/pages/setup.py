@@ -59,17 +59,21 @@ class SetupPage(tk.Frame):
             self.cam_down_button.bind("<ButtonRelease-1>", lambda _: self.controller.ss8.stop_cam())
             self.cam_down_button.grid(row=2, column=2, padx=5, pady=5)
 
+            self.reset_button = ttk.Button(buttons_container, text="Reset")
+            self.reset_button.bind("<ButtonPress-1>", lambda _: self.controller.ss8.goto_cam(0, 0))
+            self.reset_button.grid(row=2, column=1, padx=5, pady=5)
+
             self.cam_align_button = ttk.Button(buttons_container, text="Track alignment")
             self.cam_align_button.bind("<ButtonPress-1>", lambda _: self.controller.ss8.align_to(mode='alignment'))
             self.cam_align_button.grid(row=3, column=0, padx=5, pady=5)
 
             self.cam_angle_button = ttk.Button(buttons_container, text="Track angle")
             self.cam_angle_button.bind("<ButtonPress-1>", lambda _: self.controller.ss8.align_to(mode='angle'))
-            self.cam_angle_button.grid(row=3, column=2, padx=5, pady=5)
+            self.cam_angle_button.grid(row=3, column=1, padx=5, pady=5)
 
-            self.reset_button = ttk.Button(buttons_container, text="Reset")
-            self.reset_button.bind("<ButtonPress-1>", lambda _: self.controller.ss8.goto_cam(0, 0))
-            self.reset_button.grid(row=3, column=1, padx=5, pady=5)
+            self.cam_angle_button = ttk.Button(buttons_container, text="Track body angle")
+            self.cam_angle_button.bind("<ButtonPress-1>", lambda _: self.controller.ss8.align_to(mode='body'))
+            self.cam_angle_button.grid(row=3, column=2, padx=5, pady=5)
 
         # Directional buttons
         self.forward_button = ttk.Button(buttons_container, text="Forward")
