@@ -19,7 +19,7 @@ def generate_path(N):
     all_points = []
 
     # Define the start and end points for each segment
-    vertical_start = [-10, -2]
+    vertical_start = [-10, 0]
     vertical_end = [-10, 20]
     curve_start = [-10, 20]
     curve_end = [-40, 69]
