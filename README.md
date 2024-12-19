@@ -176,3 +176,7 @@ We would like to express our special thanks to our assisstant [Pinar](https://gi
 And I (Kevan) would like to thanks my peers, my friends for this fun project.
 
 
+[Python.org]: https://img.shields.io/badge/Python-brightgreeen?style=flat&logo=python&logoColor=FFE873&color=306998
+[Python-url]: https://www.python.org/
+[Cpp.org]: https://img.shields.io/badge/C%2B%2B-blue?logo=cplusplus
+[Cpp-url]: https://isocpp.org/
