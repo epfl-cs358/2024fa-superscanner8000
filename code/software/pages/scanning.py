@@ -55,13 +55,16 @@ class ScanningPage(tk.Frame):
         def update_plot():
             self.fig.clear()
             plot = self.fig.add_subplot(111)
-            ss8_pos, ss8_rot, obstacles = self.controller.nav.get_obstacle_plot_data()
+            ss8_pos, ss8_rot, obstacles, obstacle_contributions = self.controller.nav.get_obstacle_plot_data()
             
+
+
             plot.quiver(ss8_pos[0], ss8_pos[1], 10 * np.cos(ss8_rot), 10 * np.sin(ss8_rot), angles='xy', scale_units='xy', scale=1)
 
             plot.scatter(ss8_pos[0], ss8_pos[1], c='r', marker='o', label='SS8')
             if obstacles.shape[0] > 0:
                 plot.scatter(obstacles[:][:,0], obstacles[:][:,1], c='b', marker='x', label='Obstacle')
+                plot.quiver(obstacles[:][:, 0], obstacles[:][:,1], obstacle_contributions[:][:,0], obstacle_contributions[:][:,1], angles='xy', scale_units='xy', scale=1)
 
             plot.set_xlim(-110, 10)
             plot.set_ylim(-60, 60)
@@ -102,13 +105,7 @@ class ScanningPage(tk.Frame):
             # placing the canvas on the Tkinter window 
             self.occupancy_plot.get_tk_widget().pack() 
   
-            # creating the Matplotlib toolbar 
-            toolbar = NavigationToolbar2Tk(self.occupancy_plot, 
-                                        self.container) 
-            toolbar.update() 
-  
-            # placing the toolbar on the Tkinter window 
-            self.occupancy_plot.get_tk_widget().pack() 
+
             
             update_plot()
 
