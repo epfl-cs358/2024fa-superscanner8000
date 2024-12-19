@@ -117,8 +117,7 @@ class Navigator:
         Add an obstacle to the navigator.
         relative_position (NDArray[Any]): The relative position in sheeric coords of the obstacle to the ss8 (in cm).
         """
-        print(f'SS8 rotation : {self.ss8_angle}')
-        if self._assert_no_obstacle(absolute_position, 5):
+        if self._assert_no_obstacle(absolute_position, 20):
             #print(f'Obstacle added at position {absolute_position}')
             self.obstacles = np.append(self.obstacles, ForcePoint(absolute_position, size, 3))
     
@@ -128,6 +127,7 @@ class Navigator:
         pos (NDArray[Any]): The position to check.
         radius (int): The radius of the circle.
         """
+        
         for obs in self.obstacles:
             if np.linalg.norm(obs.get_pos() - pos) < radius:
                 return False
@@ -135,7 +135,7 @@ class Navigator:
         return True
     
     def get_obstacle_plot_data(self):
-        return self.ss8_pos, self._get_obstacles_pos()
+        return self.ss8_pos, self.ss8_angle, self._get_obstacles_pos()
 
     def _get_obstacles_pos(self):
         return np.array([obs.get_pos() for obs in self.obstacles])

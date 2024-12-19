@@ -136,18 +136,15 @@ class Object_Detector:
         Xc = depth
         Yc = (pixel_index[0] - cy) * depth / (focal_length/sensor_pixel_size)
         camera_position = np.array([Xc, Yc[0]])
+        
 
-        world_position = R @ camera_position + T
-
-        #48/35
+        world_position = R @ camera_position + T #np.linalg.inv(R) @
+        #print(f"Camera position: {camera_position} World position: {world_position} T position: {T.T}")
 
         # get 2d camera position norm
         camera_position_norm = np.linalg.norm(camera_position)
 
-        # 4x4 extrinsic matrix
-        #extrinsic_matrix = np.vstack((np.hstack((R, T)), np.array([0, 0, 0, 1])))
-        #world_position = extrinsic_matrix @ np.append(camera_position, 1).reshape(4, 1)
-        return world_position[0]# * depth
+        return world_position
     
     def _segment_ground(self, frame):
         '''
@@ -155,7 +152,6 @@ class Object_Detector:
         '''
 
         if not self.segmenter.is_init:
-            print(frame.shape)
             points = np.array([[0, frame.shape[0] - 1]], dtype=np.float32)#np.linspace([0, frame.shape[0] - 1], [frame.shape[1] - 1, frame.shape[0] - 1], 10, dtype=np.uint8) #
             self.segmenter.initialize(frame, points=points)
             ground_mask = self.segmenter.propagate(frame)
@@ -217,7 +213,7 @@ class Object_Detector:
             self.depth = cv2.multiply(self.depth, self.occupancy_map.astype(np.float32))
 
             # Convert ss8 position to 3d position
-            T = np.array(self.navigator.ss8_pos).reshape(2, 1)
+            T = self.navigator.ss8_pos
             R = self._get_rotation_matrix(self.navigator.ss8_angle) 
 
             top_view, pixelated_depth, pos_3d, colors = self._compute_perspective_views(
@@ -228,9 +224,11 @@ class Object_Detector:
             
 
             for pos in pos_3d:
+                self.navigator.add_obstacle(pos)
                 if np.linalg.norm(pos - T) < 70 and np.linalg.norm(pos - T) > 15:
+                    pass
                     #print(T, pos, np.linalg.norm(pos - T))
-                    self.navigator.add_obstacle(pos)
+                    
 
     def detect_occupancy(self):
         frame = self._request_frame()
