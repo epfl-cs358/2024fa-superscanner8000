@@ -10,8 +10,8 @@ from controllers.image_segmenter import ImageSegmenter
 
 
 STEP_DISTANCE = 5
-DEFAULT_CALLIBRATION_DISTANCE = 120
-DEFAULT_CALLIBRATION_ITERATION = 4
+DEFAULT_CALLIBRATION_DISTANCE = 50
+DEFAULT_CALLIBRATION_ITERATION = 5
 CENTER_THRESHOLD = 25
 ANGLE_TOLERANCE = 0.05
 
@@ -41,7 +41,7 @@ class Navigator:
         self.vertical_precision = vertical
         self.horizontal_precision = horizontal
 
-    def callibrate(self, iteration=DEFAULT_CALLIBRATION_ITERATION, distance=DEFAULT_CALLIBRATION_DISTANCE):
+    def _callibrate(self, iteration=DEFAULT_CALLIBRATION_ITERATION, distance=DEFAULT_CALLIBRATION_DISTANCE):
         """
         Start the callibration of the device.
         iteration (int): The number of iteration to do.
@@ -50,9 +50,7 @@ class Navigator:
         print('Callibrating...')
 
         iteration_dist = distance / iteration
-        measures = np.array([])
 
-        start_point = -iteration/2*iteration_dist
         print(f'Iteration dist : {iteration_dist}')
 
         if not dconfig.CONNECT_TO_TOP_CAM or not dconfig.CONNECT_TO_MOV_API:
@@ -65,31 +63,53 @@ class Navigator:
                     print(point[0].get_pos())
                     
             return
+
+        self.ss8.align_to(mode='pos')
         
-        self.ss8.align_to(mode='alignment')
-        self.ss8.move_backward(int(np.abs(start_point)))
-        time.sleep(2000)
-        measures.append(np.array([np.abs(start_point), self.ss8.get_arm_cam_angle() - 90]))
+        if(dconfig.DEBUG_NAV):
+            print('Aligned with object and ready to measure')
 
-        for i in range(1, iteration):
-            self.ss8.move_forward(iteration_dist)
+        distances = np.array([])
+        angles = np.array([])
+        
+        for i in range(0, iteration):
+            # y_pos = start_point+i*iteration_dist
 
-            #The angle between the begining and the actual angle
+            # if(y_pos==0):
+            #     if(dconfig.DEBUG_NAV):
+            #         print('Align during middle point')
+                
+            #     self.ss8.align_to('body')
+            #     continue
+
+            self.ss8.move_backward(iteration_dist)
+            y_pos = -(i+1)*iteration_dist
+
+            #The angle measure angle
+            time.sleep(dconfig.ALIGNMENT_WAIT/2)
             theta = self.ss8.align_to(mode='angle')
             
-            measure = [np.abs(start_point+i*iteration_dist), self.ss8.get_arm_cam_angle()-90]
-            measures.append(np.array(measure))
+            distances = np.append(distances, np.abs(y_pos))
+            angles = np.append(angles, theta)
+            if dconfig.DEBUG_NAV:
+                print(f'Measure : {[y_pos, theta]}')
+            
+        # Could be replaced by the line below if movement is precise enough
+        # self.ss8.move_backward(int(np.abs(iteration/2*iteration_dist)))
+        self.ss8.move_forward(distance)
+        time.sleep(dconfig.ALIGNMENT_WAIT)
+        self.ss8.align_to('body')
 
         if dconfig.DEBUG_NAV:
-            print(f'Measures : {measures}')
-            
-        self.ss8.move_backward(int(np.abs(iteration/2*iteration_dist)))
+            print(f'Angles measured : {angles}')
+            print(f'Distances measured : {distances}')
 
-        mean_radius = np.mean(np.tan(measures[:, 0]) * measures[:, 1])
+        all_radius = np.tan(np.radians(angles)) * distances
+        mean_radius = np.mean(all_radius)
         if(dconfig.DEBUG_NAV):
-            print(mean_radius)
+            print(f'Mean radius : {mean_radius} cm')
 
-        self._set_circle_trajectory(mean_radius, self.vertical_precision)
+        self._set_circle_trajectory(mean_radius, self.horizontal_precision)
 
     def add_obstacle(self, absolute_position, size=1):
         """
@@ -123,13 +143,16 @@ class Navigator:
         self._set_arm_positions(self.vertical_precision)
 
         for arm_pos in self.arm_positions:
-            self.callibrate()
-            time.sleep(60000)
-            break
+            self._callibrate()
+            self.ss8.goto_cam(-90, 90)
+            self.ss8.align_to(mode='angle', wait_for_completion=False, keep_arm_cam_settings=False)
             self.ss8.goto_arm(arm_pos[0], arm_pos[1])
+            time.sleep(1)
+            self.ss8.stop_align_to()
+            self.ss8.align_to(mode='angle', keep_arm_cam_settings=False)
+
             self.moving = True
             self._move_one_turn()
-
 
         self.ss8.goto_arm(0, 0)
         on_finish()
@@ -142,11 +165,11 @@ class Navigator:
                 abs_angle = math.atan2(next_dep[1], next_dep[0])
                 diff_angle = abs_angle - self.ss8_angle
                 norm = np.linalg.norm(next_dep)
-                # print('Next deplacement : ', next_dep)
-                # await asyncio.sleep(0.5)
                 self._move_of(diff_angle, norm)
 
             next_dep, must_take_break = self._compute_next_deplacement()
+
+            time.sleep(0.5)
 
             if must_take_break:
                 self._on_reach_point()
@@ -176,6 +199,11 @@ class Navigator:
 
         if dconfig.DEBUG_ARM:
             print(f'Arm positions : \n{self.arm_positions}')
+
+    def _get_trajectory_angle(self):
+        # Get the angle to reach the next point
+        tracking_vec = self.ss8_pos - self.obj_pos
+        return math.atan2(tracking_vec[1], tracking_vec[0]) % (2*np.pi)
 
     def _compute_next_deplacement(self):
         """
@@ -242,6 +270,11 @@ class Navigator:
         """
         
         time.sleep(dconfig.ARM_MOV_WAITING_TIME)
+        
+        correction_angle = self.ss8_angle- np.pi/2 - self._get_trajectory_angle()   
+        self._move_of(correction_angle, 0)
+        self.ss8.align_to(mode='body')
+
         self.ss8.top_cam_udp_receiver.save_frame()
         self.taken_picture += 1
 

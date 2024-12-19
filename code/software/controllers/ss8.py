@@ -38,7 +38,7 @@ class SS8:
         self.connection_lost_callback = disconnected_callback
 
         self.top_cam_angles = np.array([0,0])
-        self.tracker_on = False
+        self.is_aligning = False
 
         self.top_cam_udp_receiver = UDPReceiver(12346, "0.0.0.0")
         self.front_cam_udp_receiver = UDPReceiver(12349, "0.0.0.0")
@@ -404,10 +404,9 @@ class SS8:
         """
         Get the angle of the top camera.
         """
-        data = self._send_req(lambda: requests.get(self.api_url + "/cam/status"))
-        return data
+        return self.top_cam_angles
     
-    def align_to(self, mode='alignment'):
+    def align_to(self, mode='pos', wait_for_completion=True, keep_arm_cam_settings=False):
         """
         Start the object tracking. The camera will try to keep the object in the center of its view.
         """
@@ -419,8 +418,10 @@ class SS8:
             [height, width] = frame.shape[:2]
             return obj_coords - np.array([width, height])/2
 
-        def update_angle(): 
+        def update_cam_angle(): 
             init_diff = get_diff()
+            if(dconfig.DEBUG_NAV):
+                print('Align cam angle to obj')
             if(init_diff[0] > center_threshold):
                 self.stop_cam()
                 self.goto_cam(0, np.sqrt(np.abs(init_diff[0])), relative=True)
@@ -428,13 +429,29 @@ class SS8:
                 self.stop_cam()
                 self.goto_cam(0, -np.sqrt(np.abs(init_diff[0])), relative=True)
             else:
-                self.tracker_on=False
+                if(dconfig.DEBUG_NAV):
+                    print(f'Alignment finished with angle : {self.top_cam_angles[1]}')
+                self.is_aligning=False
                 return self.top_cam_angles[1]
         
-        def update_alignment():
+        def update_body_angle(): 
+            init_diff = get_diff()
+            if(dconfig.DEBUG_NAV):
+                print('Align body angle to obj')
+            if(init_diff[0] > center_threshold):
+                self.stop_mov()
+                self.rotate_left(np.sqrt(np.abs(init_diff[0])*np.pi/1000))
+            elif(init_diff[0] < -center_threshold):
+                self.stop_mov()
+                self.rotate_right(np.sqrt(np.abs(init_diff[0])*np.pi/1000))
+            else:
+                self.is_aligning=False
+                return self.top_cam_angles[1]
+        
+        def update_pos_alignment():
             init_diff = get_diff()
             if(dconfig.DEBUG_SS8):
-                print(init_diff[0])
+                print('Align body position to obj')
             if(init_diff[0] > center_threshold):
                 self.stop_mov()
                 self.move_backward(dist=np.sqrt(np.abs(init_diff[0]))*dconfig.ALIGNMENT_SPEED, wait_for_completion=False)
@@ -442,34 +459,49 @@ class SS8:
                 self.stop_mov()
                 self.move_forward(dist=np.sqrt(np.abs(init_diff[0]))*dconfig.ALIGNMENT_SPEED, wait_for_completion=False)
             else:
-
-                if(dconfig.DEBUG_SS8):
-                    print(f'Alignment finished with angle : {self.top_cam_angles[1]}')
-                self.tracker_on=False
+                self.is_aligning=False
                 return self.top_cam_angles[1]
-
-        print("Start tracking the object")
+            
         center_threshold = dconfig.CENTER_THRESHOLD
-        
-        self.goto_arm(0, 0)
-        self.goto_cam(0, 90)
 
-        self.tracker_on = True
-        while self.tracker_on:
-            if mode=='alignment':
-                res = update_alignment()
+        if not keep_arm_cam_settings:
+            self.goto_arm(0, 0)
+            self.goto_cam(0, 90)
+
+        if dconfig.DEBUG_NAV:
+            print("Start tracking the object")
+
+        self.is_aligning = True
+        res = None
+
+        def update_align_to():
+            if mode=='pos':
+                return update_pos_alignment()
+            elif mode =='body':
+                return update_body_angle()
             else:
-                res = update_angle()
+                return update_cam_angle()
 
-            time.sleep(dconfig.ALIGNMENT_WAIT)
+        if(wait_for_completion):
+            while self.is_aligning:
+                res = update_align_to()
+                time.sleep(dconfig.ALIGNMENT_WAIT)
 
-        if(dconfig.DEBUG_NAV):
-            print(res)
+        else:
+            def loop():
+                update_align_to()
+                if self.is_aligning:
+                    self.controller.after(dconfig.ALIGNMENT_WAIT*1000, loop)
+            loop()
+
+
+        if(dconfig.DEBUG_NAV and res is not None):
+            print(f'Aligned with angle {res}')
         
         return res
         
-    def turn_off_tracker(self):
-        self.tracker_on = False
+    def stop_align_to(self):
+        self.is_aligning = False
         
     def capture_image(self, src='arm'):
         """
