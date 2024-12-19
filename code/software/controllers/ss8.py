@@ -436,14 +436,32 @@ class SS8:
         
         def update_body_angle(): 
             init_diff = get_diff()
+            alpha = self.top_cam_angles[0]
+
+            print(np.abs(alpha), np.abs(alpha+90))
+            if(np.abs(alpha) < np.abs(alpha-90)):
+                print('x axis')
+                diff_axis = 0
+            else :
+                print('y axis')
+                diff_axis=1
+
+            diff_angle = np.sqrt((np.abs(init_diff[diff_axis]))*np.pi/1000)
+            print(diff_angle)
             if(dconfig.DEBUG_NAV):
                 print('Align body angle to obj')
-            if(init_diff[0] > center_threshold):
+            if(init_diff[diff_axis] > center_threshold):
                 self.stop_mov()
-                self.rotate_left(np.sqrt(np.abs(init_diff[0])*np.pi/1000))
-            elif(init_diff[0] < -center_threshold):
+                if(diff_axis==0):
+                    self.rotate_left(diff_angle)
+                else:
+                    self.rotate_right(diff_angle)
+            elif(init_diff[diff_axis] < -center_threshold):
                 self.stop_mov()
-                self.rotate_right(np.sqrt(np.abs(init_diff[0])*np.pi/1000))
+                if(diff_axis==0):
+                    self.rotate_right(diff_angle)
+                else:
+                    self.rotate_left(diff_angle)
             else:
                 self.is_aligning=False
                 return self.top_cam_angles[1]
