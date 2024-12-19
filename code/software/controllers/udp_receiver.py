@@ -147,7 +147,7 @@ class UDPReceiver:
                 os.makedirs(temp_dir)
 
             # Construct the full path for the file with a numbered filename
-            filename = f"frame_{self.frame_counter}.jpg"
+            filename = f"{self.frame_counter}.jpg"
             temp_file_path = os.path.join(temp_dir, filename)
             # Save theself.current_frame to the temporary folder
             cv2.imwrite(temp_file_path, self.current_frame)
