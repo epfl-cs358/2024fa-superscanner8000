@@ -143,16 +143,23 @@ class Navigator:
         self._set_arm_positions(self.vertical_precision)
 
         for arm_pos in self.arm_positions:
-            self._callibrate()
-            self.ss8.goto_cam(-90, 90)
-            self.ss8.align_to(mode='angle', wait_for_completion=False, keep_arm_cam_settings=False)
+            if(dconfig.SKIP_CALLIBRATION_STEP):
+                if dconfig.CONNECT_TO_TOP_CAM:
+                    self.ss8.align_to(mode='pos')
+                self._set_circle_trajectory(80, self.horizontal_precision)
+            else :
+                self._callibrate()
+
+            self.ss8.goto_cam(-90, 90)  
+            if dconfig.CONNECT_TO_TOP_CAM:
+                self.ss8.align_to(mode='angle', wait_for_completion=False, keep_arm_cam_settings=True)
+            
             self.ss8.goto_arm(arm_pos[0], arm_pos[1])
-            time.sleep(1)
-            self.ss8.stop_align_to()
-            self.ss8.align_to(mode='angle', keep_arm_cam_settings=False)
 
             self.moving = True
             self._move_one_turn()
+            
+            self.ss8.stop_align_to()
 
         self.ss8.goto_arm(0, 0)
         on_finish()
@@ -160,11 +167,15 @@ class Navigator:
     
     def _move_one_turn(self):
         next_dep = None
+        if dconfig.DEBUG_NAV:
+            print('Start the turn')
+
         while self.moving:
+            print('Start new dep :', next_dep)
             if next_dep is not None:
                 abs_angle = math.atan2(next_dep[1], next_dep[0])
                 diff_angle = abs_angle - self.ss8_angle
-                norm = np.linalg.norm(next_dep)
+                norm = np.abs(np.linalg.norm(next_dep))
                 self._move_of(diff_angle, norm)
 
             next_dep, must_take_break = self._compute_next_deplacement()
@@ -173,6 +184,7 @@ class Navigator:
 
             if must_take_break:
                 self._on_reach_point()
+            
                 
         return
     
@@ -196,6 +208,7 @@ class Navigator:
     
     def _set_arm_positions(self, step_nbr):
         self.arm_positions = generate_path(step_nbr)
+        self.arm_positions= [[0, 0]]
 
         if dconfig.DEBUG_ARM:
             print(f'Arm positions : \n{self.arm_positions}')
@@ -228,9 +241,8 @@ class Navigator:
             else:
                 reach_point = self.trajectory[0][0]
 
-        if dconfig.DEBUG_NAV:
+        if dconfig.DEBUG_NAV and False:
             print(f'\n\nCurrent position : {self.ss8_pos} || Current angle : {angle} \nReach point : {reach_point.get_pos()} || Reach angle : {self.trajectory[0][1]} \n')
-
 
         # Compute the next deplacement with the contribution of the obstacles and the reach point
         next_dep = reach_point.get_contribution(self.ss8_pos)
@@ -260,21 +272,24 @@ class Navigator:
         self.ss8_angle = (self.ss8_angle + angle) % (2*np.pi)
         
         # Move the ss8 forward
-        self.ss8.move_forward(distance)
-        self.ss8_pos += np.array([distance * math.cos(self.ss8_angle), distance * math.sin(self.ss8_angle)])
+        if(distance>00.1):
+            self.ss8.move_forward(distance)
+            self.ss8_pos += np.array([distance * math.cos(self.ss8_angle), distance * math.sin(self.ss8_angle)])
+        
         return
     
     def _on_reach_point(self):
         """
         Pause the movement and restart it.
         """
+        # Try to be in the right direction to look at the object
+        correction_angle = self._get_trajectory_angle() - self.ss8_angle + np.pi/2
         
         time.sleep(dconfig.ARM_MOV_WAITING_TIME)
-        
-        correction_angle = self.ss8_angle- np.pi/2 - self._get_trajectory_angle()   
         self._move_of(correction_angle, 0)
-        self.ss8.align_to(mode='body')
+        self.ss8.align_to(mode='body', keep_arm_cam_settings=True)
 
+        time.sleep(dconfig.ARM_MOV_WAITING_TIME)
         self.ss8.top_cam_udp_receiver.save_frame()
         self.taken_picture += 1
 
