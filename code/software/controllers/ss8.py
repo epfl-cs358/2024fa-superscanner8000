@@ -79,6 +79,10 @@ class SS8:
                 return False
         elif not self.init_udp_connection():
             return False
+        
+        self.display_text("Connected")
+        self.set_led(0, dconfig.LED_BRIGHTNESS, dconfig.LED_BRIGHTNESS)
+
         return True
     
     def init_api_connection(self) -> bool:
@@ -262,9 +266,6 @@ class SS8:
 
         if wait_for_completion:
             time.sleep(ms*0.001)
-
-        self.display_text("Connected")
-        self.set_led(0, dconfig.LED_BRIGHTNESS, dconfig.LED_BRIGHTNESS)
 
         return
 
@@ -513,12 +514,9 @@ class SS8:
             init_diff = get_diff()
             alpha = self.top_cam_angles[0]
 
-            print(np.abs(alpha), np.abs(alpha+90))
             if(np.abs(alpha) < np.abs(alpha-90)):
-                print('x axis')
                 diff_axis = 0
             else :
-                print('y axis')
                 diff_axis=1
 
             diff_angle = np.sqrt((np.abs(init_diff[diff_axis]))*np.pi/1000)
