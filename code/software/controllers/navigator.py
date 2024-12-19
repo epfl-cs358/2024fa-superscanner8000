@@ -48,13 +48,14 @@ class Navigator:
         """
 
         print('Callibrating...')
-        self.ss8.display_text('Callibrating...')
         self.ss8.set_led(0, 0, 1 * dconfig.LED_BRIGHTNESS)
 
         iteration_dist = distance / iteration
 
-        print(f'Iteration dist : {iteration_dist}')
-        self.ss8.display_text_2lines('Callibrating...', f'Iteration :{iteration_dist}')
+        if dconfig.DEBUG_NAV:
+            print(f'Iteration dist : {iteration_dist}')
+
+        self.ss8.display_text_2lines('Callibrating...', f'Iteration :{iteration}')
 
         if not dconfig.CONNECT_TO_TOP_CAM or not dconfig.CONNECT_TO_MOV_API:
             self._set_circle_trajectory(50, self.horizontal_precision)
@@ -73,30 +74,7 @@ class Navigator:
             print('Aligned with object and ready to measure')
 
         distances = np.array([])
-        angles = np.array([])
-        
-        for i in range(0, iteration):
-            # y_pos = start_point+i*iteration_dist
 
-            # if(y_pos==0):
-            #     if(dconfig.DEBUG_NAV):
-            #         print('Align during middle point')
-                
-            #     self.ss8.align_to('body')
-            #     continue
-
-            self.ss8.move_backward(iteration_dist)
-            y_pos = -(i+1)*iteration_dist
-
-            #The angle measure angle
-            time.sleep(dconfig.ALIGNMENT_WAIT/2)
-            theta = self.ss8.align_to(mode='cam')
-            
-            distances = np.append(distances, np.abs(y_pos))
-            angles = np.append(angles, theta)
-            if dconfig.DEBUG_NAV:
-                print(f'Measure : {[y_pos, theta]}')
-            
         # Could be replaced by the line below if movement is precise enough
         # self.ss8.move_backward(int(np.abs(iteration/2*iteration_dist)))
         self.ss8.move_forward(distance)
@@ -162,16 +140,12 @@ class Navigator:
                 self._callibrate()
 
             self.ss8.goto_cam(-90, 90)  
-            if dconfig.CONNECT_TO_TOP_CAM:
-                self.ss8.align_to(mode='cam', wait_for_completion=False, keep_arm_cam_settings=True)
             
             self.ss8.goto_arm(arm_pos[0], arm_pos[1])
 
             self.moving = True
             self._move_one_turn()
             
-            self.ss8.stop_align_to()
-
         self.ss8.goto_arm(0, 0)
         on_finish()
         return
@@ -296,13 +270,12 @@ class Navigator:
         
         time.sleep(dconfig.ARM_MOV_WAITING_TIME)
         self._move_of(correction_angle, 0)
-        self.ss8.stop_align_to()
         self.ss8.align_to(mode='body', keep_arm_cam_settings=True)
 
-        time.sleep(dconfig.ARM_MOV_WAITING_TIME)
-        self.ss8.align_to(mode='cam', keep_arm_cam_settings=True, wait_for_completion=False)
 
-        if last_point:
+        if not last_point:
+            time.sleep(dconfig.ARM_MOV_WAITING_TIME)
+            self.ss8.align_to(mode='cam', keep_arm_cam_settings=True)
             self.ss8.top_cam_udp_receiver.save_frame()
             self.segmenter.save_mask()
             self.taken_picture += 1

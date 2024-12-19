@@ -29,8 +29,6 @@ class SetupPage(tk.Frame):
         self._display_preview()
         self._display_directionnal_buttons()
         self._display_selection_buttons()
-
-        self.controller.ss8.display_text("Connected")
         
     def _display_directionnal_buttons(self):
         buttons_container = tk.Frame(self.container_left)

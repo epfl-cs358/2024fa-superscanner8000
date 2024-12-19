@@ -19,7 +19,7 @@ TEST_CONNECTION_TIMEOUT = 3
 # SS8 movement constants
 DEFAULT_MOVING_DIST = 1000
 DEFAULT_ROTATING_ANGLE = 2*np.pi
-BODY_ANGLE_TO_TIME = 280 # Time to rotate the body by 1 radian            TODO: Update this value
+BODY_ANGLE_TO_TIME = 510 # Time to rotate the body by 1 radian            TODO: Update this value
 BODY_DIST_TO_TIME = 28 # Time to move the body by 1 cm                   TODO: Update this value
 TOP_CAM_ANGLE_TO_TIME = 1 # Time to rotate the top camera by 1 radian
 TOP_CAM_FOV = 60
@@ -213,7 +213,7 @@ class SS8:
         
         
         if dconfig.DEBUG_SS8:
-            print(f"Moving backward of {dist} cm...")
+            print(f"Moving backward of {dist} cm")
 
         if wait_for_completion:
             time.sleep(ms*0.001)
@@ -235,7 +235,7 @@ class SS8:
             self._send_req(lambda: requests.post(self.api_url + "/lft", json={"ms": angle*BODY_ANGLE_TO_TIME}))
         
         if dconfig.DEBUG_SS8:
-            print(f"Rotating left of {round(angle*180/np.pi)} degrees...")
+            print(f"Rotating left of {round(angle*180/np.pi)} degrees")
 
         if wait_for_completion:
             time.sleep(ms*0.001)
@@ -255,13 +255,16 @@ class SS8:
             return
 
         if dconfig.CAN_MOVE:
-            self._send_req(lambda: requests.post(self.api_url + "/hrgt", json={"ms": angle*BODY_ANGLE_TO_TIME}))
+            self._send_req(lambda: requests.post(self.api_url + "/rgt", json={"ms": angle*BODY_ANGLE_TO_TIME}))
         
         if dconfig.DEBUG_SS8:
-            print(f"Rotating right of {round(angle*180/np.pi, 1)} degrees...")
+            print(f"Rotating right of {round(angle*180/np.pi, 1)} degrees")
 
         if wait_for_completion:
             time.sleep(ms*0.001)
+
+        self.display_text("Connected")
+        self.set_led(0, dconfig.LED_BRIGHTNESS, dconfig.LED_BRIGHTNESS)
 
         return
 
@@ -273,7 +276,7 @@ class SS8:
             self._send_req(lambda: requests.post(self.api_url + "/stp"))
 
         if dconfig.DEBUG_SS8:
-            print("Stopping movement...")
+            print("Stopping movement")
 
         return
 
@@ -304,7 +307,7 @@ class SS8:
             self._send_req(lambda: requests.post(self.api_url + "/arm/stp"))
 
         if dconfig.DEBUG_SS8:
-            print("Stopping arm movement...")
+            print("Stopping arm movement")
 
         return
         
