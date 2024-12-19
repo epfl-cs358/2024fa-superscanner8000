@@ -185,7 +185,8 @@ Here, drill your own hole to make your own wire management.
 3d print this part to hold the belt together :
    - [Belt Holder](design/prints/belt_holder.stl)
 
-You should print 2 times esp_case2 for the cam in the box that we use for object detection. You yill need the 6mm stainless steel bar for the elbow connection of the arm.
+You should print 2 times esp_case2 for the cam in the box that we use for object detection. You will need the 6mm stainless steel bar for the elbow connection of the arm.
+We opted to glue our belt into one piece instead of the belt holder in the end but both solutions are fine.
 
 ###### Gearbox
 
@@ -220,6 +221,21 @@ Once you have printed all these components you will firstly you'll want to screw
 
 ### Software
 The structure of the software as well as an installation guide can be found in the [software directory](code/software).
+
+## Possible Improvements
+
+Here are a few improvements we thought of for this project.
+
+### Hardware
+
+A non-exhaustive list :
+   - A better LiPo battery : ours is starting to die out and can't power the LEDs at full capacity.
+   - Different / more precise motors for the wheels : our robot has slight trouble going perfectly straight.
+   - A third stepper for the camera to avoid inverse kinematics.
+   - Screw the elbow instead of using a stainless steel bar : would need the perfect screw that is partialy threaded so it can rotate around the other arm.
+   - Metal balls for the gearbox : our airsoft balls start to melt and decompose.
+   - A better design for the nema 17 housings to make sure the gear box doesn't bend due to the pull of the belt
+
 ## Gratitude and Appreciation
 We would like to express our special thanks to our assisstant [Pinar](https://github.com/pinar-oray) and [Julian](https://github.com/julianmarmier), whose insights and suggestions were instrumental in shaping our super scanner. We are also grateful to [Timofey](https://github.com/kreslotim) for his technical support and encouragement and constructive feedback.
 
