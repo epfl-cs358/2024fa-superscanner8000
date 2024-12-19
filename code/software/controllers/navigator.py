@@ -49,7 +49,7 @@ class Navigator:
 
         print('Callibrating...')
         self.ss8.display_text('Callibrating...')
-        self.ss8.set_led(0, 0, 1 * dconfig.BRIGHTNESS)
+        self.ss8.set_led(0, 0, 1 * dconfig.LED_BRIGHTNESS)
 
         iteration_dist = distance / iteration
 
@@ -123,7 +123,7 @@ class Navigator:
         if self._assert_no_obstacle(absolute_position, 20):
             #print(f'Obstacle added at position {absolute_position}')
             self.obstacles = np.append(self.obstacles, ForcePoint(absolute_position, size, 3))
-            self.ss8.flash_led(1 * dconfig.LED_BRIGHTNESS, 0, 0, 500)
+            self.ss8.flash_led(1 * dconfig.LED_BRIGHTNESS, 0, 0, 125)
     
     def _assert_no_obstacle(self, pos, radius = 25):
         """
@@ -216,7 +216,7 @@ class Navigator:
         for a in range(0, 360, step_angle):
             x = radius * (math.cos(math.radians(a))-1)
             y = radius * math.sin(math.radians(a))
-            self.trajectory.append((ForcePoint(np.array([x, y]), 50, 0), math.radians(a)))
+            self.trajectory.append((ForcePoint(np.array([x, y]), 40, 0), math.radians(a)))
     
     def _set_arm_positions(self, step_nbr):
         self.arm_positions = generate_path(step_nbr)

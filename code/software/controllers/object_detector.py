@@ -225,7 +225,7 @@ class Object_Detector:
 
             for pos in pos_3d:
                 if np.linalg.norm(pos - T) > 15:
-                    self.navigator.add_obstacle(pos, -10000)
+                    self.navigator.add_obstacle(pos, -100000)
                     #print(T, pos, np.linalg.norm(pos - T))
                     
 
