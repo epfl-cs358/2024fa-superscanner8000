@@ -175,5 +175,6 @@ if __name__ == "__main__":
     b.grid(row=9, column=2)
     Button(root, text="Set LED", command=lambda: requests.post("http://superscanner8000:80/led/set", json={"r": int(r.get()), "g": int(g.get()), "b": int(b.get())})).grid(row=10, column=0)
     Button(root, text="rainbow", command=lambda: requests.post("http://superscanner8000:80/led/rainbow", json={"rainbow": True})).grid(row=10, column=1)
+    Button(root, text="flash", command=lambda: requests.post("http://superscanner8000:80/led/flash", json={"r": int(r.get()), "g": int(g.get()), "b": int(b.get()), "duration": 150})).grid(row=10, column=2)
 
     root.mainloop()

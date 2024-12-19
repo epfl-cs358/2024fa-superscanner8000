@@ -46,6 +46,7 @@ void setup_routing() {
   
   server.on("/led/set", HTTP_POST, led_set);
   server.on("/led/rainbow", HTTP_POST, led_rainbow);
+  server.on("/led/flash", HTTP_POST, led_flash);
           
   server.begin();    
 }
@@ -238,7 +239,7 @@ void text() {
   server.send(200, "application/json", "{}");
 }
 
-void text() {
+void progress() {
   handlePost();
   
   String text = jsonDocument["text"];
@@ -291,6 +292,21 @@ void led_rainbow() {
   led.rainbowMode = (bool) jsonDocument["rainbow"];
   Serial.println(led.rainbowMode);
   Serial.println("rainbow leds");
+
+  server.send(200, "application/json", "{}");
+}
+
+void led_flash() {
+  handlePost();
+  
+  int r = jsonDocument["r"];
+  int g = jsonDocument["g"];
+  int b = jsonDocument["b"];
+  int duration = jsonDocument["duration"];
+  
+  led.flash(r, g, b, duration);
+
+  Serial.println("leds flash");
 
   server.send(200, "application/json", "{}");
 }
