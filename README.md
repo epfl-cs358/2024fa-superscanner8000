@@ -222,7 +222,7 @@ Once you have printed all these components you will firstly you'll want to screw
 ### Software
 The structure of the software as well as an installation guide can be found in the [software directory](code/software).
 
-## Improvements
+## Possible Improvements
 
 Here are a few improvements we thought of for this project.
 
