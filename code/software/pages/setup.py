@@ -111,11 +111,11 @@ class SetupPage(tk.Frame):
 
             if(not self.object_selected):
                 self.controller.ss8.display_text("Image selected")
-                self.controller.ss8.set_leds(0, 1 * dconfig.BRIGHTNESS, 0 )
+                self.controller.ss8.set_led(0, 1 * dconfig.LED_BRIGHTNESS, 0 )
                 self.selection_buttons_frame.pack(anchor=tk.S, pady=20)
                 self.object_selected = True
 
-        self.img_preview_top = ImageWidget(self.container_right, 445, 300, img_click_callback)
+        self.img_preview_top = ImageWidget(self.container_right, 1080, 920, img_click_callback)
         self.img_preview_top.canvas.pack(expand=True)  # Center the canvas in the container
 
         self.img_preview_front = ImageWidget(self.container_right, 445, 300, lambda:None)

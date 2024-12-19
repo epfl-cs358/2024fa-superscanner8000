@@ -487,7 +487,7 @@ class SS8:
             if obj_coords is None:
                 return np.array([0, 0])
             [height, width] = frame.shape[:2]
-            return obj_coords - np.array([width, height])/2
+            return (obj_coords - np.array([width, height])/2)/3
 
         def update_cam_angle(): 
             init_diff = get_diff()

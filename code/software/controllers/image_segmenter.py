@@ -87,7 +87,7 @@ class ImageSegmenter:
             filename = f"{self.frame_counter}.mask.png"
             temp_file_path = os.path.join(temp_dir, filename)
             # Save theself.current_frame to the temporary folder
-            cv2.imwrite(temp_file_path, self.current_frame)
+            cv2.imwrite(temp_file_path, self.all_mask)
             if DEBUG_CAM:
                 print(f"Saved self.all_mask {self.frame_counter} to {temp_file_path}")
             # Increment theself.current_frame counter

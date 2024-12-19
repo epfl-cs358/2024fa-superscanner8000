@@ -50,7 +50,7 @@ class ScanningPage(tk.Frame):
         movement_thread = threading.Thread(target=self.nav.start_moving, args=(self._on_finish,))
         movement_thread.start()
 
-        #return 
+        return 
 
         def update_plot():
             self.fig.clear()

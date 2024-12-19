@@ -22,7 +22,7 @@ class App(tk.Tk):
 
         # Init the window
         self.title("SuperScanner8000")
-        self.geometry("990x540")
+        self.geometry("1500x750")
         self.container = tk.Frame(self)
         self.container.pack(fill="both", expand=True)
         self._apply_styling()

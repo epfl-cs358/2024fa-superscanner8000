@@ -222,7 +222,6 @@ class Navigator:
     
     def _set_arm_positions(self, step_nbr):
         self.arm_positions = generate_path(step_nbr)
-        self.arm_positions= [[0, 0]]
 
         if dconfig.DEBUG_ARM:
             print(f'Arm positions : \n{self.arm_positions}')
