@@ -56,15 +56,21 @@ class ScanningPage(tk.Frame):
             self.fig.clear()
             plot = self.fig.add_subplot(111)
             ss8_pos, ss8_rot, obstacles, obstacle_contributions = self.controller.nav.get_obstacle_plot_data()
-            
+            trajectory_pos, trajectory_contributions = self.controller.nav.get_trajectory_plot_data()
+            print(f"Trajectory positions: {trajectory_pos}, Trajectory contributions: {trajectory_contributions}")
 
-
+            # Plot ss8 orientation and position
             plot.quiver(ss8_pos[0], ss8_pos[1], 10 * np.cos(ss8_rot), 10 * np.sin(ss8_rot), angles='xy', scale_units='xy', scale=1)
-
             plot.scatter(ss8_pos[0], ss8_pos[1], c='r', marker='o', label='SS8')
+            
+            # Plot obstacle positions and contributions
             if obstacles.shape[0] > 0:
                 plot.scatter(obstacles[:][:,0], obstacles[:][:,1], c='b', marker='x', label='Obstacle')
                 plot.quiver(obstacles[:][:, 0], obstacles[:][:,1], obstacle_contributions[:][:,0], obstacle_contributions[:][:,1], angles='xy', scale_units='xy', scale=1)
+
+            if trajectory_pos.shape[0] > 0:
+                plot.scatter(trajectory_pos[:][:,0], trajectory_pos[:][:,1], c='g', marker='x', label='Trajectory')
+                plot.quiver(trajectory_pos[:][:, 0], trajectory_pos[:][:,1], trajectory_contributions[:][:,0], trajectory_contributions[:][:,1], angles='xy', scale_units='xy', scale=1)
 
             plot.set_xlim(-110, 10)
             plot.set_ylim(-60, 60)

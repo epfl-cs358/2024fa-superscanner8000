@@ -118,8 +118,7 @@ class Navigator:
         relative_position (NDArray[Any]): The relative position in sheeric coords of the obstacle to the ss8 (in cm).
         """
         if self._assert_no_obstacle(absolute_position, 20):
-            #print(f'Obstacle added at position {absolute_position}')
-            self.obstacles = np.append(self.obstacles, ForcePoint(absolute_position, size, 3))
+            self.obstacles = np.append(self.obstacles, ForcePoint(absolute_position, size, 2))
     
     def _assert_no_obstacle(self, pos, radius = 25):
         """
@@ -135,7 +134,13 @@ class Navigator:
         return True
     
     def get_obstacle_plot_data(self):
-        return self.ss8_pos, self.ss8_angle, self._get_obstacles_pos()
+        obstacle_contributions = np.array([obs.get_contribution(self.ss8_pos) for obs in self.obstacles])
+        return self.ss8_pos, self.ss8_angle, self._get_obstacles_pos(), obstacle_contributions
+
+    def get_trajectory_plot_data(self):
+        trajectory_positions = np.array([point[0].get_pos() for point in self.trajectory])
+        trajectory_contributions = np.array([point[0].get_contribution(self.ss8_pos) for point in self.trajectory])
+        return trajectory_positions, trajectory_contributions
 
     def _get_obstacles_pos(self):
         return np.array([obs.get_pos() for obs in self.obstacles])
@@ -180,6 +185,7 @@ class Navigator:
                 self._move_of(diff_angle, norm)
 
             next_dep, must_take_break = self._compute_next_deplacement()
+            print(f"Next dep : {next_dep}")
 
             time.sleep(0.5)
 
@@ -205,7 +211,7 @@ class Navigator:
         for a in range(0, 360, step_angle):
             x = radius * (math.cos(math.radians(a))-1)
             y = radius * math.sin(math.radians(a))
-            self.trajectory.append((ForcePoint(np.array([x, y]), 100, 0), math.radians(a)))
+            self.trajectory.append((ForcePoint(np.array([x, y]), 50, 0), math.radians(a)))
     
     def _set_arm_positions(self, step_nbr):
         self.arm_positions = generate_path(step_nbr)
@@ -224,10 +230,6 @@ class Navigator:
         Get the next deplacement to reach the next point in the trajectory while avoiding the obstacles.
         """
         new_reach_point = False
-        
-        # Get the angle to reach the next point
-        tracking_vec = self.ss8_pos - self.obj_pos
-        angle = math.atan2(tracking_vec[1], tracking_vec[0]) % (2*np.pi)
 
         # Get the next point in the trajectory (the one with the closest angle above the current angle)
         reach_point = None
@@ -236,7 +238,7 @@ class Navigator:
                 self.moving = False
                 return None, True
             
-            if(np.linalg.norm(self.trajectory[0][0].get_pos() - self.ss8_pos) < STEP_DISTANCE/2):
+            if(np.linalg.norm(self.trajectory[0][0].get_pos() - self.ss8_pos) < STEP_DISTANCE/2) or self._get_trajectory_angle() > self.trajectory[0][1]:
                 self.trajectory.pop(0)
                 new_reach_point = True
             else:
@@ -247,8 +249,8 @@ class Navigator:
 
         # Compute the next deplacement with the contribution of the obstacles and the reach point
         next_dep = reach_point.get_contribution(self.ss8_pos)
-        """ for obs in self.obstacles:
-            next_dep += obs.get_contribution(self.ss8_pos) """
+        for obs in self.obstacles:
+            next_dep += obs.get_contribution(self.ss8_pos)
 
         if np.linalg.norm(next_dep) > STEP_DISTANCE:
             next_dep = (next_dep / np.linalg.norm(next_dep)) * STEP_DISTANCE
