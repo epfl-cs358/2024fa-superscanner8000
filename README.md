@@ -89,6 +89,8 @@ Laser cut the following MDF (4mm) files :
    - [Side Base](design/dxf/side_full.dxf)
    - [Top Base Front](design/dxf/top_base_front.dxf)
    - [Top Base Back](design/dxf/top_base_back.dxf)
+   - 3 * [Calibrate 1](design/dxf/calibrate1)
+   - 3 * [Calibrate 2](design/dxf/calibrate2)
 
 The side is made to be foldable to give our SuperScanner8000 round corners. Be careful with these specific parts as they could break. 
 You can assemble the bottom and side by glueing them but we recommend glueing the top parts once you have all the electronics setup inside.
