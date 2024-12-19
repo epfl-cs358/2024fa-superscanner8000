@@ -87,7 +87,7 @@ class Navigator:
 
             #The angle measure angle
             time.sleep(dconfig.ALIGNMENT_WAIT/2)
-            theta = self.ss8.align_to(mode='angle')
+            theta = self.ss8.align_to(mode='cam')
             
             distances = np.append(distances, np.abs(y_pos))
             angles = np.append(angles, theta)
@@ -98,6 +98,7 @@ class Navigator:
         # self.ss8.move_backward(int(np.abs(iteration/2*iteration_dist)))
         self.ss8.move_forward(distance)
         time.sleep(dconfig.ALIGNMENT_WAIT)
+        self.ss8.stop_align_to()
         self.ss8.align_to('body')
 
         if dconfig.DEBUG_NAV:
@@ -152,7 +153,7 @@ class Navigator:
 
             self.ss8.goto_cam(-90, 90)  
             if dconfig.CONNECT_TO_TOP_CAM:
-                self.ss8.align_to(mode='angle', wait_for_completion=False, keep_arm_cam_settings=True)
+                self.ss8.align_to(mode='cam', wait_for_completion=False, keep_arm_cam_settings=True)
             
             self.ss8.goto_arm(arm_pos[0], arm_pos[1])
 
@@ -287,9 +288,11 @@ class Navigator:
         
         time.sleep(dconfig.ARM_MOV_WAITING_TIME)
         self._move_of(correction_angle, 0)
+        self.ss8.stop_align_to()
         self.ss8.align_to(mode='body', keep_arm_cam_settings=True)
 
         time.sleep(dconfig.ARM_MOV_WAITING_TIME)
+        self.ss8.align_to(mode='cam', keep_arm_cam_settings=True, wait_for_completion=False)
         self.ss8.top_cam_udp_receiver.save_frame()
         self.taken_picture += 1
 
