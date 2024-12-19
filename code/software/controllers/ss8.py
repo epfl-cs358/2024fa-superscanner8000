@@ -399,6 +399,34 @@ class SS8:
 
         return
     
+    def display_progress_bar(self, text, progress):
+        """
+        Display text on the device screen.
+        text (str): The text to display.
+        """
+        if dconfig.CONNECT_TO_MOV_API:
+            requests.post(self.api_url + "/progress", json={"text": text, "progress": progress})
+        
+        if(dconfig.DEBUG_SS8):
+            print(f"Displaying text: {text}")
+            print(f"Displaying progress: {progress}")
+
+        return
+    
+    def display_progress_bar(self, text, progress):
+        """
+        Display text on the device screen.
+        text (str): The text to display.
+        """
+        if dconfig.CONNECT_TO_MOV_API:
+            requests.post(self.api_url + "/progress", json={"text": text, "progress": progress})
+        
+        if(dconfig.DEBUG_SS8):
+            print(f"Displaying text: {text}")
+            print(f"Displaying progress: {progress}")
+
+        return
+    
     def display_text_2lines(self, line1, line2):
         """
         Display text on two lines on the device screen.
