@@ -67,6 +67,8 @@ In order to move the camera, we will use an arm with two segments, each powered 
 
 Most currently existing 3D object scanners are catered to small objects, rotating the object and photographing it from a fixed camera. We decided to take a different approach with the goal of providing more flexibility while keeping the complexity as low as possible.
 
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 ## Project Structure
 
 Below is a brief explanation of this repository's structure to provide context and aid readers' comprehension in the following sections of this document.
@@ -77,6 +79,8 @@ Below is a brief explanation of this repository's structure to provide context a
 - `diagrams` directory: contains all diagrams relate to the project
 - `documentation` directory: contains all the pictures and schematics to be able to reproduce this project.
 - `proposal` directory: the original document used to write the initial project proposal.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Make your own SuperScanner8000
 
@@ -120,6 +124,8 @@ Have access to:
 - Bunch of different screwdrivers
 - Soldering kit
 
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 ### Hardware Assembly
 
 ##### Main Body
@@ -140,11 +146,13 @@ Laser cut the following MDF (4mm) files :
 The side is made to be foldable to give our SuperScanner8000 round corners. Be careful with these specific parts as they could break. 
 You can assemble the bottom and side by glueing them but we recommend glueing the top parts once you have all the electronics setup inside.
 
+
 ###### Wheels
 
 3D print the following parts : 
    - 2 * [Inner Wheel](design/prints/inner_wheel.stl)
    - 2 * [Outer Wheel](design/prints/outer_wheel.stl) (Beware you need to print this in TPU)
+
 
 ###### Caster Wheel
 
@@ -198,6 +206,8 @@ We followed [this tutorial](https://www.thingiverse.com/thing:4428749/) to creat
    - [Nema17 Housings](design/prints/housing_on_base.stl)
 
 Here we also used some small carpet textile to reduce the stepper motor noise.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ###### Assembly Of The Arm
 
