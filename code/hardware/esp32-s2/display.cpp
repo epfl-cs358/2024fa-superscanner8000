@@ -20,6 +20,9 @@ void Display::setup()
 
     lcd.begin(16, 2);
     lcd.clear();
+
+    // Load the custom character for the full block
+    lcd.createChar(0, fullBlock);
 }
 
 void Display::print(String text)
@@ -39,6 +42,23 @@ void Display::print(String text)
     } else
     {
         scroll(text, "");
+    }
+}
+
+void Display::printProgressBar(String text, int percentage) {
+    lcd.print(text.substring(0, 16));
+
+    // Calculate the number of blocks to display
+    int blocks = map(percentage, 0, 100, 0, 16); // Map percentage to the width of the LCD (16 columns)
+
+    // Display the progress bar on the second row
+    lcd.setCursor(0, 1); // Move to the second row
+    for (int i = 0; i < 16; i++) {
+        if (i < blocks) {
+            lcd.write(byte(0)); // Full block character
+        } else {
+            lcd.print(" "); // Empty space
+        }
     }
 }
 

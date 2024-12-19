@@ -41,6 +41,7 @@ void setup_routing() {
   server.on("/cam/stp", HTTP_POST, cam_stop);
 
   server.on("/text", HTTP_POST, text);
+  server.on("/progress", HTTP_POST, progress);
   server.on("/scroll", HTTP_POST, scroll);
   server.on("/led/set", HTTP_POST, led_set);
   server.on("/led/rainbow", HTTP_POST, led_rainbow);
@@ -232,6 +233,26 @@ void text() {
 
   Serial.print("Text is: ");
   Serial.println(text);
+
+  server.send(200, "application/json", "{}");
+}
+
+void text() {
+  handlePost();
+  
+  String text = jsonDocument["text"];
+  int progress = jsonDocument["progress"];
+  
+  if(progress < 0 || progress > 100 || text.length() > 16) {
+    server.send(422, "application/json", "{}");
+    return;
+  }
+  display.printProgressBar(text, progress);
+
+  Serial.print("Text is: ");
+  Serial.println(text);
+  Serial.print("Progress is: ");
+  Serial.println(progress);
 
   server.send(200, "application/json", "{}");
 }
