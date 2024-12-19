@@ -232,7 +232,7 @@ class SS8:
             return
 
         if dconfig.CAN_MOVE:
-            self._send_req(lambda: requests.post(self.api_url + "/hlft", json={"ms": angle*BODY_ANGLE_TO_TIME}))
+            self._send_req(lambda: requests.post(self.api_url + "/lft", json={"ms": angle*BODY_ANGLE_TO_TIME}))
         
         if dconfig.DEBUG_SS8:
             print(f"Rotating left of {round(angle*180/np.pi)} degrees...")
@@ -381,7 +381,8 @@ class SS8:
         if dconfig.CONNECT_TO_MOV_API:
             data = self._send_req(lambda: requests.post(self.api_url + "/cam/stp"))
             self.top_cam_angles = np.array([data['alpha'], data['beta']])
-        print("Stopped  camera movement at ", np.round(self.top_cam_angles))
+        if dconfig.DEBUG_SS8:
+            print("Stopped  camera movement at ", np.round(self.top_cam_angles))
         
         return
     
@@ -428,9 +429,10 @@ class SS8:
             elif(init_diff[0] < -center_threshold):
                 self.stop_cam()
                 self.goto_cam(0, -np.sqrt(np.abs(init_diff[0])), relative=True)
-            else:
+            elif(wait_for_completion):
                 if(dconfig.DEBUG_NAV):
                     print(f'Alignment finished with angle : {self.top_cam_angles[1]}')
+                
                 self.is_aligning=False
                 return self.top_cam_angles[1]
         
@@ -447,7 +449,6 @@ class SS8:
                 diff_axis=1
 
             diff_angle = np.sqrt((np.abs(init_diff[diff_axis]))*np.pi/1000)
-            print(diff_angle)
             if(dconfig.DEBUG_NAV):
                 print('Align body angle to obj')
             if(init_diff[diff_axis] > center_threshold):
@@ -510,10 +511,11 @@ class SS8:
                 update_align_to()
                 if self.is_aligning:
                     self.controller.after(dconfig.ALIGNMENT_WAIT*1000, loop)
+
             loop()
 
 
-        if(dconfig.DEBUG_NAV and res is not None):
+        if(dconfig.DEBUG_NAV and res is not None and False):
             print(f'Aligned with angle {res}')
         
         return res
