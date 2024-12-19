@@ -111,6 +111,7 @@ class SetupPage(tk.Frame):
 
             if(not self.object_selected):
                 self.controller.ss8.display_text("Image selected")
+                self.controller.ss8.set_leds(0, 1 * dconfig.BRIGHTNESS, 0 )
                 self.selection_buttons_frame.pack(anchor=tk.S, pady=20)
                 self.object_selected = True
 
