@@ -132,6 +132,7 @@ class SetupPage(tk.Frame):
         def update_preview_front():
             cv2.waitKey(1)
             prev_img = self.controller.ss8.capture_image("front")
+            prev_img = cv2.rotate(prev_img, cv2.ROTATE_90_CLOCKWISE)
             if prev_img is not None:
                 return cv2.cvtColor(prev_img, cv2.COLOR_BGR2RGB)
             else:
