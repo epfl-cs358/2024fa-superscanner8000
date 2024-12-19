@@ -79,9 +79,11 @@ class ImageSegmenter:
             
             if not os.path.exists(temp_dir):
                 os.makedirs(temp_dir)
-            else:
+            elif self.frame_counter == 0:
                 shutil.rmtree(temp_dir)
                 os.makedirs(temp_dir)
+            else:
+                pass
 
             # Construct the full path for the file with a numbered filename
             filename = f"{self.frame_counter}.mask.png"
