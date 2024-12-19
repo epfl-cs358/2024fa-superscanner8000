@@ -49,7 +49,7 @@ class Navigator:
 
         print('Callibrating...')
         self.ss8.display_text('Callibrating...')
-        self.ss8.set_led(0, 0, 1 * dconfig.BRIGHTNESS)
+        self.ss8.set_led(0, 0, 1 * dconfig.LED_BRIGHTNESS)
 
         iteration_dist = distance / iteration
 
@@ -123,7 +123,7 @@ class Navigator:
         if self._assert_no_obstacle(absolute_position, 20):
             #print(f'Obstacle added at position {absolute_position}')
             self.obstacles = np.append(self.obstacles, ForcePoint(absolute_position, size, 3))
-            self.ss8.flash_led(1 * dconfig.LED_BRIGHTNESS, 0, 0)
+            self.ss8.flash_led(1 * dconfig.LED_BRIGHTNESS, 0, 0, 125)
     
     def _assert_no_obstacle(self, pos, radius = 25):
         """
@@ -195,7 +195,7 @@ class Navigator:
             time.sleep(0.5)
 
             if must_take_break:
-                self._on_reach_point()
+                self._on_reach_point(self.moving)
             
                 
         return
@@ -216,7 +216,9 @@ class Navigator:
         for a in range(0, 360, step_angle):
             x = radius * (math.cos(math.radians(a))-1)
             y = radius * math.sin(math.radians(a))
-            self.trajectory.append((ForcePoint(np.array([x, y]), 50, 0), math.radians(a)))
+            self.trajectory.append((ForcePoint(np.array([x, y]), 40, 0), math.radians(a)))
+        
+        self.trajectory.append((ForcePoint(np.array([0, 0]), 40, 0), 0))
     
     def _set_arm_positions(self, step_nbr):
         self.arm_positions = generate_path(step_nbr)
@@ -286,7 +288,7 @@ class Navigator:
         
         return
     
-    def _on_reach_point(self):
+    def _on_reach_point(self, last_point=False):
         """
         Pause the movement and restart it.
         """
@@ -300,8 +302,11 @@ class Navigator:
 
         time.sleep(dconfig.ARM_MOV_WAITING_TIME)
         self.ss8.align_to(mode='cam', keep_arm_cam_settings=True, wait_for_completion=False)
-        self.ss8.top_cam_udp_receiver.save_frame()
-        self.taken_picture += 1
+
+        if last_point:
+            self.ss8.top_cam_udp_receiver.save_frame()
+            self.segmenter.save_mask()
+            self.taken_picture += 1
 
         tot_pics = self.horizontal_precision*self.vertical_precision
         self.ss8.display_progress_bar(f"Picture :{self.taken_picture}/{tot_pics}", self.taken_picture/tot_pics)

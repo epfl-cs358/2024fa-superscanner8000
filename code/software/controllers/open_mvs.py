@@ -3,10 +3,12 @@ import subprocess
 import pathlib
 
 class open_mvs:
-    def __init__(self, mvs_bin_dir: pathlib.Path, working_dir: pathlib.Path):
+    def __init__(self, mvs_bin_dir: pathlib.Path, working_dir: pathlib.Path, use_masks=False):
         #Colmap directory
         self.mvs_bin_dir = mvs_bin_dir
         self.working_dir = pathlib.Path.cwd() / working_dir
+        self.use_masks = use_masks
+
 
     def interface_colmap(self):
         cmd_path = self.mvs_bin_dir / "InterfaceCOLMAP"
@@ -26,6 +28,7 @@ class open_mvs:
         cmd_path = self.mvs_bin_dir / "DensifyPointCloud"
         input_file = self.working_dir / pathlib.Path("model_colmap.mvs")
         output_path = self.working_dir / "model_dense.mvs"
+
         
         command = [
             cmd_path,
@@ -34,6 +37,13 @@ class open_mvs:
             "--output-file", output_path,
             "--archive-type", "-1"
         ]
+
+        if self.use_masks:
+            masks = self.working_dir / "masks"
+            command.append("--mask-path")
+            command.append(masks)
+
+
         
         return_code = subprocess.call(command)
         return return_code
