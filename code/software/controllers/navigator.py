@@ -55,7 +55,6 @@ class Navigator:
         if dconfig.DEBUG_NAV:
             print(f'Iteration dist : {iteration_dist}')
 
-        self.ss8.display_text_2lines('Callibrating...', f'Iteration :{iteration}')
 
         if not dconfig.CONNECT_TO_TOP_CAM or not dconfig.CONNECT_TO_MOV_API:
             self._set_circle_trajectory(50, self.horizontal_precision)
@@ -85,6 +84,7 @@ class Navigator:
                 
             #     self.ss8.align_to('body')
             #     continue
+            self.ss8.display_text_2lines('Callibrating...', f'Iteration : {i+1}/{iteration}')
 
             self.ss8.move_backward(iteration_dist)
             y_pos = -(i+1)*iteration_dist
@@ -115,7 +115,7 @@ class Navigator:
 
         self._set_circle_trajectory(mean_radius, self.horizontal_precision)
 
-        self.ss8.display_text('Callibration done')
+        self.ss8.display_text(f'Radius : {np.round(mean_radius)} cm')
 
     def add_obstacle(self, absolute_position, size=1):
         """
@@ -295,7 +295,7 @@ class Navigator:
             time.sleep(dconfig.ARM_MOV_WAITING_TIME)
             self.ss8.goto_arm(arm_pos[0], arm_pos[1])
             time.sleep(12)
-            self.ss8.align_to(mode='cam', keep_arm_cam_settings=True)
+            self.ss8.align_to(mode='cam', keep_arm_cam_settings=True, tolerance_ratio=2)
             self.ss8.top_cam_udp_receiver.save_frame()
             self.segmenter.save_mask()
             self.taken_picture += 1

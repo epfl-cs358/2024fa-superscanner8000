@@ -123,6 +123,20 @@ class ImageSegmenter:
         # Convert the frame to base64
         _, buffer = cv2.imencode('.jpg', img)
         return base64.b64encode(buffer).decode('utf-8')
+    
+    def rotate_crop_image_of_90_clockwise(self, img):
+        original_height, original_width = img.shape[:2]
+        rotated = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+        rotated_height, rotated_width = rotated.shape[:2]
+        Scale = min(original_height/rotated_height, original_width/rotated_width)
+        new_width = int(rotated_width * Scale)
+        new_height = int(rotated_height * Scale)
+        resized = cv2.resize(rotated, (new_width, new_height), interpolation = cv2.INTER_AREA)
+        img = np.zeros((original_height, original_width, 3), np.uint8)
+        x_offset = (original_width - new_width) // 2
+        y_offset = (original_height - new_height) // 2
+        img[y_offset:y_offset+new_height, x_offset:x_offset+new_width] = resized
+        return img
 
 if __name__ == "__main__":
 

@@ -113,7 +113,7 @@ class SetupPage(tk.Frame):
                 self.selection_buttons_frame.pack(anchor=tk.S, pady=20)
                 self.object_selected = True
 
-        self.img_preview_top = ImageWidget(self.container_right, 1080, 920, img_click_callback)
+        self.img_preview_top = ImageWidget(self.container_right, 540, 460, img_click_callback)
         self.img_preview_top.canvas.pack(expand=True)  # Center the canvas in the container
 
         self.img_preview_front = ImageWidget(self.container_right, 445, 300, lambda:None)
