@@ -136,6 +136,8 @@ class Object_Detector:
         Xc = depth
         Yc = (pixel_index[0] - cy) * depth / (focal_length/sensor_pixel_size)
         camera_position = np.array([Xc, Yc[0]])
+
+        T = T + np.array([np.cos(self.navigator.ss8_angle) * 22, np.sin(self.navigator.ss8_angle) * -13])
         
 
         world_position = R @ camera_position + T #np.linalg.inv(R) @
@@ -203,7 +205,7 @@ class Object_Detector:
             for j in range(0, height, pixel_size):
                 # Get the pixelated depth value
                 value = pixelated_depth[j, i]
-                if value == 0:
+                if value < 30:
                     continue
                 # Set the pixelated depth value to all pixels in the square
                 #top_view[i:i+pixel_size, d:d+pixel_size] = 0
@@ -239,7 +241,10 @@ class Object_Detector:
 
             fake_ground = np.ones_like(self.occupancy_map)
 
-            fake_ground[self.occupancy_map.shape[0] - 120 : self.occupancy_map.shape[0] -1 , :] = 0
+            fake_ground[self.occupancy_map.shape[0] - 140 : self.occupancy_map.shape[0] -1 , :] = 0
+            fake_ground[0:20, :] = 0
+            fake_ground[:, 0:20] = 0
+            fake_ground[:, self.occupancy_map.shape[1] - 20 : self.occupancy_map.shape[1] - 1] = 0
 
             # substract occupancy map by ground mask
             self.occupancy_map = cv2.multiply(self.occupancy_map, fake_ground)
@@ -251,44 +256,12 @@ class Object_Detector:
 
             top_view, pixelated_depth, pos_3d, colors = self._compute_perspective_views(
                                     self.depth, frame, T, R, pixel_size=20, hfov=self.hfov)
-            self.depth = pixelated_depth
-            
-            #print(pos_3d.shape)
+            #self.depth = pixelated_depth
             
 
             for pos in pos_3d:
                 if np.linalg.norm(pos - T) > 15:
                     self.navigator.add_obstacle(pos, -100000)
-                    #print(T, pos, np.linalg.norm(pos - T))
-                    
-
-    def detect_occupancy(self):
-        frame = self._request_frame()
-
-
-        if frame is not None:
-            depth = self._get_depth_map(frame)
-            self._update_occupancy_map(depth)
-            
-            #self.occupancy_map = self._segment_ground(frame, self.occupancy_map)
-            self.occupancy_map = self._seg_color(frame)
-
-            depth = cv2.multiply(depth, self.occupancy_map.astype(np.float32))
-            self.depth = depth
-            # Convert ss8 position to 3d position
-            T = np.array([self.navigator.ss8_pos[0], self.navigator.ss8_pos[1], 0]).reshape(3, 1)
-            top_view, pixelated_depth, pos_3d, colors = self._compute_perspective_views(
-                                    depth, frame, T, 
-                                    self._get_rotation_matrix(self.navigator.ss8_angle) , pixel_size=16, hfov=self.hfov)
-            # TODO: Display top view
-
-            for pos in pos_3d:
-                self.navigator.add_obstacle(pos)
-        
-        # await asyncio.sleep(0.1)
-
-        # if self.must_detect:
-        #     await self.detect_occupancy()
         
 
 
