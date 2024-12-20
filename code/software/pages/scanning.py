@@ -36,6 +36,8 @@ class ScanningPage(tk.Frame):
 
         self._start_scanning()
 
+    
+
     def _start_scanning(self):
         # Start the movement
 
@@ -43,13 +45,9 @@ class ScanningPage(tk.Frame):
         def update_top_cam_mask():
             cv2.waitKey(1)
             prev_img = self.controller.ss8.capture_image()
-
-            top_cam_alpha = self.controller.ss8.get_top_cam_angle()[0]
-
-
-            if(np.abs(top_cam_alpha) < np.abs(top_cam_alpha - 90) and False):
-                prev_img = cv2.rotate(prev_img, cv2.ROTATE_90_COUNTERCLOCKWISE)
-                prev_img.resize((prev_img.shape[1], prev_img.shape[0]//prev_img.shape[1]))
+        
+            if(self.controller.ss8.is_top_cam_vertical()):
+                prev_img = self.controller.segmenter.rotate_crop_image_of_90_clockwise(prev_img)
 
             self.controller.segmenter.propagate(prev_img)
             self.display_mask_counter += 1
@@ -62,7 +60,7 @@ class ScanningPage(tk.Frame):
                 None
 
         if dconfig.CONNECT_TO_FRONT_CAM:
-            self.img_preview_occupancy = ImageWidget(self.container, 1080, 920, None)
+            self.img_preview_occupancy = ImageWidget(self.container, 540, 460, None)
             self.img_preview_occupancy.display(update_top_cam_mask, 1000//24)
 
         movement_thread = threading.Thread(target=self.nav.start_moving, args=(self._on_finish,))
