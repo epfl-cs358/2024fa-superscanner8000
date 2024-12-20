@@ -82,6 +82,8 @@ class SS8:
         
         self.display_text("Connected")
         self.set_led(0, dconfig.LED_BRIGHTNESS, dconfig.LED_BRIGHTNESS)
+        self.goto_cam(0, 0)
+        self.goto_arm(0, 0)
 
         return True
     
@@ -365,8 +367,6 @@ class SS8:
                 angles = np.degrees(self._get_reverse_kin_angle(x_angle, y_angle)) + self.top_cam_angles
 
         [alpha, beta] =  (angles + 180) % 360 -180
-            
-
 
         if dconfig.DEBUG_SS8:
             print(f"Moving camera to position {int(alpha)}, {int(beta)}")
@@ -489,29 +489,31 @@ class SS8:
             frame = self.capture_image()
             obj_coords = self.controller.segmenter.get_object_coords(frame, False)
             if obj_coords is None:
-                return np.array([0, 0])
+                return np.array(['not found', 'not found'])
             [height, width] = frame.shape[:2]
             return (obj_coords - np.array([width, height])/2)/3
 
         def update_cam_angle(): 
-            init_diff = get_diff()
+            curr_diff = get_diff()
             if(dconfig.DEBUG_NAV):
                 print('Align cam angle to obj')
-            if(init_diff[0] > center_threshold):
-                self.stop_cam()
-                self.goto_cam(0, np.sqrt(np.abs(init_diff[0])), relative=True)
-            elif(init_diff[0] < -center_threshold):
-                self.stop_cam()
-                self.goto_cam(0, -np.sqrt(np.abs(init_diff[0])), relative=True)
+
+                
+            if(curr_diff[0]=='not found'):
+                self.goto_cam(0, 10, relative=True)
+            elif(curr_diff[0] > center_threshold):
+                self.goto_cam(0, np.sqrt(np.abs(curr_diff[0])), relative=True)
+            elif(curr_diff[0] < -center_threshold):
+                self.goto_cam(0, -np.sqrt(np.abs(curr_diff[0])), relative=True)
             elif(wait_for_completion):
                 if(dconfig.DEBUG_NAV):
-                    print(f'Alignment finished with angle : {self.top_cam_angles[1]}')
+                    print(f'Alignment finished with angle : {self.top_cam_angles[1]}, diff {curr_diff[0]}')
                 
                 self.is_aligning=False
                 return self.top_cam_angles[1]
         
         def update_body_angle(): 
-            init_diff = get_diff()
+            curr_diff = get_diff()
             alpha = self.top_cam_angles[0]
 
             if(np.abs(alpha) < np.abs(alpha-90)):
@@ -519,16 +521,16 @@ class SS8:
             else :
                 diff_axis=1
 
-            diff_angle = np.sqrt((np.abs(init_diff[diff_axis]))*np.pi/1000)
+            diff_angle = np.sqrt((np.abs(curr_diff[diff_axis]))*np.pi/1000)
             if(dconfig.DEBUG_NAV):
                 print('Align body angle to obj')
-            if(init_diff[diff_axis] > center_threshold):
+            if(curr_diff[diff_axis] > center_threshold):
                 self.stop_mov()
                 if(diff_axis==0):
                     self.rotate_left(diff_angle)
                 else:
                     self.rotate_right(diff_angle)
-            elif(init_diff[diff_axis] < -center_threshold):
+            elif(curr_diff[diff_axis] < -center_threshold):
                 self.stop_mov()
                 if(diff_axis==0):
                     self.rotate_right(diff_angle)
@@ -539,15 +541,15 @@ class SS8:
                 return self.top_cam_angles[1]
         
         def update_pos_alignment():
-            init_diff = get_diff()
+            curr_diff = get_diff()
             if(dconfig.DEBUG_SS8):
                 print('Align body position to obj')
-            if(init_diff[0] > center_threshold):
+            if(curr_diff[0] > center_threshold):
                 self.stop_mov()
-                self.move_backward(dist=np.sqrt(np.abs(init_diff[0]))*dconfig.ALIGNMENT_SPEED, wait_for_completion=False)
-            elif(init_diff[0] < -center_threshold):
+                self.move_backward(dist=np.sqrt(np.abs(curr_diff[0]))*dconfig.ALIGNMENT_SPEED, wait_for_completion=False)
+            elif(curr_diff[0] < -center_threshold):
                 self.stop_mov()
-                self.move_forward(dist=np.sqrt(np.abs(init_diff[0]))*dconfig.ALIGNMENT_SPEED, wait_for_completion=False)
+                self.move_forward(dist=np.sqrt(np.abs(curr_diff[0]))*dconfig.ALIGNMENT_SPEED, wait_for_completion=False)
             else:
                 self.is_aligning=False
                 return self.top_cam_angles[1]
