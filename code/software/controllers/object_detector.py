@@ -15,7 +15,7 @@ import time
 
 class Object_Detector:
     def __init__(self, navigator: Navigator, ss8: SS8, visualize=False):
-        self.segmenter = ImageSegmenter(model_cfg="sam2_hiera_s.yaml", checkpoint="config/sam2_checkpoints/sam2_hiera_small.pt", expand_pixels=10)
+        self.segmenter = ImageSegmenter(model_cfg="sam2_hiera_s.yaml", checkpoint="config/sam2_checkpoints/sam2_hiera_small.pt", expand_pixels=5)
         self.navigator = navigator
         self.ss8 = ss8
         self.hfov = np.deg2rad(95) # Horizontal field of view set according to OV5640 datasheet
@@ -146,13 +146,39 @@ class Object_Detector:
 
         return world_position
     
+    def grabcut(self, frame):
+        # Create a mask with white in bottom
+        mask = np.ones(frame.shape[:2], np.uint8) * cv2.GC_PR_FGD
+        mask[frame.shape[0] - 50 : frame.shape[0] - 1, :] = 0
+        
+        # Grabcut
+        bgdModel = np.zeros((1,65),np.float64)
+        fgdModel = np.zeros((1,65),np.float64)
+        mask, bgdModel, fgdModel = cv2.grabCut(frame, mask, None, bgdModel, fgdModel, 5, cv2.GC_INIT_WITH_MASK)
+
+        return np.where((mask==2)|(mask==0),0,1).astype('uint8')
+
+    def _seg_color(self, frame):
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        blurred = cv2.GaussianBlur(frame, (5, 5), 0)
+        blurred_lower_square = blurred[:, frame.shape[0] - 50: frame.shape[0] - 1]
+        blurred_pixel = cv2.resize(blurred_lower_square, (1, 1))[0][0]
+
+        tolerance = 20
+        lower = np.array([blurred_pixel[0] - tolerance, 0, 0])
+        upper = np.array([blurred_pixel[0] + tolerance, 255, 255])
+        mask = cv2.inRange(blurred, lower, upper)
+        mask[mask == 255] = 1
+        mask[mask == 0] = 0
+        return mask
+
     def _segment_ground(self, frame):
         '''
         Returns a mask with the ground segmented where 0 is the ground and 1 is the rest
         '''
 
         if not self.segmenter.is_init:
-            points = np.array([[0, frame.shape[0] - 1]], dtype=np.float32)#np.linspace([0, frame.shape[0] - 1], [frame.shape[1] - 1, frame.shape[0] - 1], 10, dtype=np.uint8) #
+            points = np.array([[5, frame.shape[0] - 6]], dtype=np.float32)#np.linspace([0, frame.shape[0] - 1], [frame.shape[1] - 1, frame.shape[0] - 1], 10, dtype=np.uint8) #
             self.segmenter.initialize(frame, points=points)
             ground_mask = self.segmenter.propagate(frame)
 
@@ -204,12 +230,19 @@ class Object_Detector:
     def start_detection(self):
         frame = self._request_frame()
         if frame is not None:
-            ground_mask = self._segment_ground(frame)
+            #ground_mask = self._segment_ground(frame)
+            #ground_mask = self.grabcut(frame)
+            #ground_mask = self._seg_color(frame)
+
             self.depth = self._get_depth_map(frame)
-            self._update_occupancy_map(self.depth, 70)
+            self._update_occupancy_map(self.depth, 100)
+
+            fake_ground = np.ones_like(self.occupancy_map)
+
+            fake_ground[self.occupancy_map.shape[0] - 120 : self.occupancy_map.shape[0] -1 , :] = 0
 
             # substract occupancy map by ground mask
-            self.occupancy_map = cv2.multiply(self.occupancy_map, ground_mask)
+            self.occupancy_map = cv2.multiply(self.occupancy_map, fake_ground)
             self.depth = cv2.multiply(self.depth, self.occupancy_map.astype(np.float32))
 
             # Convert ss8 position to 3d position
@@ -238,6 +271,7 @@ class Object_Detector:
             self._update_occupancy_map(depth)
             
             #self.occupancy_map = self._segment_ground(frame, self.occupancy_map)
+            self.occupancy_map = self._seg_color(frame)
 
             depth = cv2.multiply(depth, self.occupancy_map.astype(np.float32))
             self.depth = depth
