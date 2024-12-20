@@ -481,17 +481,31 @@ class SS8:
         """
         return self.top_cam_angles
     
-    def align_to(self, mode='pos', wait_for_completion=True, keep_arm_cam_settings=False):
+    def is_top_cam_vertical(self):
+        return np.abs(self.top_cam_angles[0]) > np.abs(self.top_cam_angles[0] + 90)
+    
+    def align_to(self, mode='pos', wait_for_completion=True, keep_arm_cam_settings=False, tolerance_ratio=1):
         """
         Start the object tracking. The camera will try to keep the object in the center of its view.
         """
         def get_diff():
             frame = self.capture_image()
+
+            if(self.is_top_cam_vertical()):
+                frame = self.controller.segmenter.rotate_crop_image_of_90_clockwise(frame)
+            
             obj_coords = self.controller.segmenter.get_object_coords(frame, False)
             if obj_coords is None:
                 return np.array(['not found', 'not found'])
+            
             [height, width] = frame.shape[:2]
-            return (obj_coords - np.array([width, height])/2)/3
+
+            if(dconfig.DEBUG_NAV):
+                print(f'Obj coords : {obj_coords}')
+                print(f'Frame center : {np.array([width, height])/2}')
+                print(f'Cam is vertical : {self.is_top_cam_vertical()}')
+
+            return (obj_coords - np.array([width, height])/2)
 
         def update_cam_angle(): 
             curr_diff = get_diff()
@@ -499,11 +513,33 @@ class SS8:
                 print('Aligning cam angle to obj')
 
             if(curr_diff[0]=='not found'):
-                self.goto_cam(0, 20, relative=True)
-            elif(curr_diff[0] > center_threshold):
-                self.goto_cam(0, np.power(np.abs(curr_diff[0]), 2.5)*2, relative=True)
-            elif(curr_diff[0] < -center_threshold):
-                self.goto_cam(0, -np.power(np.abs(curr_diff[0]), 2.5)*2, relative=True)
+                if(dconfig.DEBUG_NAV):
+                    print('Obj tracked not found', self.galere_counter)
+                if(self.galere_counter>dconfig.GALERE_TOLERANCE):
+                    self.goto_cam(0, 30, relative=True)
+                    self.galere_counter=0
+                else:
+                    self.galere_counter+=1
+                
+                return
+            
+            if(self.is_top_cam_vertical()):
+                diff_axis = 1
+                diff_angle = np.power(np.abs(curr_diff[1]), 1/2.5)/2
+            else :
+                diff_axis = 0
+                diff_angle = np.power(np.abs(curr_diff[0]), 1/2.5)/2
+            
+            self.galere_counter=0
+
+            if (dconfig.DEBUG_NAV):
+                print(f'Current diff : {curr_diff[diff_axis]}, will move of {diff_angle} degrees')
+                print(f'Current saved angle : {self.top_cam_angles[1]}') 
+
+            if(curr_diff[diff_axis] > center_threshold):
+                self.goto_cam(0, diff_angle, relative=True)
+            elif(curr_diff[diff_axis] < -center_threshold):
+                self.goto_cam(0, -diff_angle, relative=True)
             elif(wait_for_completion):
                 if(dconfig.DEBUG_NAV):
                     print(f'Alignment finished with angle : {self.top_cam_angles[1]}, diff {curr_diff[0]}')
@@ -516,18 +552,24 @@ class SS8:
             
             alpha = self.top_cam_angles[0]
 
-            if(np.abs(alpha) < np.abs(alpha-90)):
+            if(not self.is_top_cam_vertical()):
                 diff_axis = 0
             else :
                 diff_axis=1
+
             if(dconfig.DEBUG_NAV):
                 print('Align body angle to obj')
             
-            if(curr_diff[0]=='not found'):
-                self.rotate_left(10)
+            if(curr_diff[diff_axis]=='not found'):
+                if(self.galere_counter>dconfig.GALERE_TOLERANCE):
+                    self.rotate_left(10)
+                    self.galere_counter=0
+                else:
+                    self.galere_counter+=1
                 return
-            
-            diff_angle = np.sqrt((np.abs(curr_diff[diff_axis]))*np.pi/1000)
+                        
+            self.galere_counter=0
+            diff_angle = np.sqrt((np.abs(curr_diff[diff_axis]))*np.pi/2000)
             if(curr_diff[diff_axis] > center_threshold):
                 self.stop_mov()
                 if(diff_axis==0):
@@ -550,7 +592,8 @@ class SS8:
                 print('Align body position to obj')
             
             if(curr_diff[0]=='not found'):
-                self.stop_mov()
+                return
+                
             elif(curr_diff[0] > center_threshold):
                 self.stop_mov()
                 self.move_backward(dist=np.sqrt(np.abs(curr_diff[0]))*dconfig.ALIGNMENT_SPEED, wait_for_completion=False)
@@ -561,7 +604,7 @@ class SS8:
                 self.is_aligning=False
                 return self.top_cam_angles[1]
             
-        center_threshold = dconfig.CENTER_THRESHOLD
+        center_threshold = dconfig.CENTER_THRESHOLD * tolerance_ratio
 
         if dconfig.DEBUG_NAV:
             print(f"Start tracking the object. Keep arm cam settings : {keep_arm_cam_settings}. Mode : {mode}")
@@ -571,6 +614,7 @@ class SS8:
             self.goto_cam(0, 90)
 
         self.is_aligning = True
+        self.galere_counter = 0
         res = None
         self.stop_cam()
 
