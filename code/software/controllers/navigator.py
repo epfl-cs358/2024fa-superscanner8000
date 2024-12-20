@@ -11,7 +11,7 @@ from controllers.image_segmenter import ImageSegmenter
 
 STEP_DISTANCE = 5
 DEFAULT_CALLIBRATION_DISTANCE = 50
-DEFAULT_CALLIBRATION_ITERATION = 5
+DEFAULT_CALLIBRATION_ITERATION = 3
 CENTER_THRESHOLD = 25
 ANGLE_TOLERANCE = 0.05
 
@@ -99,11 +99,9 @@ class Navigator:
                 print(f'Measure : {[y_pos, theta]}')
             
 
-        # Could be replaced by the line below if movement is precise enough
-        # self.ss8.move_backward(int(np.abs(iteration/2*iteration_dist)))
+        self.ss8.goto_cam(0, 90)
         self.ss8.move_forward(distance)
         time.sleep(dconfig.ALIGNMENT_WAIT)
-        self.ss8.stop_align_to()
         self.ss8.align_to('body')
 
         if dconfig.DEBUG_NAV:
@@ -116,6 +114,8 @@ class Navigator:
             print(f'Mean radius : {mean_radius} cm')
 
         self._set_circle_trajectory(mean_radius, self.horizontal_precision)
+
+        self.ss8.display_text('Callibration done')
 
     def add_obstacle(self, absolute_position, size=1):
         """
@@ -155,22 +155,18 @@ class Navigator:
     def start_moving(self, on_finish):
         self._set_arm_positions(self.vertical_precision)
 
-        for arm_pos in self.arm_positions:
-            if(dconfig.SKIP_CALLIBRATION_STEP):
-                if dconfig.CONNECT_TO_TOP_CAM:
-                    self.ss8.align_to(mode='pos')
-                self._set_circle_trajectory(80, self.horizontal_precision)
-            else :
-                self._callibrate()
+        if(dconfig.SKIP_CALLIBRATION_STEP):
+            if dconfig.CONNECT_TO_TOP_CAM:
+                self.ss8.align_to(mode='pos')
+            self._set_circle_trajectory(80, self.horizontal_precision)
+        else :
+            self._callibrate()
 
-            self.ss8.goto_cam(-90, 90)  
-            
-            self.ss8.goto_arm(arm_pos[0], arm_pos[1])
-
-            self.moving = True
-            self._move_one_turn()
+        self.moving = True
+        self._move_one_turn()
             
         self.ss8.goto_arm(0, 0)
+        self.ss8.display_text('End of the turn')
         on_finish()
         return
     
@@ -190,11 +186,10 @@ class Navigator:
             next_dep, must_take_break = self._compute_next_deplacement()
             print(f"Next dep : {next_dep}")
 
-            time.sleep(0.5)
+            #time.sleep(0.5)
 
-            if must_take_break:
-                self._on_reach_point(self.moving)
-            
+            if must_take_break and self.moving:
+                self._on_reach_point()         
                 
         return
     
@@ -285,7 +280,7 @@ class Navigator:
         
         return
     
-    def _on_reach_point(self, last_point=False):
+    def _on_reach_point(self):
         """
         Pause the movement and restart it.
         """
@@ -294,18 +289,23 @@ class Navigator:
         
         time.sleep(dconfig.ARM_MOV_WAITING_TIME)
         self._move_of(correction_angle, 0)
-        self.ss8.align_to(mode='body', keep_arm_cam_settings=True)
+        self.ss8.align_to(mode='body')
 
-
-        if not last_point:
+        for arm_pos in self.arm_positions:
             time.sleep(dconfig.ARM_MOV_WAITING_TIME)
+            self.ss8.goto_arm(arm_pos[0], arm_pos[1])
+            time.sleep(10)
             self.ss8.align_to(mode='cam', keep_arm_cam_settings=True)
             self.ss8.top_cam_udp_receiver.save_frame()
             self.segmenter.save_mask()
             self.taken_picture += 1
+            
+        self.ss8.goto_arm(0, 0)
+        self.ss8.goto_cam(0, 90)
+        time.sleep(dconfig.ARM_MOV_WAITING_TIME)
 
         tot_pics = self.horizontal_precision*self.vertical_precision
-        self.ss8.display_progress_bar(f"Picture :{self.taken_picture}/{tot_pics}", self.taken_picture/tot_pics)
+        self.ss8.display_progress_bar(f"Picture : {self.taken_picture}/{tot_pics}", self.taken_picture/tot_pics)
 
         return
 
