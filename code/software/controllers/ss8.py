@@ -17,10 +17,10 @@ DEFAULT_FRONT_CAM_URL = "http://superscanner8009:80"
 TEST_CONNECTION_TIMEOUT = 3
 
 # SS8 movement constants
-DEFAULT_MOVING_DIST = 1000
+DEFAULT_MOVING_DIST = 50
 DEFAULT_ROTATING_ANGLE = 2*np.pi
 BODY_ANGLE_TO_TIME = 510 # Time to rotate the body by 1 radian            TODO: Update this value
-BODY_DIST_TO_TIME = 28 # Time to move the body by 1 cm                   TODO: Update this value
+BODY_DIST_TO_TIME = 24 # Time to move the body by 1 cm                   TODO: Update this value
 TOP_CAM_ANGLE_TO_TIME = 1 # Time to rotate the top camera by 1 radian
 TOP_CAM_FOV = 60
 
@@ -482,6 +482,8 @@ class SS8:
         return self.top_cam_angles
     
     def align_to(self, mode='pos', wait_for_completion=True, keep_arm_cam_settings=False):
+        if(not dconfig.CONNECT_TO_TOP_CAM):
+            return
         """
         Start the object tracking. The camera will try to keep the object in the center of its view.
         """
