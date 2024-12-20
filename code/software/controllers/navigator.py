@@ -122,10 +122,17 @@ class Navigator:
         Add an obstacle to the navigator.
         relative_position (NDArray[Any]): The relative position in sheeric coords of the obstacle to the ss8 (in cm).
         """
-        if self._assert_no_obstacle(absolute_position, 20):
+        if self._assert_no_obstacle(absolute_position, 20): 
             #print(f'Obstacle added at position {absolute_position}')
-            self.obstacles = np.append(self.obstacles, ForcePoint(absolute_position, size, 3))
+            self.obstacles = np.append(self.obstacles, {"force_point": ForcePoint(absolute_position, size, 3), "age": 0})
             self.ss8.flash_led(1 * dconfig.LED_BRIGHTNESS, 0, 0, 125)
+
+    def _age_obstacles(self):
+        for obs in self.obstacles:
+            obs.birthday()
+
+    def _cull_old_obstacles(self, max_age):
+        self.obstacles = np.array([obs for obs in self.obstacles if obs.age < max_age])
     
     def _assert_no_obstacle(self, pos, radius = 25):
         """
@@ -176,7 +183,13 @@ class Navigator:
             print('Start the turn')
 
         while self.moving:
-            print('Start new dep :', next_dep)
+            if(dconfig.OBSTACLES_AVOIDANCE):
+                self._age_obstacles()
+                self._cull_old_obstacles()
+            
+            if(dconfig.DEBUG_NAV):
+                print('Start new dep :', next_dep)
+                
             if next_dep is not None:
                 abs_angle = math.atan2(next_dep[1], next_dep[0])
                 diff_angle = abs_angle - self.ss8_angle
@@ -184,7 +197,6 @@ class Navigator:
                 self._move_of(diff_angle, norm)
 
             next_dep, must_take_break = self._compute_next_deplacement()
-            print(f"Next dep : {next_dep}")
 
             #time.sleep(0.5)
 
@@ -292,6 +304,9 @@ class Navigator:
         self.ss8.align_to(mode='body')
 
         for arm_pos in self.arm_positions:
+            if(dconfig.NAVIGATION_ONLY):
+                break
+
             time.sleep(dconfig.ARM_MOV_WAITING_TIME)
             self.ss8.goto_arm(arm_pos[0], arm_pos[1])
             time.sleep(12)
@@ -320,8 +335,12 @@ class ForcePoint:
         dist_order (int): The order of the distance norm.
         """
         self.force = force
+        self.age = 0
         self.pos = pos
         self.dist_order = dist_order
+
+    def birthday(self):
+        self.age += 1
     
     def get_contribution(self, pos):
         """

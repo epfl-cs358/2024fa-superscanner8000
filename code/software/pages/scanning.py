@@ -59,14 +59,15 @@ class ScanningPage(tk.Frame):
             else:
                 None
 
-        if dconfig.CONNECT_TO_FRONT_CAM:
+        if dconfig.CONNECT_TO_TOP_CAM:
             self.img_preview_occupancy = ImageWidget(self.container, 540, 460, None)
             self.img_preview_occupancy.display(update_top_cam_mask, 1000//24)
 
         movement_thread = threading.Thread(target=self.nav.start_moving, args=(self._on_finish,))
         movement_thread.start()
 
-        return
+        if not dconfig.OBSTACLES_AVOIDANCE:
+            return
 
         # Obstacles detection
         def update_plot():
