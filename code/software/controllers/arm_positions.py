@@ -32,8 +32,8 @@ def generate_path(N):
     total_length = vertical_length + curve_length
 
     # Calculate the number of points for each segment based on their relative lengths
-    vertical_points = int(round((vertical_length / total_length) * (N - 1))) + 1
-    curve_points = (N - 1) - (vertical_points - 1)
+    vertical_points = int(round((N - 1) / 2)) + 1
+    curve_points = (N - 1) - (vertical_points - 1) - 1
 
     # 1. Generate vertical segment (-10, -10) to (-10, 20)
     vertical_segment = generate_line_points(vertical_points, vertical_start, vertical_end)
@@ -43,6 +43,7 @@ def generate_path(N):
     # 2. Generate curve from (-10, 20) to (-40, 69)
     curve_segment = generate_line_points(curve_points, curve_start, curve_end)
     all_points.extend(curve_segment)
+    all_points.append(curve_end)
 
     # 3. Add the final point (0, 80)
     final_point = [0, 80]
@@ -52,6 +53,6 @@ def generate_path(N):
 
 if __name__ == "__main__":
     # Print all points
-    path = generate_path(11)
+    path = generate_path(7)
     for point in path:
         print(f"x: {point[0]}, y: {point[1]}")
