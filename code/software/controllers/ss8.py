@@ -84,6 +84,7 @@ class SS8:
         self.set_led(0, dconfig.LED_BRIGHTNESS, dconfig.LED_BRIGHTNESS)
         self.goto_cam(0, 0)
         self.goto_arm(0, 0)
+        self.stop_cam()
 
         return True
     
@@ -110,7 +111,6 @@ class SS8:
             print(f"An error occurred: {e}")
             return False
         
-        self.stop_cam()
         return True
 
     def init_udp_connection(self) -> bool:
@@ -496,15 +496,14 @@ class SS8:
         def update_cam_angle(): 
             curr_diff = get_diff()
             if(dconfig.DEBUG_NAV):
-                print('Align cam angle to obj')
+                print('Aligning cam angle to obj')
 
-                
             if(curr_diff[0]=='not found'):
-                self.goto_cam(0, 10, relative=True)
+                self.goto_cam(0, 20, relative=True)
             elif(curr_diff[0] > center_threshold):
-                self.goto_cam(0, np.sqrt(np.abs(curr_diff[0])), relative=True)
+                self.goto_cam(0, np.power(np.abs(curr_diff[0]), 2.5)*2, relative=True)
             elif(curr_diff[0] < -center_threshold):
-                self.goto_cam(0, -np.sqrt(np.abs(curr_diff[0])), relative=True)
+                self.goto_cam(0, -np.power(np.abs(curr_diff[0]), 2.5)*2, relative=True)
             elif(wait_for_completion):
                 if(dconfig.DEBUG_NAV):
                     print(f'Alignment finished with angle : {self.top_cam_angles[1]}, diff {curr_diff[0]}')
@@ -514,16 +513,21 @@ class SS8:
         
         def update_body_angle(): 
             curr_diff = get_diff()
+            
             alpha = self.top_cam_angles[0]
 
             if(np.abs(alpha) < np.abs(alpha-90)):
                 diff_axis = 0
             else :
                 diff_axis=1
-
-            diff_angle = np.sqrt((np.abs(curr_diff[diff_axis]))*np.pi/1000)
             if(dconfig.DEBUG_NAV):
                 print('Align body angle to obj')
+            
+            if(curr_diff[0]=='not found'):
+                self.rotate_left(10)
+                return
+            
+            diff_angle = np.sqrt((np.abs(curr_diff[diff_axis]))*np.pi/1000)
             if(curr_diff[diff_axis] > center_threshold):
                 self.stop_mov()
                 if(diff_axis==0):
@@ -544,7 +548,10 @@ class SS8:
             curr_diff = get_diff()
             if(dconfig.DEBUG_SS8):
                 print('Align body position to obj')
-            if(curr_diff[0] > center_threshold):
+            
+            if(curr_diff[0]=='not found'):
+                self.stop_mov()
+            elif(curr_diff[0] > center_threshold):
                 self.stop_mov()
                 self.move_backward(dist=np.sqrt(np.abs(curr_diff[0]))*dconfig.ALIGNMENT_SPEED, wait_for_completion=False)
             elif(curr_diff[0] < -center_threshold):
@@ -556,15 +563,16 @@ class SS8:
             
         center_threshold = dconfig.CENTER_THRESHOLD
 
+        if dconfig.DEBUG_NAV:
+            print(f"Start tracking the object. Keep arm cam settings : {keep_arm_cam_settings}. Mode : {mode}")
+
         if not keep_arm_cam_settings:
             self.goto_arm(0, 0)
             self.goto_cam(0, 90)
 
-        if dconfig.DEBUG_NAV:
-            print("Start tracking the object")
-
         self.is_aligning = True
         res = None
+        self.stop_cam()
 
         def update_align_to():
             if mode=='pos':

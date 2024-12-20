@@ -39,19 +39,38 @@ class ScanningPage(tk.Frame):
     def _start_scanning(self):
         # Start the movement
 
-        def update_mask():
+        self.display_mask_counter = 0
+        def update_top_cam_mask():
             cv2.waitKey(1)
-            self.controller.segmenter.propagate(self.controller.ss8.capture_image())
-            self.after(1000//24, update_mask)
+            prev_img = self.controller.ss8.capture_image()
 
-        if dconfig.CONNECT_TO_TOP_CAM:
-            self.after(100, update_mask)
+            top_cam_alpha = self.controller.ss8.get_top_cam_angle()[0]
+
+
+            if(np.abs(top_cam_alpha) < np.abs(top_cam_alpha - 90) and False):
+                prev_img = cv2.rotate(prev_img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+                prev_img.resize((prev_img.shape[1], prev_img.shape[0]//prev_img.shape[1]))
+
+            self.controller.segmenter.propagate(prev_img)
+            self.display_mask_counter += 1
+            if self.display_mask_counter % 20 < 10:
+                prev_img = self.controller.segmenter.mask_img(prev_img)
+
+            if prev_img is not None:
+                return cv2.cvtColor(prev_img, cv2.COLOR_BGR2RGB)
+            else:
+                None
+
+        if dconfig.CONNECT_TO_FRONT_CAM:
+            self.img_preview_occupancy = ImageWidget(self.container, 1080, 920, None)
+            self.img_preview_occupancy.display(update_top_cam_mask, 1000//24)
 
         movement_thread = threading.Thread(target=self.nav.start_moving, args=(self._on_finish,))
         movement_thread.start()
 
-        return 
+        return
 
+        # Obstacles detection
         def update_plot():
             self.fig.clear()
             plot = self.fig.add_subplot(111)

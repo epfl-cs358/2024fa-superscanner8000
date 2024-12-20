@@ -40,6 +40,11 @@ class ImageSegmenter:
             _, self.out_obj_ids, self.out_mask_logits = self.predictor.add_new_prompt(
                 frame_idx=ann_frame_idx, obj_id=ann_obj_id, bbox=bbox
             )
+            
+    def point_center(self, frame):
+        height, width, _ = frame.shape
+        center_point = np.array([[width // 2, height // 2]], dtype=np.float32)
+        self.initialize(frame, points=center_point)
 
     def propagate(self, img:cv2.typing.MatLike):
         """

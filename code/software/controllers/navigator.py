@@ -294,7 +294,7 @@ class Navigator:
         for arm_pos in self.arm_positions:
             time.sleep(dconfig.ARM_MOV_WAITING_TIME)
             self.ss8.goto_arm(arm_pos[0], arm_pos[1])
-            time.sleep(10)
+            time.sleep(12)
             self.ss8.align_to(mode='cam', keep_arm_cam_settings=True)
             self.ss8.top_cam_udp_receiver.save_frame()
             self.segmenter.save_mask()
