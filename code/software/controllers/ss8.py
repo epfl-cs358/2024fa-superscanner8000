@@ -650,7 +650,7 @@ class SS8:
     def stop_align_to(self):
         self.is_aligning = False
         
-    def capture_image(self, src='arm'):
+    def capture_image(self, src='arm', save_to_dir=False):
         """
         Captures an image from the ESP32.
         
@@ -660,10 +660,15 @@ class SS8:
             cv2.typing.MatLike: The captured image in a format compatible with OpenCV.
         """
         if(dconfig.TEST_SEG_WITH_VID):
-            return self.fake_current_frame
+            img = self.fake_current_frame
         elif src == 'arm':
-            return self.top_cam_udp_receiver.get_current_frame()
+            img = self.top_cam_udp_receiver.get_current_frame()
         elif src == 'front':
-            return self.front_cam_udp_receiver.get_current_frame()
+            img = self.front_cam_udp_receiver.get_current_frame()
+
+        if save_to_dir:
+            self.top_cam_udp_receiver.save_frame()
+            #self.controller.segmenter.propagate(frame)
+            #self.controller.segmenter.save_mask()
         
-        return None
+        return img

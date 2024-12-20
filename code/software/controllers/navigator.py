@@ -296,8 +296,7 @@ class Navigator:
             self.ss8.goto_arm(arm_pos[0], arm_pos[1])
             time.sleep(12)
             self.ss8.align_to(mode='cam', keep_arm_cam_settings=True, tolerance_ratio=2)
-            self.ss8.top_cam_udp_receiver.save_frame()
-            self.segmenter.save_mask()
+            self.ss8.capture_image(save_to_dir=True)
             self.taken_picture += 1
             
         self.ss8.goto_arm(0, 0)
