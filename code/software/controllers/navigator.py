@@ -301,7 +301,7 @@ class Navigator:
             
         self.ss8.goto_arm(0, 0)
         self.ss8.goto_cam(0, 90)
-        time.sleep(dconfig.ARM_MOV_WAITING_TIME)
+        time.sleep(5)
 
         tot_pics = self.horizontal_precision*self.vertical_precision
         self.ss8.display_progress_bar(f"Picture : {self.taken_picture}/{tot_pics}", self.taken_picture/tot_pics)
