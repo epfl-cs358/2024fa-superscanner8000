@@ -384,7 +384,9 @@ class SS8:
         
         if dconfig.CONNECT_TO_MOV_API:
             data = self._send_req(lambda: requests.post(self.api_url + "/cam/stp"))
-            self.top_cam_angles = np.array([data['alpha'], data['beta']])
+
+            if data is not None:
+                self.top_cam_angles = np.array([data['alpha'], data['beta']])
         if dconfig.DEBUG_SS8:
             print("Stopped  camera movement at ", np.round(self.top_cam_angles))
         
